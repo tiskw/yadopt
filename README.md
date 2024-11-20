@@ -96,10 +96,10 @@ you can explicitly specify the argument vector by using the second argument
 of the function, just like as follows:
 
 ```python
-# Parse sys.argv
+# Parse "sys.argv" (default behaviour).
 args = yadopt.parse(__doc__)
 
-# Parse the given argv.
+# Parse the given argument vector "argv".
 args = yadopt.parse(__doc__, argv)
 ```
 
@@ -122,14 +122,66 @@ if __name__ == "__main__":
 The returned value of `yadopt.parse` is an instance of `YadOptArgs` that is
 a normal mutable Python class. However, sometimes a dictionary that has
 the `get` accessor, or an immutable namedtuple, may be preferable.
-In that case, please try `.to_dict` and `.to_namedtuple` functions.
+In that case, please try `yadopt.to_dict` and `yadopt.to_namedtuple` functions.
 
 ```python
 # Convert the returned value to dictionary.
-args = yadopt.parse(__doc__).to_dict()
+args = yadopt.to_dict(yadopt.parse(__doc__))
 
 # Convert the returned value to namedtuple.
-args = yadopt.parse(__doc__).to_namedtuple()
+args = yadopt.to_namedtuple(yadopt.parse(__doc__))
+```
+
+### Restore arguments from dictionary or JSON file
+
+YadOpt has a function to save parsed argument instances as a JSON or pickle
+format, and to restore the argument instances from the JSON and pickle files.
+
+```python
+# At first, create a parsed arguments (i.e. YadOptArgs instance).
+args = yadopt.parse(__doc__)
+
+# Save the parsed arguments as a JSON file.
+yadopt.save("args.json", args, indent=4)
+
+# Resotre parsed YadOptArgs instance from the JSON file.
+args_restored = yadopt.load("args.json")
+```
+
+These functions are useful when recalling the arguments to previously executed
+commands, especially ML code.
+
+```python
+"""
+Usage:
+    train.py <config_path> [--epochs INT] [--model STR] [--lr FLT]
+    train.py --help
+
+Train a neural network model.
+
+Training options:
+    --epochs INT   The number of training epochs.   [default: 100]
+    --lr FLT       Learning rate.                   [default: 1.0E-3]
+
+Restore options:
+    --restore      Restore command options.         [default: None]
+
+Other options:
+    -h, --help     Show this help message and exit.
+"""
+
+import yadopt
+
+if __name__ == "__main__":
+
+    # Parse the docstring and command line arguments.
+    args = yadopt.parse(__doc__)
+
+    # Restore command options if specified.
+    if args.restore is not None:
+        args = yadopt.load(args.restore)
+
+    print(args)
 ```
 
 

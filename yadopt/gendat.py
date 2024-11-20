@@ -7,7 +7,6 @@ __all__ = ["generate_dat", "YadOptArgs"]
 
 # Import standard libraries.
 import ast
-import collections
 import itertools
 
 # Import custom modules.
@@ -19,18 +18,13 @@ class YadOptArgs:
     """
     Command line arguments parsed by YadOpt.
     """
-    def to_dict(self):
+    def __init__(self, args_dict=None):
         """
-        Convert to dictionary.
+        Constructor.
         """
-        return vars(self)
-
-    def to_namedtuple(self):
-        """
-        Convert to named tuple.
-        """
-        fields = list(self.to_dict().keys())
-        return collections.namedtuple("YadOptArgsNamedtuple", fields)(**self.to_dict())
+        if args_dict is not None:
+            for key, value in args_dict.items():
+                setattr(self, key, value)
 
     def __repr__(self):
         """
@@ -44,6 +38,12 @@ class YadOptArgs:
         String expression of this class.
         """
         return self.__repr__()
+
+    def __eq__(self, other):
+        """
+        Returns True if equivarent.
+        """
+        return vars(self) == vars(other)
 
 
 def generate_dat(uin: UserInput, args: list[ArgEntry], opts: list[OptEntry]) -> YadOptArgs:
