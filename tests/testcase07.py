@@ -27,9 +27,9 @@ def check(index, args, command):
     Checker function for testcases.
 
     Args:
-        index   (int)            : Index of testcases.
-        args    (YadOptArguments): Parsed command line arguments.
-        command (str)            : Command string (source of `args`).
+        index   (int)       : Index of testcases.
+        args    (YadOptArgs): Parsed command line arguments.
+        command (str)       : Command string (source of `args`).
     """
     if index == 0:
         assert args is None

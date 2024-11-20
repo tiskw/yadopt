@@ -6,6 +6,11 @@ Testcase 1: standard usage
 import collections
 import os
 import pathlib
+import sys
+
+# Import Yadopt.
+sys.path.append(".")
+import yadopt
 
 
 docstring = """
@@ -43,9 +48,9 @@ def check(index, args, command):
     Checker function for testcases.
 
     Args:
-        index   (int)            : Index of testcases.
-        args    (YadOptArguments): Parsed command line arguments.
-        command (str)            : Command string (source of `args`).
+        index   (int)       : Index of testcases.
+        args    (YadOptArgs): Parsed command line arguments.
+        command (str)       : Command string (source of `args`).
     """
     print("  ->", args)
 
@@ -58,7 +63,7 @@ def check(index, args, command):
         assert args.help == False
         assert args.verbose == False
 
-        args_dict = args.to_dict()
+        args_dict = yadopt.to_dict(args)
         assert isinstance(args_dict, dict)
         assert args_dict["config_path"] == pathlib.Path("config.toml")
         assert args_dict["epochs"] == 10
@@ -68,7 +73,7 @@ def check(index, args, command):
         assert args_dict["help"] == False
         assert args_dict["verbose"] == False
 
-        args_nt = args.to_namedtuple()
+        args_nt = yadopt.to_namedtuple(args)
         assert args_nt.__class__.__name__ == "YadOptArgsNamedtuple"
         assert args.config_path == pathlib.Path("config.toml")
         assert args.epochs == 10
