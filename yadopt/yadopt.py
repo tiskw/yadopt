@@ -3,13 +3,18 @@ Yet another docopt, a human-friendly command line arguments parser.
 """
 
 # Declare published functins and variables.
-__all__ = ["parse", "wrap", "YadOptArgs"]
+__all__ = ["parse", "wrap", "to_dict", "to_namedtuple", "save", "load"]
 
 # Import standard libraries.
+import collections
 import copy
 import functools
+import gzip
 import inspect
+import json
 import os
+import pathlib
+import pickle
 import sys
 
 # For type hinting.
@@ -120,16 +125,147 @@ def wrap(*pargs, **kwargs) -> Callable:
         This function atually returns a decorator function bacause this function
         is designed as a decorator function with argument (= docstr).
     """
-    def decorator(func):
-        """
-        """
-        return functools.partial(func, args)
-
     # Parse command line arguments.
     args = parse(*pargs, **kwargs)
 
-    # Returns decorator function.
-    return decorator
+    # Instanciate a decorator function and returns it.
+    return lambda func: functools.partial(func, args)
+
+
+def to_dict(args: YadOptArgs) -> dict:
+    """
+    Convert YadOptArgs instance to a dictionary.
+
+    Args:
+        args (YadOptArgs): Parsed command line arguments.
+
+    Returns:
+        (dict): Dictionary of the given parsed arguments.
+    """
+    return vars(args)
+
+
+def to_namedtuple(args: YadOptArgs) -> collections.namedtuple:
+    """
+    Convert YadOptArgs instance to a named tuple.
+
+    Args:
+        args (YadOptArgs): Parsed command line arguments.
+
+    Returns:
+        (namedtuple): Namedtuple of the given parsed arguments.
+    """
+    args_d = to_dict(args)
+    fields = list(args_d.keys())
+    return collections.namedtuple("YadOptArgsNamedtuple", fields)(**args_d)
+
+
+def save(path: str, args: YadOptArgs, **kwargs: dict):
+    """
+    Save the parsed command line arguments as JSON or pickle file.
+
+    Args:
+        path   (str)       : Destination path.
+        args   (YadOptArgs): Parsed command line arguments to be saved.
+        kwargs (dict)      : Extra keyword arguments that will be passed to the dump functions.
+    """
+    def get_class_str(value):
+        """
+        Returns string expression of the class of the given instance.
+        """
+        # Removes "<class '" from left and "'>" from right.
+        return repr(type(value))[8:-2]
+
+    # Conver the given path as an instance of pathlib.Path.
+    path = pathlib.Path(path)
+
+    # Convert to dictionary.
+    args_dict = to_dict(args)
+
+    # Determine the open function.
+    open_func = gzip.open if path.suffix.endswith(".gz") else open
+
+    # Case 1: JSON file.
+    if any(path.name.endswith(sfx) for sfx in [".json", ".json.gz"]):
+
+        # Create a dictionary of data types for each values in the dictionary "args_dict".
+        data_types = {key:get_class_str(value) for key, value in args_dict.items()}
+
+        # Escape the pathlib.Path instance because it is not writable to JSON file.
+        args_dict = {k:(str(v) if isinstance(v, pathlib.Path) else v) for k, v in args_dict.items()}
+
+        # Create a dictionary to be dumped as a JSON file.
+        contents = {"data": args_dict, "type": data_types}
+
+        # Compute the keyword arguments for the "json.dump" function.
+        extra_kwargs = {"indent": 4}
+        extra_kwargs.update(**kwargs)
+
+        # Write to JSON file.
+        with open_func(path, "wt") as ofp:
+            json.dump(contents, ofp, **extra_kwargs)
+
+    # Case 2: pickle file.
+    elif any(path.name.endswith(sfx) for sfx in [".pkl", ".pkl.gz", ".pickle", ".pickle.gz"]):
+
+        # Write to pickle file.
+        with open_func(path, "wb") as ofp:
+            pickle.dump(args_dict, ofp, **kwargs)
+
+    # Otherwise: raise an error.
+    else:
+        raise YadOptError["invalid_file_type"]("yadopt.save", path)
+
+
+def load(path: str, **kwargs: dict) -> YadOptArgs:
+    """
+    Load a parsed command line arguments from JSON or pickle file.
+
+    Args:
+        path   (str) : Source path.
+        kwargs (dict): Extra keyword arguments that will be passed to the load functions.
+
+    Returns:
+        (YadOptArgs): Restored parsed command line arguments.
+    """
+    data_types_dict = {"bool": bool, "int": int, "float": float, "str": str,
+                       "pathlib.PosixPath": pathlib.Path,
+                       "pathlib.WindowsPath": pathlib.WindowsPath}
+
+    # Conver the given path as an instance of pathlib.Path.
+    path = pathlib.Path(path)
+
+    # Determine the open function.
+    open_func = gzip.open if path.suffix.endswith(".gz") else open
+
+    # Case 1: JSON file.
+    if any(path.name.endswith(sfx) for sfx in [".json", ".json.gz"]):
+
+        # Load the JSON file.
+        with open_func(path, "rt") as ifp:
+            args_dict = json.load(ifp, **kwargs)
+
+        # Get data contents and data types.
+        args_dict, data_types = args_dict["data"], args_dict["type"]
+
+        # Restore data types.
+        for key in list(args_dict.keys()):
+            dtype = data_types_dict[data_types[key]]
+            args_dict[key] = dtype(args_dict[key])
+
+        return YadOptArgs(args_dict)
+
+    # Case 2: pickle file.
+    if any(path.name.endswith(sfx) for sfx in [".pkl", ".pkl.gz", ".pickle", ".pickle.gz"]):
+
+        # Load the pickle file.
+        with open_func(path, "rb") as ifp:
+            args_dict = pickle.load(ifp, **kwargs)
+
+        return YadOptArgs(args_dict)
+
+    # Otherwise: raise an error.
+    raise YadOptError["invalid_file_type"]("yadopt.load", path)
 
 
 # vim: expandtab tabstop=4 shiftwidth=4 fdm=marker
