@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="figures/yadopt_logo.svg" width="90%">
+  <img src="docs/images/yadopt_logo.svg" width="90%">
 </div>
 
 <div align="center">
@@ -19,8 +19,8 @@ YadOpt is a Python re-implementation of [docopt](https://github.com/docopt/docop
 and [docopt-ng](https://github.com/jazzband/docopt-ng), a human-friendly
 command-line argument parser with type hinting and utility functions.
 YadOpt helps you to create beautiful command-line interfaces, just like docopt
-and docopt-ng, however, **YadOpt also supports date type hinting and conversion
-to dictionaries and data classes**.
+and docopt-ng, however, **YadOpt also supports: (1) date type hinting,
+(2) conversion to dictionaries and namedtuples, and (3) saving and loading functions**.
 
 The following is the typical usage of YadOpt:
 
@@ -188,49 +188,4 @@ if __name__ == "__main__":
 API
 --------------------------------------------------------------------------------
 
-### `yadopt.parse`
-
-```python
-yadopt.parse(
-    docstr: str,
-    argv: list[str] = None,
-    default_type: str = "auto",
-    force_continue: bool = False,
-) -> YadOptArgs
-```
-
-### Args
-
-| Name             | Type        | Default value | Description |
-|:-----------------|:-----------:|:-------------:|:------------|
-| `docstr`         | `str`       | -             | A help message string that will be parsed to create an object of command line arguments. We recommend to write a help message in the docstring of your Python script and use `__doc__` here. |
-| `argv`           | `list[str]` | `None`        | An argument vector to be parsed. YadOpt uses the command line arguments passed to your Python script, `sys.argv[1:]`, by default. |
-| `default_type`   | `str\|type` | `"auto"`      | Default data type of arguments and options. The default value `"auto"` means automatic determination. |
-| `force_continue` | `bool`      | `False`       | If `True`, do not exit the software regardless of whether YadOpt succeeds command line parsing or not. |
-
-### Returns
-
-The returned value is an instance of the `YadOptArgs` class that represents parsed
-command line arguments. The `YadOptArgs` class is a normal mutable Python
-class and users can access to parsed command line arguments by the dot notation.
-If you wish to convert `YadOptArgs` to dictionary type, please use `.to_dict()`
-function. Likewise, if you prefer an immutable data type, please try
-`.to_namedtuple()` function.
-
-### `yadopt.wrap`
-
-```python
-yadopt.wrap(*pargs, **kwargs) -> Callable
-```
-
-### Args
-
-The same as the arguments of `yadopt.parse` function.
-
-### Returns
-
-The `yadopt.wrap` is a Python decorator function that allows users to modify
-the behavior of functions or methods, therefore the returned value of this
-function is a callable object. The first argument of the target function of
-this decorator is curried by the result of `yadopt.parse` and the curried
-object will be returned.
+See [API reference](https://tiskw.github.io/yadopt/index.html#sec4).
