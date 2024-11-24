@@ -76,7 +76,7 @@ def parse(docstr: str, argv: list[str] = None, default_type: str|type = "auto",
     argv = list(retokenize(argv))
 
     # Parse the given docstring and create a data class.
-    docinfo, usage = parse_docstr(docstr)
+    docinfo, usage = parse_docstr(copy.copy(docstr))
 
     # Parse the given command line arguments.
     user_input = parse_argvec(argv, docinfo.usages, docinfo.opts)
@@ -107,10 +107,10 @@ def parse(docstr: str, argv: list[str] = None, default_type: str|type = "auto",
         sys.exit(os.EX_USAGE)
 
     # Returns data instance.
-    return generate_dat(user_input, docinfo.args, docinfo.opts)
+    return generate_dat(user_input, docinfo, argv)
 
 
-def wrap(*pargs, **kwargs) -> Callable:
+def wrap(*pargs: list, **kwargs: dict) -> Callable:
     """
     Wrapper function for the command line parsing.
 
@@ -142,7 +142,7 @@ def to_dict(args: YadOptArgs) -> dict:
     Returns:
         (dict): Dictionary of the given parsed arguments.
     """
-    return vars(args)
+    return {key:val for key, val in vars(args).items() if (key[0] != "_") and (key[-1] != "_")}
 
 
 def to_namedtuple(args: YadOptArgs) -> collections.namedtuple:
@@ -169,100 +169,77 @@ def save(path: str, args: YadOptArgs, **kwargs: dict):
         args   (YadOptArgs): Parsed command line arguments to be saved.
         kwargs (dict)      : Extra keyword arguments that will be passed to the dump functions.
     """
-    def get_class_str(value):
-        """
-        Returns string expression of the class of the given instance.
-        """
-        # Removes "<class '" from left and "'>" from right.
-        return repr(type(value))[8:-2]
-
     # Conver the given path as an instance of pathlib.Path.
     path = pathlib.Path(path)
-
-    # Convert to dictionary.
-    args_dict = to_dict(args)
 
     # Determine the open function.
     open_func = gzip.open if path.suffix.endswith(".gz") else open
 
-    # Case 1: JSON file.
-    if any(path.name.endswith(sfx) for sfx in [".json", ".json.gz"]):
+    # Case 1: a simple ".txt" file.
+    if any(path.name.endswith(sfx) for sfx in [".txt", ".txt.gz"]):
 
-        # Create a dictionary of data types for each values in the dictionary "args_dict".
-        data_types = {key:get_class_str(value) for key, value in args_dict.items()}
+        # Initialize the lines to be dumped.
+        lines = []
 
-        # Escape the pathlib.Path instance because it is not writable to JSON file.
-        args_dict = {k:(str(v) if isinstance(v, pathlib.Path) else v) for k, v in args_dict.items()}
+        # Append preceding tokens.
+        for key, value in args._user_.pres.items():
+            if value == True:
+                lines.append(key)
 
-        # Create a dictionary to be dumped as a JSON file.
-        contents = {"data": args_dict, "type": data_types}
+        # Append arguments.
+        for key, value in args._user_.args.items():
+            if value is not None:
+                lines.append(value)
 
-        # Compute the keyword arguments for the "json.dump" function.
-        extra_kwargs = {"indent": 4}
-        extra_kwargs.update(**kwargs)
+        # Append options.
+        for key, value in to_dict(args).items():
+            if key in args._user_.opts:
+                lines.append(f"--{key} {value}")
 
-        # Write to JSON file.
+        # Write to text file.
         with open_func(path, "wt") as ofp:
-            json.dump(contents, ofp, **extra_kwargs)
+            ofp.write("\n".join(lines))
 
-    # Case 2: pickle file.
-    elif any(path.name.endswith(sfx) for sfx in [".pkl", ".pkl.gz", ".pickle", ".pickle.gz"]):
-
-        # Write to pickle file.
-        with open_func(path, "wb") as ofp:
-            pickle.dump(args_dict, ofp, **kwargs)
+    # Case 2: a JSON file.
+    # The author is thinking to support JSON format too, but not implemented yet.
 
     # Otherwise: raise an error.
     else:
         raise YadOptError["invalid_file_type"]("yadopt.save", path)
 
 
-def load(path: str, **kwargs: dict) -> YadOptArgs:
+def load(path: str, docstr: str = None, **kwargs: dict) -> YadOptArgs:
     """
     Load a parsed command line arguments from JSON or pickle file.
 
     Args:
         path   (str) : Source path.
+        docstr (str) : Docstring to be parsed.
         kwargs (dict): Extra keyword arguments that will be passed to the load functions.
 
     Returns:
         (YadOptArgs): Restored parsed command line arguments.
     """
-    data_types_dict = {"bool": bool, "int": int, "float": float, "str": str,
-                       "pathlib.PosixPath": pathlib.Path,
-                       "pathlib.WindowsPath": pathlib.WindowsPath}
-
     # Conver the given path as an instance of pathlib.Path.
     path = pathlib.Path(path)
 
     # Determine the open function.
     open_func = gzip.open if path.suffix.endswith(".gz") else open
 
-    # Case 1: JSON file.
-    if any(path.name.endswith(sfx) for sfx in [".json", ".json.gz"]):
+    # Case 1: a simple ".txt" file.
+    if any(path.name.endswith(sfx) for sfx in [".txt", ".txt.gz"]):
 
-        # Load the JSON file.
-        with open_func(path, "rt") as ifp:
-            args_dict = json.load(ifp, **kwargs)
+        # Read the text file and make an argument vector.
+        argv = sum([line.split() for line in open_func(path, "rt")], [])
 
-        # Get data contents and data types.
-        args_dict, data_types = args_dict["data"], args_dict["type"]
+        # Append the first real argument vector at the top of the "argv".
+        argv = sys.argv[0:1] + argv
 
-        # Restore data types.
-        for key in list(args_dict.keys()):
-            dtype = data_types_dict[data_types[key]]
-            args_dict[key] = dtype(args_dict[key])
+        # Parse the argument vector using the given docstring.
+        return parse(docstr, argv)
 
-        return YadOptArgs(args_dict)
-
-    # Case 2: pickle file.
-    if any(path.name.endswith(sfx) for sfx in [".pkl", ".pkl.gz", ".pickle", ".pickle.gz"]):
-
-        # Load the pickle file.
-        with open_func(path, "rb") as ifp:
-            args_dict = pickle.load(ifp, **kwargs)
-
-        return YadOptArgs(args_dict)
+    # Case 2: a JSON file.
+    # The author is thinking to support JSON format too, but not implemented yet.
 
     # Otherwise: raise an error.
     raise YadOptError["invalid_file_type"]("yadopt.load", path)

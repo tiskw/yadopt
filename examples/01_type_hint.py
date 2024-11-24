@@ -3,7 +3,7 @@ Usage:
     01_type_hint.py <config_path> [--epochs INT] [--model STR] [--lr FLT]
     01_type_hint.py --help
 
-Train a neural network model.
+Example if type hinting.
 
 Arguments:
     config_path     Path to config file.

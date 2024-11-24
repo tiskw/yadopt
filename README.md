@@ -134,10 +134,15 @@ args = yadopt.to_namedtuple(yadopt.parse(__doc__))
 
 ### Restore arguments from dictionary or JSON file
 
-YadOpt has a function to save parsed argument instances as a JSON or pickle
-format, and to restore the argument instances from the JSON and pickle files.
+YadOpt has a function to save parsed argument instances as a text file,
+and to restore the argument instances from the text files.
+These functions probably be useful when recalling the same arguments
+that previously executed, for example, machine learning code.
 
 ```python
+# At first, create a parsed arguments (i.e. YadOptArgs instance).
+args = yadopt.parse(__doc__)
+
 # At first, create a parsed arguments (i.e. YadOptArgs instance).
 args = yadopt.parse(__doc__)
 
@@ -148,41 +153,10 @@ yadopt.save("args.json", args, indent=4)
 args_restored = yadopt.load("args.json")
 ```
 
-These functions are useful when recalling the arguments to previously executed
-commands, especially ML code.
-
-```python
-"""
-Usage:
-    train.py <config_path> [--epochs INT] [--model STR] [--lr FLT]
-    train.py --help
-
-Train a neural network model.
-
-Training options:
-    --epochs INT   The number of training epochs.   [default: 100]
-    --lr FLT       Learning rate.                   [default: 1.0E-3]
-
-Restore options:
-    --restore      Restore command options.         [default: None]
-
-Other options:
-    -h, --help     Show this help message and exit.
-"""
-
-import yadopt
-
-if __name__ == "__main__":
-
-    # Parse the docstring and command line arguments.
-    args = yadopt.parse(__doc__)
-
-    # Restore command options if specified.
-    if args.restore is not None:
-        args = yadopt.load(args.restore)
-
-    print(args)
-```
+The format of the text file is straightforward — just exactly what you would
+type on a command line under the normal use case. If you want to write
+the text file manually, the author recommends making a text file using
+the save function and investigating the contents of the file at first.
 
 
 API

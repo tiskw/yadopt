@@ -7,11 +7,13 @@ __all__ = ["generate_dat", "YadOptArgs"]
 
 # Import standard libraries.
 import ast
+import copy
 import itertools
 
 # Import custom modules.
 from .argopt import ArgEntry, OptEntry
 from .argvec import UserInput
+from .docstr import DocStrInfo
 
 
 class YadOptArgs:
@@ -26,11 +28,18 @@ class YadOptArgs:
             for key, value in args_dict.items():
                 setattr(self, key, value)
 
+    @property
+    def __normal_dict__(self):
+        """
+        Returns "normal" dictionary that contains keys not starting with the underscore.
+        """
+        return {key:value for key, value in self.__dict__.items() if not key.startswith("_")}
+
     def __repr__(self):
         """
         Representation of this class.
         """
-        contents = ", ".join(f"{key}={val}" for key, val in self.__dict__.items())
+        contents = ", ".join(f"{key}={val}" for key, val in self.__normal_dict__.items())
         return f"{self.__class__.__name__}({contents})"
 
     def __str__(self):
@@ -43,10 +52,10 @@ class YadOptArgs:
         """
         Returns True if equivarent.
         """
-        return vars(self) == vars(other)
+        return self.__normal_dict__ == other.__normal_dict__
 
 
-def generate_dat(uin: UserInput, args: list[ArgEntry], opts: list[OptEntry]) -> YadOptArgs:
+def generate_dat(user_input: UserInput, docinfo: DocStrInfo, argv: list[str]) -> YadOptArgs:
     """
     Create YadOptArgs instance, fill the values, and return it.
     """
@@ -54,14 +63,14 @@ def generate_dat(uin: UserInput, args: list[ArgEntry], opts: list[OptEntry]) -> 
     data = YadOptArgs()
 
     # Get a map from argument/option name to data type.
-    data_types = {item.name:item.data_type for item in itertools.chain(args, opts)}
+    data_types = {item.name:item.data_type for item in itertools.chain(docinfo.args, docinfo.opts)}
 
     # Fill user input preceding values.
-    for name, value in uin.pres.items():
+    for name, value in user_input.pres.items():
         setattr(data, name, bool(value))
 
     # Set default values.
-    for item in itertools.chain(args, opts):
+    for item in itertools.chain(docinfo.args, docinfo.opts):
 
         # Get typed default value.
         default = None if (item.default is None) else get_typed_data(item.default, item.data_type)
@@ -70,7 +79,7 @@ def generate_dat(uin: UserInput, args: list[ArgEntry], opts: list[OptEntry]) -> 
         setattr(data, item.name, default)
 
     # Fill user input arguments and options.
-    for name, value in (uin.args | uin.opts).items():
+    for name, value in (user_input.args | user_input.opts).items():
 
         # If the target value is list.
         if isinstance(value, list):
@@ -79,6 +88,11 @@ def generate_dat(uin: UserInput, args: list[ArgEntry], opts: list[OptEntry]) -> 
         # Otherwise.
         else:
             setattr(data, name, get_typed_data(value, data_types[name]))
+
+    # Append extra data.
+    setattr(data, "_info_", copy.deepcopy(docinfo))
+    setattr(data, "_user_", copy.deepcopy(user_input))
+    setattr(data, "_argv_", copy.deepcopy(argv))
 
     return data
 
