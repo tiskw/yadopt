@@ -15,20 +15,25 @@ import yadopt
 
 docstring = """
 Usage:
-    train.py subcmd1 [--bool BOOL] [--int INT] [--float FLOAT] [--str STR] [--path PATH]
-    train.py subcmd2 [--bool BOOL] [--int INT] [--float FLOAT] [--str STR] [--path PATH]
-    train.py subcmd3 [--bool BOOL] [--int INT] [--float FLOAT] [--str STR] [--path PATH]
+    train.py subcmd1 <arg1> [--bool BOOL] [--int INT] [--float FLOAT] [--str STR] [--path PATH]
+    train.py subcmd2 <arg2> [--bool BOOL] [--int INT] [--float FLOAT] [--str STR] [--path PATH]
+    train.py subcmd3 <arg3> [--bool BOOL] [--int INT] [--float FLOAT] [--str STR] [--path PATH]
+
+Arguments:
+    arg1           An argument for subcmd1.
+    arg2           An argument for subcmd2.
+    arg3           An argument for subcmd3.
 
 Options:
-    --bool BOOL    An option of type boolean.
-    --int INT      An option of type integer.
-    --float FLOAT  An option of type float.
-    --str STR      An option of type string.
-    --path PATH    An option of type path.
+    -b, --bool BOOL    An option of type boolean.
+    -i, --int INT      An option of type integer.
+    -f, --float FLOAT  An option of type float.
+    -s, --str STR      An option of type string.
+    -p, --path PATH    An option of type path.
 """
 
 commands = [
-    "train.py subcmd1 --bool True --int 6 --float 3.1416 --str hello --path ./dir",
+    "train.py subcmd1 path1 -b True --int 6 -f 3.1416 --str hello -p ./dir",
 ]
 
 
@@ -44,7 +49,7 @@ def check(index, args, command):
     print("  ->", args)
 
     if index == 0:
-        print(args)
+
         assert args.subcmd1 == True
         assert args.subcmd2 == False
         assert args.subcmd3 == False
@@ -54,9 +59,9 @@ def check(index, args, command):
         assert args.str == "hello"
         assert args.path == pathlib.Path("./dir")
 
-        for suffix in ["json", "json.gz", "pkl", "pkl.gz"]:
+        for suffix in ["txt", "txt.gz"]:
             yadopt.save(f"/tmp/yadopt_test_args.{suffix}", args)
-            args_restore = yadopt.load(f"/tmp/yadopt_test_args.{suffix}")
+            args_restore = yadopt.load(f"/tmp/yadopt_test_args.{suffix}", docstring)
             assert args == args_restore
 
     else:

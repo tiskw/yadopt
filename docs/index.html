@@ -140,49 +140,24 @@ args = yadopt.parse(__doc__).to_dict()
 # Convert the returned value to namedtuple.
 args = yadopt.parse(__doc__).to_namedtuple()</code></pre>
 
-                <h3>Restore arguments from JSON file</h3>
-                <p>YadOpt has a function to save parsed argument instances as a JSON or pickle format, <!--
-                -->and to restore the argument instances from the JSON and pickle files.</p>
+                <h3>Restore arguments from a text file</h3>
+                <p>YadOpt has a function to save parsed argument instances as a text file, <!--
+                -->and to restore the argument instances from the text files. These functions probably be useful when <!--
+                -->recalling the same arguments that previously executed, for example, machine learning code.</p>
                 <pre><code class="python"># At first, create a parsed arguments (i.e. YadOptArgs instance).
 args = yadopt.parse(__doc__)
 
-# Save the parsed arguments as a JSON file.
-yadopt.save("args.json", args, indent=4)
+# Save the parsed arguments as a text file.
+yadopt.save("args.txt", args)
 
 # Resotre parsed YadOptArgs instance from the JSON file.
-args_restored = yadopt.load("args.json")</code></pre>
-                <p>These functions are useful when recalling the arguments to previously executed commands, especially ML code.</p>
-                <pre><code class="python">&quot;&quot;&quot;
-Usage:
-    train.py <config_path> [--epochs INT] [--model STR] [--lr FLT]
-    train.py --help
+args_restored = yadopt.load("args.txt")
 
-Train a neural network model.
-
-Training options:
-    --epochs INT   The number of training epochs.   [default: 100]
-    --lr FLT       Learning rate.                   [default: 1.0E-3]
-
-Restore options:
-    --restore      Restore command options.         [default: None]
-
-Other options:
-    -h, --help     Show this help message and exit.
-&quot;&quot;&quot;
-
-import yadopt
-
-if __name__ == "__main__":
-
-    # Parse the docstring and command line arguments.
-    args = yadopt.parse(__doc__)
-
-    # Restore command options if specified.
-    if args.restore is not None:
-        args = yadopt.load(args.restore)
-
-    print(args)</code></pre>
-
+# The restored arguments are the same as the original.
+assert args == args_restored</code></pre>
+                <p>The format of the text file is straightforward &mdash; just exactly what you would type on a command line <!--
+                -->under the normal use case. If you want to write the text file manually, the author recommends making <!--
+                -->a text file using the <code>save</code> function and investigating the contents of the file at first.</p>
                 <!-- End of section 3 }}} -->
 
                 <!-- Section 4: API reference {{{ -->
@@ -204,7 +179,7 @@ if __name__ == "__main__":
                 <pre><code class="python">yadopt.parse(docstr: str,
              argv: list[str] = None,
              default_type: str = "auto",
-             force_continue: bool = False) -&gt; YadOptArgs</code></pre>
+             force_continue: bool = False) -&gt; YadOptArgs:</code></pre>
                 <p>Parse docstring and returns YadoptArgs instance.</p>
                 <h4>Args</h4>
                 <table class="pure-table pure-table-bordered"><thead><tr>
@@ -250,8 +225,8 @@ if __name__ == "__main__":
 
                 <!-- yadopt.wrap {{{ -->
                 <h3 id="reference:yadopt.wrap" class="reference-title">yadopt.wrap</h3>
-                <pre><code class="python">@yadopt.wrap
-yadopt.wrap(*pargs, **kwargs) -&gt; Callable</code></pre>
+                <pre><code class="python">yadopt.wrap(*pargs: list,
+            **kwargs: dict) -&gt; Callable:</code></pre>
                 <p>Wrapper function for the command line parsing.</p>
                 <h4>Args</h4>
                 <p>The same as the arguments of yadopt.parse function.</p>
@@ -264,7 +239,7 @@ yadopt.wrap(*pargs, **kwargs) -&gt; Callable</code></pre>
 
                 <!-- yadopt.to_dict {{{ -->
                 <h3 id="reference:yadopt.to_dict" class="reference-title">yadopt.to_dict</h3>
-                <pre><code class="python">def to_dict(args: YadOptArgs) -&gt; dict</code></pre>
+                <pre><code class="python">def to_dict(args: YadOptArgs) -&gt; dict:</code></pre>
                 <p>Convert <code class="python">YadOptArgs</code> instance to a dictionary.</p>
                 <h4>Args</h4>
                 <table class="pure-table pure-table-bordered"><thead><tr>
@@ -284,7 +259,7 @@ yadopt.wrap(*pargs, **kwargs) -&gt; Callable</code></pre>
 
                 <!-- yadopt.to_namedtuple {{{ -->
                 <h3 id="reference:yadopt.to_namedtuple" class="reference-title">yadopt.to_namedtuple</h3>
-                <pre><code class="python">def to_namedtuple(args: YadOptArgs) -&gt; collections.namedtuple</code></pre>
+                <pre><code class="python">def to_namedtuple(args: YadOptArgs) -&gt; collections.namedtuple:</code></pre>
                 <p>Convert YadOptArgs instance to a named tuple.</p>
                 <h4>Args</h4>
                 <table class="pure-table pure-table-bordered"><thead><tr>
@@ -299,12 +274,14 @@ yadopt.wrap(*pargs, **kwargs) -&gt; Callable</code></pre>
                     <td>Parsed command line arguments.</td>
                 </tr></tbody></table>
                 <h4>Returns</h4>
-                <p><code class="python">namedtuple</code>: Namedtuple of the given parsed arguments.</p>
+                <p><code class="python">collections.namedtuple</code>: Namedtuple of the given parsed arguments.</p>
                 <!-- }}} -->
 
                 <!-- yadopt.save {{{ -->
                 <h3 id="reference:yadopt.save" class="reference-title">yadopt.save</h3>
-                <pre><code class="python">def save(path: str, args: YadOptArgs, **kwargs: dict)</code></pre>
+                <pre><code class="python">def save(path: str,
+         args: YadOptArgs,
+         **kwargs: dict) -&gt; None:</code></pre>
                 <p>Save the parsed command line arguments as JSON or pickle file.</p>
                 <h4>Args</h4>
                 <table class="pure-table pure-table-bordered"><thead><tr>
@@ -334,7 +311,8 @@ yadopt.wrap(*pargs, **kwargs) -&gt; Callable</code></pre>
 
                 <!-- yadopt.load {{{ -->
                 <h3 id="reference:yadopt.save" class="reference-title">yadopt.load</h3>
-                <pre><code class="python">def load(path: str, **kwargs: dict) -&gt; YadOptArgs:</code></pre>
+                <pre><code class="python">def load(path: str,
+         **kwargs: dict) -&gt; YadOptArgs:</code></pre>
                 <p>Load a parsed command line arguments from JSON or pickle file.</p>
                 <h4>Args</h4>
                 <table class="pure-table pure-table-bordered"><thead><tr>

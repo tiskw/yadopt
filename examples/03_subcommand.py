@@ -4,7 +4,7 @@ Usage:
     03_subcommand.py bar [--bar_opt INT]
     03_subcommand.py --help
 
-Test of subcommand in YadOpt.
+Example of subcommands.
 
 Options:
     --foo_opt INT   Options of subcommand foo.   [default: 0]
@@ -13,9 +13,6 @@ Options:
 Other options:
     -h, --help      Show this help message and exit.
 """
-
-# Import standard libraries.
-import pathlib
 
 # Import YadOpt.
 import yadopt

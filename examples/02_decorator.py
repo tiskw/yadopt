@@ -3,7 +3,7 @@ Usage:
     02_decorator.py <config_path> [--epochs INT] [--model STR] [--lr FLT]
     02_decorator.py --help
 
-Train a neural network model.
+Example of the decorator "yadopt.wrap".
 
 Arguments:
     config_path     Path to config file.
@@ -16,9 +16,6 @@ Training options:
 Other options:
     -h, --help      Show this help message and exit.
 """
-
-# Import standard libraries.
-import pathlib
 
 # Import YadOpt.
 import yadopt

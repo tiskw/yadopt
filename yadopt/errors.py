@@ -150,9 +150,9 @@ class YadOptErrorInvalidFileType(YadOptErrorBase):
       Argument of {0}: {1}
 
     Details:
-      The "yadopt.save" and "yadopt.load" functions support only JSON and pickle format,
-      and gzipped version of them. However, this error indicates that the other
-      suffixes than ".json", ".json.gz", ".pickle", ".pickle.gz" is specified.
+      The "yadopt.save" and "yadopt.load" functions support only ".txt" format, and gzipped
+      version of it. However, this error indicates that the other suffixe than
+      ".txt", ".txt.gz" is specified.
 
     Solution:
       Please specify the supported file type.
