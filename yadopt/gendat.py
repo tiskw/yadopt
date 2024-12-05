@@ -11,7 +11,6 @@ import copy
 import itertools
 
 # Import custom modules.
-from .argopt import ArgEntry, OptEntry
 from .argvec import UserInput
 from .docstr import DocStrInfo
 
@@ -108,12 +107,26 @@ def get_typed_data(value, data_type):
     Returns:
         (object): Typed value.
     """
+    def strtobool(s: str) -> bool:
+        """
+        Convert the given string to bool instance.
+        """
+        if s.lower() in {"t", "true", "y", "yes", "on", "1"}:
+            return True
+        if s.lower() in {"f", "false", "n", "no", "off", "0"}:
+            return False
+        return None
+
     # Automatically determine the data type if the data_type is None.
     if data_type is None:
         try:
             return ast.literal_eval(value)
         except ValueError:
             return str(value)
+
+    # Convert string to bool.
+    if data_type == bool and isinstance(value, str):
+        return strtobool(value)
 
     return data_type(value)
 

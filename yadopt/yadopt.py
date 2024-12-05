@@ -11,10 +11,8 @@ import copy
 import functools
 import gzip
 import inspect
-import json
 import os
 import pathlib
-import pickle
 import sys
 
 # For type hinting.
@@ -160,14 +158,13 @@ def to_namedtuple(args: YadOptArgs) -> collections.namedtuple:
     return collections.namedtuple("YadOptArgsNamedtuple", fields)(**args_d)
 
 
-def save(path: str, args: YadOptArgs, **kwargs: dict):
+def save(path: str, args: YadOptArgs):
     """
-    Save the parsed command line arguments as JSON or pickle file.
+    Save the parsed command line arguments as a text file.
 
     Args:
-        path   (str)       : Destination path.
-        args   (YadOptArgs): Parsed command line arguments to be saved.
-        kwargs (dict)      : Extra keyword arguments that will be passed to the dump functions.
+        path (str)       : Destination path.
+        args (YadOptArgs): Parsed command line arguments to be saved.
     """
     # Conver the given path as an instance of pathlib.Path.
     path = pathlib.Path(path)
@@ -182,18 +179,18 @@ def save(path: str, args: YadOptArgs, **kwargs: dict):
         lines = []
 
         # Append preceding tokens.
-        for key, value in args._user_.pres.items():
-            if value == True:
+        for key, value in getattr(args, "_user_").pres.items():
+            if value is True:
                 lines.append(key)
 
         # Append arguments.
-        for key, value in args._user_.args.items():
+        for key, value in getattr(args, "_user_").args.items():
             if value is not None:
                 lines.append(value)
 
         # Append options.
         for key, value in to_dict(args).items():
-            if key in args._user_.opts:
+            if key in getattr(args, "_user_").opts:
                 lines.append(f"--{key} {value}")
 
         # Write to text file.
@@ -208,14 +205,13 @@ def save(path: str, args: YadOptArgs, **kwargs: dict):
         raise YadOptError["invalid_file_type"]("yadopt.save", path)
 
 
-def load(path: str, docstr: str = None, **kwargs: dict) -> YadOptArgs:
+def load(path: str, docstr: str = None) -> YadOptArgs:
     """
-    Load a parsed command line arguments from JSON or pickle file.
+    Load a parsed command line arguments from a text file.
 
     Args:
         path   (str) : Source path.
         docstr (str) : Docstring to be parsed.
-        kwargs (dict): Extra keyword arguments that will be passed to the load functions.
 
     Returns:
         (YadOptArgs): Restored parsed command line arguments.

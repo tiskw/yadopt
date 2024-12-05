@@ -85,10 +85,10 @@ def parse_usage(line: str) -> UsageEntry:
     Examples:
     >>> parse_usage("sample.py <arg1> <arg2> [--opt1]")
     UsageEntry(pres=['sample.py'], args=['arg1', 'arg2'], opts={'opt1': None}, mopt=set())
-    >>> parse_usage("sample.py subcmd <arg1> [--opt1] [--opt2 val2]")
-    UsageEntry(pres=['sample.py', 'subcmd'], args=['arg1'], opts={'opt1': None, 'opt2': 'val2'}, mopt=set())
-    >>> parse_usage("sample.py subcmd <arg1> --opt1 [--opt2 val2]")
-    UsageEntry(pres=['sample.py', 'subcmd'], args=['arg1'], opts={'opt1': None, 'opt2': 'val2'}, mopt={'opt1'})
+    >>> parse_usage("sample.py subcmd <arg1> [--opt1]")
+    UsageEntry(pres=['sample.py', 'subcmd'], args=['arg1'], opts={'opt1': None}, mopt=set())
+    >>> parse_usage("sample.py subcmd <arg1> --opt1")
+    UsageEntry(pres=['sample.py', 'subcmd'], args=['arg1'], opts={'opt1': None}, mopt={'opt1'})
     """
     def is_arg(token):
         return token.startswith("<") and token.endswith(">")
