@@ -166,16 +166,16 @@ assert args == args_restored</code></pre>
                 <!-- Table of contents -->
                 <h3>Contents</h3>
                 <ul>
-                    <li><a href="#reference:yadopt.parse">yadopt.parse</a></li>
-                    <li><a href="#reference:yadopt.wrap">yadopt.wrap</a></li>
-                    <li><a href="#reference:yadopt.to_dict">yadopt.to_dict</a></li>
-                    <li><a href="#reference:yadopt.to_namedtuple">yadopt.to_namedtuple</a></li>
-                    <li><a href="#reference:yadopt.save">yadopt.save</a></li>
-                    <li><a href="#reference:yadopt.load">yadopt.load</a></li>
+                    <li><a href="#reference_yadopt_parse">yadopt.parse</a></li>
+                    <li><a href="#reference_yadopt_wrap">yadopt.wrap</a></li>
+                    <li><a href="#reference_yadopt_to_dict">yadopt.to_dict</a></li>
+                    <li><a href="#reference_yadopt_to_namedtuple">yadopt.to_namedtuple</a></li>
+                    <li><a href="#reference_yadopt_save">yadopt.save</a></li>
+                    <li><a href="#reference_yadopt_load">yadopt.load</a></li>
                 </ul>
 
                 <!-- yadopt.parse {{{ -->
-                <h3 id="reference:yadopt.parse" class="reference-title">yadopt.parse</h3>
+                <h3 id="reference_yadopt_parse" class="reference-title">yadopt.parse</h3>
                 <pre><code class="python">yadopt.parse(docstr: str,
              argv: list[str] = None,
              default_type: str = "auto",
@@ -224,9 +224,8 @@ assert args == args_restored</code></pre>
                 <!-- }}} -->
 
                 <!-- yadopt.wrap {{{ -->
-                <h3 id="reference:yadopt.wrap" class="reference-title">yadopt.wrap</h3>
-                <pre><code class="python">yadopt.wrap(*pargs: list,
-            **kwargs: dict) -&gt; Callable:</code></pre>
+                <h3 id="reference_yadopt_wrap" class="reference-title">yadopt.wrap</h3>
+                <pre><code class="python">yadopt.wrap(*pargs: list, **kwargs: dict) -&gt; Callable:</code></pre>
                 <p>Wrapper function for the command line parsing.</p>
                 <h4>Args</h4>
                 <p>The same as the arguments of yadopt.parse function.</p>
@@ -238,7 +237,7 @@ assert args == args_restored</code></pre>
                 <!-- }}} -->
 
                 <!-- yadopt.to_dict {{{ -->
-                <h3 id="reference:yadopt.to_dict" class="reference-title">yadopt.to_dict</h3>
+                <h3 id="reference_yadopt_to_dict" class="reference-title">yadopt.to_dict</h3>
                 <pre><code class="python">def to_dict(args: YadOptArgs) -&gt; dict:</code></pre>
                 <p>Convert <code class="python">YadOptArgs</code> instance to a dictionary.</p>
                 <h4>Args</h4>
@@ -258,7 +257,7 @@ assert args == args_restored</code></pre>
                 <!-- }}} -->
 
                 <!-- yadopt.to_namedtuple {{{ -->
-                <h3 id="reference:yadopt.to_namedtuple" class="reference-title">yadopt.to_namedtuple</h3>
+                <h3 id="reference_yadopt_to_namedtuple" class="reference-title">yadopt.to_namedtuple</h3>
                 <pre><code class="python">def to_namedtuple(args: YadOptArgs) -&gt; collections.namedtuple:</code></pre>
                 <p>Convert YadOptArgs instance to a named tuple.</p>
                 <h4>Args</h4>
@@ -278,11 +277,9 @@ assert args == args_restored</code></pre>
                 <!-- }}} -->
 
                 <!-- yadopt.save {{{ -->
-                <h3 id="reference:yadopt.save" class="reference-title">yadopt.save</h3>
-                <pre><code class="python">def save(path: str,
-         args: YadOptArgs,
-         **kwargs: dict) -&gt; None:</code></pre>
-                <p>Save the parsed command line arguments as JSON or pickle file.</p>
+                <h3 id="reference_yadopt_save" class="reference-title">yadopt.save</h3>
+                <pre><code class="python">def save(path: str, args: YadOptArgs) -&gt; None:</code></pre>
+                <p>Save the parsed command line arguments as a text file.</p>
                 <h4>Args</h4>
                 <table class="pure-table pure-table-bordered"><thead><tr>
                     <th>Name</th>
@@ -299,21 +296,15 @@ assert args == args_restored</code></pre>
                     <td><code class="python">YadOptArgs</code></td>
                     <td>-</td>
                     <td>Parsed command line arguments to be saved.</td>
-                </tr><tr>
-                    <td><code class="python">kwargs</code></td>
-                    <td><code class="python">dict</code></td>
-                    <td><code class="python">{}</code></td>
-                    <td>Extra keyword arguments that will be passed to the dump functions.</td>
                 </tr></tbody></table>
                 <h4>Returns</h4>
                 <p>Nothing.</p>
                 <!-- }}} -->
 
                 <!-- yadopt.load {{{ -->
-                <h3 id="reference:yadopt.save" class="reference-title">yadopt.load</h3>
-                <pre><code class="python">def load(path: str,
-         **kwargs: dict) -&gt; YadOptArgs:</code></pre>
-                <p>Load a parsed command line arguments from JSON or pickle file.</p>
+                <h3 id="reference_yadopt_load" class="reference-title">yadopt.load</h3>
+                <pre><code class="python">def load(path: str) -&gt; YadOptArgs:</code></pre>
+                <p>Load a parsed command line arguments from text file.</p>
                 <h4>Args</h4>
                 <table class="pure-table pure-table-bordered"><thead><tr>
                     <th>Name</th>
@@ -325,11 +316,6 @@ assert args == args_restored</code></pre>
                     <td><code class="python">str</code></td>
                     <td>-</td>
                     <td>Source path.</td>
-                </tr><tr>
-                    <td><code class="python">kwargs</code></td>
-                    <td><code class="python">dict</code></td>
-                    <td><code class="python">{}</code></td>
-                    <td>Extra keyword arguments that will be passed to the load functions.</td>
                 </tr></tbody></table>
                 <h4>Returns</h4>
                 <p><code class="python">YadOptArgs</code>: Restored parsed command line arguments.</p>
