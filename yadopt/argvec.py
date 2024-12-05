@@ -139,6 +139,10 @@ def match_argvec_and_usage(argv: list[str], usage: UsageEntry) -> UserInput:
     if any(not arg.endswith("...") for arg in available_args):
         return None
 
+    # If any of the required options are missing, that means the usage does not match.
+    if not all(opt_mandatory in user_input.opts for opt_mandatory in usage.mopt):
+        return None
+
     return user_input
 
 
