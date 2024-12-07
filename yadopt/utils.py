@@ -20,8 +20,8 @@ def get_default(description: str) -> tuple:
         (tuple): A tuple of (rest of description, default value string).
 
     Examples:
-    >>> get_default("sample description [default: value]")
-    ('sample description', 'value')
+        >>> get_default("sample description [default: value]")
+        ('sample description', 'value')
     """
     default_pattern = r"^(.*)\s+\[default:\s*([^\]]+)\]\s*$"
 
@@ -36,7 +36,7 @@ def get_default(description: str) -> tuple:
     return (m.group(1).strip(), m.group(2).strip())
 
 
-def get_error_marker(line, token):
+def get_error_marker(line: str, token: str) -> str:
     """
     Args:
         line  (str): Entire line.
@@ -46,10 +46,10 @@ def get_error_marker(line, token):
         (str): Error marker string like.
 
     Examples:
-    >>> get_error_marker("this is a pen", "pen")
-    '          ^^^'
-    >>> get_error_marker("this is a pen", "pencil")
-    '             '
+        >>> get_error_marker("this is a pen", "pen")
+        '          ^^^'
+        >>> get_error_marker("this is a pen", "pencil")
+        '             '
     """
     pos = line.find(token)
 
@@ -60,7 +60,7 @@ def get_error_marker(line, token):
     return " " * pos + "^" * len(token) + " " * (len(line) - len(token) - pos)
 
 
-def match_and_get(line: str, patterns_and_indices: list) -> tuple:
+def match_and_get(line: str, patterns_and_indices: list) -> tuple[str]:
     """
     Parse the given string and returns specified matched strings.
 
@@ -73,8 +73,8 @@ def match_and_get(line: str, patterns_and_indices: list) -> tuple:
                       and the rest of matched strings.
 
     Examples:
-    >>> match_and_get("-h, --help", [(r"-(\\w+), --(\\w+)", (2, 1), None)])
-    ('help', 'h', '', None)
+        >>> match_and_get("-h, --help", [(r"-(\\w+), --(\\w+)", (2, 1), None)])
+        ('help', 'h', '', None)
     """
     # Get the number of indices for each pattern.
     n_indices = len(patterns_and_indices[0][1])
@@ -99,7 +99,7 @@ def match_and_get(line: str, patterns_and_indices: list) -> tuple:
     return tuple([None] * (n_indices + 2))
 
 
-def remove_indent(text):
+def remove_indent(text: str) -> str:
     """
     Remove common indent from the given text.
 
@@ -110,8 +110,8 @@ def remove_indent(text):
         (str): Text after removing the common indent.
 
     Examples:
-    >>> remove_indent("  A\\n  B\\n  C")
-    'A\\nB\\nC'
+        >>> remove_indent("  A\\n  B\\n  C")
+        'A\\nB\\nC'
     """
     # Get non-empty lines.
     lines = [line for line in text.split("\n") if line.strip()]
@@ -131,15 +131,13 @@ def retokenize(argv: list[str]) -> Generator[str]:
 
     Returns:
         (Generator[str]): Re-tokenized tokens.
+
+    Examples:
+        >>> list(retokenize(["A=a", "B=b"]))
+        ['A', 'a', 'B', 'b']
     """
     for token in argv:
         yield from token.split("=", maxsplit=1)
-
-
-# Direct invocation of this script is intended as unit testing.
-if __name__ == "__main__":
-    import doctest
-    doctest.testmod()
 
 
 # vim: expandtab tabstop=4 shiftwidth=4 fdm=marker

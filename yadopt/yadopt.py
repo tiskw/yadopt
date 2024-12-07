@@ -56,7 +56,7 @@ def parse(docstr: str, argv: list[str] = None, default_type: str|type = "auto",
     Args:
         docstr         (str)      : Docstring to be parsed.
         argv           (list[str]): Argument vector.
-        default_type   (str)      : Default type.
+        default_type   (str|type) : Default type.
         force_continue (bool)     : Never exit the software if True.
 
     Returns:

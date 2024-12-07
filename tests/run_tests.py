@@ -1,4 +1,5 @@
 """
+Run all test at once.
 """
 
 # Import standard libraries.
@@ -21,6 +22,12 @@ def main():
     """
     Main function of test.
     """
+    # Run unittests.
+    print(f"Test: run_all_unittests")
+    unit_test = importlib.import_module("unit_test")
+    unit_test.run_all_unittests()
+    print(f"  -> {COLOR_GREEN}Passed{COLOR_NONE}")
+
     # Run all test cases.
     for path_py in sorted(pathlib.Path(__file__).parent.glob("testcase??.py")):
 

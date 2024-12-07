@@ -36,7 +36,8 @@
                 <li class="pure-menu-item"><a href="#sec1" class="pure-menu-link">What's YadOpt?</a></li>
                 <li class="pure-menu-item"><a href="#sec2" class="pure-menu-link">Installation</a></li>
                 <li class="pure-menu-item"><a href="#sec3" class="pure-menu-link">Usage</a></li>
-                <li class="pure-menu-item"><a href="#sec4" class="pure-menu-link">API reference</a></li>
+                <li class="pure-menu-item"><a href="#sec4" class="pure-menu-link">Type hints</a></li>
+                <li class="pure-menu-item"><a href="#sec5" class="pure-menu-link">API reference</a></li>
             </ul>
         </div></div>
         <!-- }}} -->
@@ -160,8 +161,112 @@ assert args == args_restored</code></pre>
                 -->a text file using the <code>save</code> function and investigating the contents of the file at first.</p>
                 <!-- End of section 3 }}} -->
 
-                <!-- Section 4: API reference {{{ -->
-                <h2 id="sec4" class="content-subhead">API reference</h2>
+                <!-- Section 4: Type hints {{{ -->
+                <h2 id="sec4" class="content-subhead">Type hints</h2>
+                <p>One of the features of YadOpt is that users can provide type hints to arguments and options. <!--
+                -->For example, if an option <code class="console">--opt</code> is defined as <code class="console">--opt INT</code>, <!--
+                -->then the value of <code class="console">--opt</code> is parsed as an integer. There are several ways <!--
+                -->to provide type hints to arguments and options, we list them all below with minimal example code.</p>
+
+                <h3>1. Type hints for arguments</h3>
+
+                <h4>1.1 Parentheses rule</h4>
+                <p>If a description begins with parentheses, the content within the parentheses is treated as a type name, <!--
+                -->and the argument value is converted to the specified type. Note that the argument value is kept as a string <!--
+                -->if the specified type name is invalid.</p>
+                <pre><code class="python">"""
+Usage:
+    sample.py &lt;arg&gt;
+
+Options:
+    arg    (int) Integer argument.
+"""
+
+import yadopt
+
+args = yadopt.parse(__doc__)
+
+assert isinstance(args.arg, int)</code></pre>
+
+                <h4>1.2 Postfix rule for argument name</h4>
+                <p>Another way to provide type hints to arguments is adding type name at the end of argument names. <!--
+                -->For example, argument <code class="console">x_int</code> is parsed as an integer value.</p>
+                <pre><code class="python">"""
+Usage:
+    sample.py &lt;arg_int&gt;
+
+Options:
+    arg_int    Integer argument.
+"""
+
+import yadopt
+
+args = yadopt.parse(__doc__)
+
+assert isinstance(args.arg_int, int)</code></pre>
+
+
+                <h3>2. Type hints for options</h3>
+
+                <h4>2.1 Parentheses rule</h4>
+                <p>The same as the parentheses rule for arguments.</p>
+                <pre><code class="python">"""
+Usage:
+    sample.py [--opt VALUE]
+
+Options:
+    --opt VALUE   (int) Integer option.
+"""
+
+import yadopt
+
+args = yadopt.parse(__doc__)
+
+assert isinstance(args.opt, int)</code></pre>
+
+                <h4>2.2 Postfix rule for option value name</h4>
+                <p>The prefix rules also work for option arguments. However, please note that <!--
+                -->the type name should be added at the end of the option value name, not the option name. <!--
+                -->You'll see this form of type hinting most often in code examples.</p>
+                <pre><code class="python">"""
+Usage:
+    sample.py [--opt INT]
+
+Options:
+    --opt INT   Integer option.
+"""
+
+import yadopt
+
+args = yadopt.parse(__doc__)
+
+assert isinstance(args.opt, int)</code></pre>
+
+                <h3>Available type names</h3>
+                <table class="pure-table pure-table-bordered"><thead><tr>
+                    <th>Data type in Python</th>
+                    <th>Type name in YadOpt</th>
+                </tr></thead><tbody><tr>
+                    <td><code class="python">bool</code></td>
+                    <td>bool, BOOL, boolean, BOOLEAN</td>
+                </tr><tr>
+                    <td><code class="python">int</code></td>
+                    <td>int, INT, integer, INTEGER</td>
+                </tr><tr>
+                    <td><code class="python">float</code></td>
+                    <td>flt, FLT, float FLOAT</td>
+                </tr><tr>
+                    <td><code class="python">str</code></td>
+                    <td>str, STR, string, STRING</td>
+                </tr><tr>
+                    <td><code class="python">pathlib.Path</code></td>
+                    <td>path, PATH</td>
+                </tr></tbody></table>
+
+                <!-- End of section 4 }}} -->
+
+                <!-- Section 5: API reference {{{ -->
+                <h2 id="sec5" class="content-subhead">API reference</h2>
 
                 <!-- Table of contents -->
                 <h3>Contents</h3>

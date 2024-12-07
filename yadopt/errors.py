@@ -18,19 +18,19 @@ class YadOptErrorBase(Exception):
     <https://github.com/tiskw/yadopt/issues>
     """.rstrip())
 
-    def __init__(self, *pargs):
+    def __init__(self, *pargs: tuple):
         """
         Constructor.
         """
         self.pargs = pargs
 
-    def __str__(self):
+    def __str__(self) -> str:
         """
         Returns string expression of this error.
         """
         return self.stringify(*self.pargs)
 
-    def stringify(self, *pargs, **kwargs):
+    def stringify(self, *pargs: tuple, **kwargs: dict) -> str:
         """
         Convert myself to a string.
         """
@@ -59,7 +59,7 @@ class YadOptErrorUsageParse(YadOptErrorBase):
       sorry. Please see the YadOpt documentation and modigy your usage pattern
       in the usage section.
     """
-    def __str__(self):
+    def __str__(self) -> str:
         """
         Returns string expression of this error.
         """
@@ -101,7 +101,7 @@ class YadOptErrorInvalidConstant(YadOptErrorBase):
       the argument, not constant token, please enclose the token in angle brackets
       because all arguments should be enclosed by brackets in the usage section.
     """
-    def __str__(self):
+    def __str__(self) -> str:
         """
         Returns string expression of this error.
         """

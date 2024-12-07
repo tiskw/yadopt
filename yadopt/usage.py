@@ -35,10 +35,10 @@ def tokenize(usage: str, strip: bool = True, drop_empty_token: bool = True):
         drop_empty_token  (bool): Drop empty token if True.
 
     Examples:
-    >>> list(tokenize("sample.py <arg1> [--opt1]"))
-    ['sample.py', '<arg1>', '[--opt1]']
-    >>> list(tokenize("sample.py subcmd <arg1> <arg2> [--opt1] [--opt2 val2]"))
-    ['sample.py', 'subcmd', '<arg1>', '<arg2>', '[--opt1]', '[--opt2 val2]']
+        >>> list(tokenize("sample.py <arg1> [--opt1]"))
+        ['sample.py', '<arg1>', '[--opt1]']
+        >>> list(tokenize("sample.py subcmd <arg1> <arg2> [--opt1] [--opt2 val2]"))
+        ['sample.py', 'subcmd', '<arg1>', '<arg2>', '[--opt1]', '[--opt2 val2]']
     """
     token_patterns = [
         r"\s+",                    # Whitespace
@@ -83,12 +83,12 @@ def parse_usage(line: str) -> UsageEntry:
         line (str): Input usage string.
 
     Examples:
-    >>> parse_usage("sample.py <arg1> <arg2> [--opt1]")
-    UsageEntry(pres=['sample.py'], args=['arg1', 'arg2'], opts={'opt1': None}, mopt=set())
-    >>> parse_usage("sample.py subcmd <arg1> [--opt1]")
-    UsageEntry(pres=['sample.py', 'subcmd'], args=['arg1'], opts={'opt1': None}, mopt=set())
-    >>> parse_usage("sample.py subcmd <arg1> --opt1")
-    UsageEntry(pres=['sample.py', 'subcmd'], args=['arg1'], opts={'opt1': None}, mopt={'opt1'})
+        >>> parse_usage("sample.py <arg1> <arg2> [--opt1]")
+        UsageEntry(pres=['sample.py'], args=['arg1', 'arg2'], opts={'opt1': None}, mopt=set())
+        >>> parse_usage("sample.py subcmd <arg1> [--opt1]")
+        UsageEntry(pres=['sample.py', 'subcmd'], args=['arg1'], opts={'opt1': None}, mopt=set())
+        >>> parse_usage("sample.py subcmd <arg1> --opt1")
+        UsageEntry(pres=['sample.py', 'subcmd'], args=['arg1'], opts={'opt1': None}, mopt={'opt1'})
     """
     def is_arg(token):
         return token.startswith("<") and token.endswith(">")
@@ -130,11 +130,6 @@ def parse_usage(line: str) -> UsageEntry:
             pattern.mopt.add(parse_opt(token)[0])
 
     return pattern
-
-
-if __name__ == "__main__":
-    import doctest
-    doctest.testmod()
 
 
 # vim: expandtab tabstop=4 shiftwidth=4 fdm=marker
