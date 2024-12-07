@@ -1,5 +1,5 @@
 """
-Testcase 12: error check - usage parse
+Testcase 13: error check - usage parse
 """
 
 # Import standard libraries.
@@ -11,19 +11,16 @@ import traceback
 
 docstring = """
 Usage:
-    cmd <config_path>
-    cmd --help
+    sample.py --opt VALUE
+    sample.py --help
 
-Arguments:
-    config_path    Path to config
-
-Other options:
+Options:
+    --opt VALUE    Option with value.
     -h, --help     Show this help message and exit.
 """
 
 commands = [
-    "sample.py",
-    "sample.py file.txt",
+    "sample.py --opt value",
     "sample.py --help",
 ]
 
@@ -40,12 +37,9 @@ def check(index, args, command):
     print("  ->", args)
 
     if index == 0:
-        assert args is None
+        assert args.opt == "value"
 
     elif index == 1:
-        assert args.config_path == pathlib.Path("file.txt")
-
-    elif index == 2:
         assert args is None
 
     else:

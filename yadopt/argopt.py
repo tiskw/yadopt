@@ -37,7 +37,7 @@ class OptEntry:
     default    : str   # Default value (string).
 
 
-def parse_argopt(line: str) -> ArgEntry | OptEntry | None:
+def parse_argopt(line: str) -> ArgEntry|OptEntry|None:
     """
     Parse a line of argument/option section.
 
@@ -46,6 +46,14 @@ def parse_argopt(line: str) -> ArgEntry | OptEntry | None:
 
     Returns:
         (ArgEntry|OptEntry): Parsed result.
+
+    Examples:
+        >>> parse_argopt(" -o   m")
+        OptEntry(name='o', name_alt=None, data_type=None, n_args=0, description='m', default=None)
+        >>> parse_argopt(" --opt   m")
+        OptEntry(name='opt', name_alt=None, data_type=None, n_args=0, description='m', default=None)
+        >>> parse_argopt(" -o, --opt   m")
+        OptEntry(name='opt', name_alt='o', data_type=None, n_args=0, description='m', default=None)
     """
     arg_patterns_and_indices = [
         # regular expression, (name, ), None
@@ -104,12 +112,18 @@ def get_type(var_name: str, description: str) -> tuple[type, str]:
 
     Returns:
         (type): An appropriate Python data type.
+
+    Examples:
+        >>> get_type("x_int", "Integer value.")
+        (<class 'int'>, 'Integer value.')
+        >>> get_type("x", "(int) Integer value.")
+        (<class 'int'>, 'Integer value.')
     """
-    name_type_map = {"bool" : bool, "boolean": bool,
-                     "int"  : int, "integer": int,
-                     "flt"  : float, "float": float,
-                     "path" : pathlib.Path,
-                     "str"  : str, "string": str}
+    name_type_map = {"bool": bool, "boolean": bool,
+                     "int": int, "integer": int,
+                     "flt": float, "float": float,
+                     "str": str, "string": str,
+                     "path": pathlib.Path}
 
     # Try to get type from the description.
     m = re.match(r"\s*\((\w+)\)\s*", description)
@@ -118,6 +132,7 @@ def get_type(var_name: str, description: str) -> tuple[type, str]:
         description = description[len(m.group(0)):]
         return (data_type, description)
 
+    # Conservative error handling.
     if not isinstance(var_name, str):
         return (None, description)
 

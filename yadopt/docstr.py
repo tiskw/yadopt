@@ -71,12 +71,15 @@ def split_section(docstr: str) -> tuple[str, list]:
         yield (sec_name, sec_contents)
 
 
-def parse_docstr(docstr: str):
+def parse_docstr(docstr: str) -> tuple[DocStrInfo, str]:
     """
     Parse the given docstring and create a data class.
 
     Args:
         docstr (str) : The target docstring.
+
+    Returns:
+        (tuple): A pair of DocStrInfo and usage descriptions.
     """
     # Initialize output variable.
     dsinfo = DocStrInfo([], [], [])

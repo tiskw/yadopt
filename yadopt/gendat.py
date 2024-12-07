@@ -57,6 +57,11 @@ class YadOptArgs:
 def generate_dat(user_input: UserInput, docinfo: DocStrInfo, argv: list[str]) -> YadOptArgs:
     """
     Create YadOptArgs instance, fill the values, and return it.
+
+    Args:
+        user_input (UserInput) : Parsed user input.
+        docinfo    (DocStrInfo): Parsed docstring info.
+        argv       (list[str]) : Argument vector.
     """
     # Create data instance.
     data = YadOptArgs()
@@ -96,7 +101,7 @@ def generate_dat(user_input: UserInput, docinfo: DocStrInfo, argv: list[str]) ->
     return data
 
 
-def get_typed_data(value, data_type):
+def get_typed_data(value: str, data_type: type):
     """
     Returns typed value.
 
@@ -106,10 +111,22 @@ def get_typed_data(value, data_type):
 
     Returns:
         (object): Typed value.
+
+    Examples:
+        >>> (get_typed_data("1", int),)
+        (1,)
+        >>> (get_typed_data("False", bool),)
+        (False,)
+        >>> (get_typed_data("1", None),)
+        (1,)
+        >>> (get_typed_data(None, int),)
+        (None,)
     """
     def strtobool(s: str) -> bool:
         """
         Convert the given string to bool instance.
+        The function `bool(...)` is not suitable for this purpose,
+        because `bool("False")` returns `True`.
         """
         if s.lower() in {"t", "true", "y", "yes", "on", "1"}:
             return True
@@ -128,7 +145,7 @@ def get_typed_data(value, data_type):
     if data_type == bool and isinstance(value, str):
         return strtobool(value)
 
-    return data_type(value)
+    return data_type(value) if (value is not None) else None
 
 
 # vim: expandtab tabstop=4 shiftwidth=4 fdm=marker
