@@ -20,10 +20,12 @@ from collections.abc import Callable
 
 # Import custom modules.
 from .argvec  import parse_argvec
-from .docstr  import parse_docstr
-from .errors  import YadOptError
-from .gendat  import generate_dat, YadOptArgs
 from .checker import check_user_input
+from .docstr  import parse_docstr
+from .dtypes  import YadOptArgs, DocStrInfo, UserInput
+from .errors  import YadOptError
+from .gendat  import generate_data
+from .hints   import type_hint
 from .utils   import retokenize
 
 
@@ -48,7 +50,7 @@ def print_error_message_user_input_not_match(usage: str, frame_info: inspect.Fra
     print(f"Error at {err_pos}: error: user input does not match with the usage")
 
 
-def parse(docstr: str, argv: list[str] = None, default_type: str|type = "auto",
+def parse(docstr: str, argv: list[str] = None, type_func: Callable = None,
           force_continue: bool = False) -> YadOptArgs:
     """
     Parse docstring and returns YadoptArgs instance.
@@ -56,34 +58,33 @@ def parse(docstr: str, argv: list[str] = None, default_type: str|type = "auto",
     Args:
         docstr         (str)      : Docstring to be parsed.
         argv           (list[str]): Argument vector.
-        default_type   (str|type) : Default type.
+        type_func      (Callable) : A function that assign types to values.
         force_continue (bool)     : Never exit the software if True.
 
     Returns:
         (YadOptArgs): Parsed command line arguments.
     """
     # Check default type.
-    if (default_type != "auto") and not callable(default_type):
-        raise YadOptError["invalid_default_type"](default_type)
+    if (type_func is not None) and (not callable(type_func)):
+        raise YadOptError["invalid_type_func"](type_func)
 
     # Use system argv values if not specified.
-    if argv is None:
-        argv = copy.copy(sys.argv)
+    argv = sys.argv if (argv is None) else argv
 
     # Retokenize the input vector.
-    argv = list(retokenize(argv))
+    argv = list(retokenize(copy.copy(argv)))
 
     # Parse the given docstring and create a data class.
-    docinfo, usage = parse_docstr(copy.copy(docstr))
+    dsinfo: DocStrInfo = parse_docstr(copy.copy(docstr))
 
     # Parse the given command line arguments.
-    user_input = parse_argvec(argv, docinfo.usages, docinfo.opts)
+    user_input: UserInput = parse_argvec(argv, dsinfo)
 
     # If appropriate usage not found, print message and return or exit.
     if user_input is None:
 
         # Print error message.
-        print_error_message_user_input_not_match(usage, inspect.stack()[1])
+        print_error_message_user_input_not_match(dsinfo.utxt, inspect.stack()[1])
 
         # Return if force_continue is True, otherwise exit.
         if force_continue:
@@ -91,10 +92,13 @@ def parse(docstr: str, argv: list[str] = None, default_type: str|type = "auto",
         sys.exit(os.EX_USAGE)
 
     # Check argvec using the parsed doc info.
-    check_user_input(user_input, docinfo)
+    check_user_input(user_input, dsinfo)
+
+    # Apply type hints. This function also fill default values.
+    type_hint(user_input, dsinfo, type_func, fill_default=True)
 
     # Print help message and exit if --help is specified, and return or exit.
-    if ("help" in user_input.opts) or ("help" in user_input.pres):
+    if user_input.opts.get("help", False) or ("help" in user_input.pres):
 
         # Print help message.
         print(docstr.strip())
@@ -105,7 +109,7 @@ def parse(docstr: str, argv: list[str] = None, default_type: str|type = "auto",
         sys.exit(os.EX_USAGE)
 
     # Returns data instance.
-    return generate_dat(user_input, docinfo, argv)
+    return generate_data(user_input, dsinfo, argv)
 
 
 def wrap(*pargs: list, **kwargs: dict) -> Callable:
@@ -158,7 +162,7 @@ def to_namedtuple(args: YadOptArgs) -> collections.namedtuple:
     return collections.namedtuple("YadOptArgsNamedtuple", fields)(**args_d)
 
 
-def save(path: str, args: YadOptArgs):
+def save(path: str, args: YadOptArgs) -> None:
     """
     Save the parsed command line arguments as a text file.
 
@@ -205,7 +209,7 @@ def save(path: str, args: YadOptArgs):
         raise YadOptError["invalid_file_type"]("yadopt.save", path)
 
 
-def load(path: str, docstr: str = None) -> YadOptArgs:
+def load(path: str, docstr: str) -> YadOptArgs:
     """
     Load a parsed command line arguments from a text file.
 

@@ -31,4 +31,8 @@ def run_all_unittests():
             exit(-1)
 
 
+if __name__ == "__main__":
+    run_all_unittests()
+
+
 # vim: expandtab tabstop=4 shiftwidth=4 fdm=marker

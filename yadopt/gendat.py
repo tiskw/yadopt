@@ -3,149 +3,42 @@ Generate YadoptArgument data class.
 """
 
 # Declare published functions and variables.
-__all__ = ["generate_dat", "YadOptArgs"]
+__all__ = ["generate_data", "YadOptArgs"]
 
 # Import standard libraries.
-import ast
 import copy
-import itertools
 
 # Import custom modules.
-from .argvec import UserInput
+from .dtypes import UserInput, YadOptArgs
 from .docstr import DocStrInfo
 
 
-class YadOptArgs:
-    """
-    Command line arguments parsed by YadOpt.
-    """
-    def __init__(self, args_dict=None):
-        """
-        Constructor.
-        """
-        if args_dict is not None:
-            for key, value in args_dict.items():
-                setattr(self, key, value)
-
-    @property
-    def __normal_dict__(self):
-        """
-        Returns "normal" dictionary that contains keys not starting with the underscore.
-        """
-        return {key:value for key, value in self.__dict__.items() if not key.startswith("_")}
-
-    def __repr__(self):
-        """
-        Representation of this class.
-        """
-        contents = ", ".join(f"{key}={val}" for key, val in self.__normal_dict__.items())
-        return f"{self.__class__.__name__}({contents})"
-
-    def __str__(self):
-        """
-        String expression of this class.
-        """
-        return self.__repr__()
-
-    def __eq__(self, other):
-        """
-        Returns True if equivarent.
-        """
-        return self.__normal_dict__ == other.__normal_dict__
-
-
-def generate_dat(user_input: UserInput, docinfo: DocStrInfo, argv: list[str]) -> YadOptArgs:
+def generate_data(user_input: UserInput, dsinfo: DocStrInfo, argv: list[str]) -> YadOptArgs:
     """
     Create YadOptArgs instance, fill the values, and return it.
 
     Args:
         user_input (UserInput) : Parsed user input.
-        docinfo    (DocStrInfo): Parsed docstring info.
+        dsinfo     (DocStrInfo): Parsed docstring info.
         argv       (list[str]) : Argument vector.
     """
     # Create data instance.
     data = YadOptArgs()
 
-    # Get a map from argument/option name to data type.
-    data_types = {item.name:item.data_type for item in itertools.chain(docinfo.args, docinfo.opts)}
-
     # Fill user input preceding values.
     for name, value in user_input.pres.items():
         setattr(data, name, bool(value))
 
-    # Set default values.
-    for item in itertools.chain(docinfo.args, docinfo.opts):
-
-        # Get typed default value.
-        default = None if (item.default is None) else get_typed_data(item.default, item.data_type)
-
-        # Set the default value.
-        setattr(data, item.name, default)
-
     # Fill user input arguments and options.
     for name, value in (user_input.args | user_input.opts).items():
-
-        # If the target value is list.
-        if isinstance(value, list):
-            setattr(data, name, [get_typed_data(v, data_types[name]) for v in value])
-
-        # Otherwise.
-        else:
-            setattr(data, name, get_typed_data(value, data_types[name]))
+        setattr(data, name, value)
 
     # Append extra data.
-    setattr(data, "_info_", copy.deepcopy(docinfo))
+    setattr(data, "_info_", copy.deepcopy(dsinfo))
     setattr(data, "_user_", copy.deepcopy(user_input))
     setattr(data, "_argv_", copy.deepcopy(argv))
 
     return data
-
-
-def get_typed_data(value: str, data_type: type):
-    """
-    Returns typed value.
-
-    Args:
-        value     (str) : Value string.
-        data_type (type): Data type, or None.
-
-    Returns:
-        (object): Typed value.
-
-    Examples:
-        >>> (get_typed_data("1", int),)
-        (1,)
-        >>> (get_typed_data("False", bool),)
-        (False,)
-        >>> (get_typed_data("1", None),)
-        (1,)
-        >>> (get_typed_data(None, int),)
-        (None,)
-    """
-    def strtobool(s: str) -> bool:
-        """
-        Convert the given string to bool instance.
-        The function `bool(...)` is not suitable for this purpose,
-        because `bool("False")` returns `True`.
-        """
-        if s.lower() in {"t", "true", "y", "yes", "on", "1"}:
-            return True
-        if s.lower() in {"f", "false", "n", "no", "off", "0"}:
-            return False
-        return None
-
-    # Automatically determine the data type if the data_type is None.
-    if data_type is None:
-        try:
-            return ast.literal_eval(value)
-        except ValueError:
-            return str(value)
-
-    # Convert string to bool.
-    if data_type == bool and isinstance(value, str):
-        return strtobool(value)
-
-    return data_type(value) if (value is not None) else None
 
 
 # vim: expandtab tabstop=4 shiftwidth=4 fdm=marker

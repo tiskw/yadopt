@@ -122,12 +122,30 @@ def remove_indent(text: str) -> str:
     return "\n".join(line[min_indent:] for line in text.split("\n"))
 
 
-def retokenize(argv: list[str]) -> Generator[str]:
+def strtobool(s: str) -> bool:
     """
-    Re-tokenize the argument vector.
+    Convert the given string to bool instance. The function `bool(...)` is not suitable
+    for this purpose, because `bool("False")` returns `True`.
 
     Args:
-        argv (list[str]): Argument vector.
+        s (str): Input string.
+
+    Returns:
+        (bool): Corresponding boolean value.
+    """
+    if s.lower() in {"t", "true", "y", "yes", "on", "1"}:
+        return True
+    if s.lower() in {"f", "false", "n", "no", "off", "0"}:
+        return False
+    return None
+
+
+def retokenize(argv: list[str]) -> Generator[str]:
+    """
+    Tokenize the argument vector.
+
+    Args:
+        target (str): Target string to be tokenized.
 
     Returns:
         (Generator[str]): Re-tokenized tokens.
