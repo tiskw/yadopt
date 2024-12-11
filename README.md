@@ -163,3 +163,12 @@ API
 --------------------------------------------------------------------------------
 
 See [API reference](https://tiskw.github.io/yadopt/index.html#sec4).
+
+
+Developer's note
+--------------------------------------------------------------------------------
+
+### Architecture diagram
+
+![software\_architecture](./docs/images/software_architecture.png)
+
