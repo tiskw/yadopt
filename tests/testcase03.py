@@ -58,8 +58,6 @@ def check(index, args, command):
         args    (YadOptArgs): Parsed command line arguments.
         command (str)       : Command string (source of `args`).
     """
-    print("  ->", args)
-
     if index == 0:
         assert isinstance(args.arg, str)
         assert isinstance(args.a, str)

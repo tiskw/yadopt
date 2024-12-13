@@ -42,8 +42,6 @@ def main(args: yadopt.YadOptArgs, real_arg: str):
     """
     Target of yadopt.wrap function.
     """
-    print("  ->", args)
-
     # Check parsed arguments.
     assert args.config_path == pathlib.Path("config.toml")
     assert args.epochs == 10

@@ -52,8 +52,6 @@ def check(index, args, command):
         args    (YadOptArgs): Parsed command line arguments.
         command (str)       : Command string (source of `args`).
     """
-    print("  ->", args)
-
     if index == 0:
         assert args.config_path == pathlib.Path("config.toml")
         assert args.epochs == 10

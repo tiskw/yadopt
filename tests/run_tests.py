@@ -53,6 +53,7 @@ def main():
             except Exception as error:
                 testcase.check_error(idx, error)
             else:
+                print("->", args)
                 testcase.check(idx, args, command)
 
             print(f"{COLOR_GREEN}Passed{COLOR_NONE}")
