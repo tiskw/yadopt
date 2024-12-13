@@ -45,8 +45,7 @@ class YadOptErrorUsageParse(YadOptErrorBase):
     Location:
       The following line in the usage setion.
 
-        {1}
-        {2}
+        {0}
 
     Details:
       Each token in the usage section have to follow the specific format.
@@ -63,10 +62,8 @@ class YadOptErrorUsageParse(YadOptErrorBase):
         """
         Returns string expression of this error.
         """
-        token  = self.pargs[0]
-        line   = self.pargs[1].strip()
-        marker = get_error_marker(line, token)
-        return self.stringify(token, line, marker)
+        line = self.pargs[0].strip()
+        return self.stringify(line)
 
 
 class YadOptErrorInvalidConstant(YadOptErrorBase):
@@ -124,20 +121,20 @@ class YadOptErrorUsageArgMismatch(YadOptErrorBase):
     """
 
 
-class YadOptErrorInvalidDefaultType(YadOptErrorBase):
+class YadOptErrorInvalidTypeFunc(YadOptErrorBase):
     """
     Error summary:
-      Invalid default type.
+      Invalid type function.
 
     Location:
-      Argument "default_type" in "yadopt.parse" or "yadopt.wrap" function.
+      Argument "type_func" in "yadopt.parse" or "yadopt.wrap" function.
 
     Details:
-      The default type should be a callable object, or string "auto", but the spacified
+      The type function should be a callable object or None, but the spacified
       object "{0}" does not satisfy either of them.
 
     Solution:
-      Modify the value of the "default_type" argument.
+      Modify the value of the "type_func" argument.
     """
 
 
@@ -160,11 +157,11 @@ class YadOptErrorInvalidFileType(YadOptErrorBase):
 
 
 YadOptError = {
-    "usage_parse"         : YadOptErrorUsageParse,
-    "invalid_constant"    : YadOptErrorInvalidConstant,
-    "usage_arg_mismatch"  : YadOptErrorUsageArgMismatch,
-    "invalid_default_type": YadOptErrorInvalidDefaultType,
-    "invalid_file_type"   : YadOptErrorInvalidFileType,
+    "usage_parse"       : YadOptErrorUsageParse,
+    "invalid_constant"  : YadOptErrorInvalidConstant,
+    "usage_arg_mismatch": YadOptErrorUsageArgMismatch,
+    "invalid_type_func" : YadOptErrorInvalidTypeFunc,
+    "invalid_file_type" : YadOptErrorInvalidFileType,
 }
 
 

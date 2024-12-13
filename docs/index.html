@@ -281,10 +281,10 @@ assert isinstance(args.opt, int)</code></pre>
 
                 <!-- yadopt.parse {{{ -->
                 <h3 id="reference_yadopt_parse" class="reference-title">yadopt.parse</h3>
-                <pre><code class="python">yadopt.parse(docstr: str,
-             argv: list[str] = None,
-             default_type: str = "auto",
-             force_continue: bool = False) -&gt; YadOptArgs:</code></pre>
+                <pre><code class="python">def yadopt.parse(docstr: str,
+                 argv: list[str] = None,
+                 default_type: Callable = None,
+                 force_continue: bool = False) -&gt; YadOptArgs:</code></pre>
                 <p>Parse docstring and returns YadoptArgs instance.</p>
                 <h4>Args</h4>
                 <table class="pure-table pure-table-bordered"><thead><tr>
@@ -307,10 +307,10 @@ assert isinstance(args.opt, int)</code></pre>
                     --> Python script, <code class="python">sys.argv[1:]</code>, by default.</td>
                 </tr><tr>
                     <td><code class="python">default_type</code></td>
-                    <td><code class="python">str|type</code></td>
-                    <td><code class="python">"auto"</code></td>
-                    <td>Default data type of arguments and options. The default value <code class="python">"auto"</code><!--
-                    --> means automatic determination.</td>
+                    <td><code class="python">Callable</code></td>
+                    <td><code class="python">None</code></td>
+                    <td>A function that assign types to arguments and option values. <!--
+                    -->The default value <code class="python">None</code> means using default function.</td>
                 </tr><tr>
                     <td><code class="python">force_continue</code></td>
                     <td><code class="python">bool</code></td>
@@ -320,25 +320,37 @@ assert isinstance(args.opt, int)</code></pre>
                 </tr></tbody></table>
 
                 <h4>Returns</h4>
-                <p><code class="python">YadOptArgs</code>: The returned value is an instance of the <code class="python">YadOptArgs</code> <!--
-                -->class that represents parsed command line arguments. The <code class="python">YadOptArgs</code> class is a normal <!--
-                --> mutable Python class and users can access to parsed command line arguments by the dot notation. <!--
-                -->If you wish to convert <code class="python">YadOptArgs</code> to dictionary type, please use <!--
-                --><code class="python">.to_dict()</code> function. Likewise, if you prefer an immutable data type, <!--
-                -->please try <code class="python">.to_namedtuple()</code> function.</p>
+                <table class="pure-table pure-table-bordered"><thead><tr>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr></thead><tbody><tr>
+                    <td><code class="python">YadOptArgs</code></td>
+                    <td>The returned value is an instance of the <code class="python">YadOptArgs</code> class that <!--
+                     -->represents parsed command line arguments. The <code class="python">YadOptArgs</code> class is <!--
+                     -->a normal mutable Python class and users can access to parsed command line arguments by <!--
+                     -->the dot notation. If you wish to convert <code class="python">YadOptArgs</code> to dictionary type, <!--
+                     -->please use <code class="python">.to_dict()</code> function. Likewise, if you prefer an immutable <!--
+                     -->data type, please try <code class="python">.to_namedtuple()</code> function.</td>
+                </tr></tbody></table>
                 <!-- }}} -->
 
                 <!-- yadopt.wrap {{{ -->
                 <h3 id="reference_yadopt_wrap" class="reference-title">yadopt.wrap</h3>
-                <pre><code class="python">yadopt.wrap(*pargs: list, **kwargs: dict) -&gt; Callable:</code></pre>
+                <pre><code class="python">def yadopt.wrap(*pargs: list, **kwargs: dict) -&gt; Callable:</code></pre>
                 <p>Wrapper function for the command line parsing.</p>
                 <h4>Args</h4>
-                <p>The same as the arguments of yadopt.parse function.</p>
+                <p>The same as the arguments of <code class="python">yadopt.parse</code> function.</p>
                 <h4>Returns</h4>
-                <p><code class="python">Callable</code>: The <code class="python">yadopt.wrap</code> is a Python decorator function <!--
-                -->that allows users to modify the behavior of functions or methods, therefore the returned value of this function <!--
-                --> is a callable object. The first argument of the target function of this decorator is curried by the result <!--
-                -->of <code class="python">yadopt.parse</code> and the curried object will be returned.</p>
+                <table class="pure-table pure-table-bordered"><thead><tr>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr></thead><tbody><tr>
+                    <td><code class="python">Callable</code></td>
+                    <td>The <code class="python">yadopt.wrap</code> is a Python decorator function that allows users <!--
+                     -->to modify the behavior of functions or methods, therefore the returned value of this function <!--
+                     --> is a callable object. The first argument of the target function of this decorator is curried <!--
+                     -->by the result of <code class="python">yadopt.parse</code> and the curried object will be returned.</td>
+                </tr></tbody></table>
                 <!-- }}} -->
 
                 <!-- yadopt.to_dict {{{ -->
@@ -358,7 +370,13 @@ assert isinstance(args.opt, int)</code></pre>
                     <td>Parsed command line arguments.</td>
                 </tr></tbody></table>
                 <h4>Returns</h4>
-                <p><code class="python">dict</code>: Dictionary of the given parsed arguments.</p>
+                <table class="pure-table pure-table-bordered"><thead><tr>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr></thead><tbody><tr>
+                    <td><code class="python">dict</code></td>
+                    <td>Dictionary of the given parsed arguments.</td>
+                </tr></tbody></table>
                 <!-- }}} -->
 
                 <!-- yadopt.to_namedtuple {{{ -->
@@ -378,7 +396,14 @@ assert isinstance(args.opt, int)</code></pre>
                     <td>Parsed command line arguments.</td>
                 </tr></tbody></table>
                 <h4>Returns</h4>
-                <p><code class="python">collections.namedtuple</code>: Namedtuple of the given parsed arguments.</p>
+
+                <table class="pure-table pure-table-bordered"><thead><tr>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr></thead><tbody><tr>
+                    <td><code class="python">collections.namedtuple</code></td>
+                    <td>Namedtuple of the given parsed arguments.</td>
+                </tr></tbody></table>
                 <!-- }}} -->
 
                 <!-- yadopt.save {{{ -->
@@ -403,12 +428,19 @@ assert isinstance(args.opt, int)</code></pre>
                     <td>Parsed command line arguments to be saved.</td>
                 </tr></tbody></table>
                 <h4>Returns</h4>
-                <p>Nothing.</p>
+
+                <table class="pure-table pure-table-bordered"><thead><tr>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr></thead><tbody><tr>
+                    <td><code class="python">None</code></td>
+                    <td>-</td>
+                </tr></tbody></table>
                 <!-- }}} -->
 
                 <!-- yadopt.load {{{ -->
                 <h3 id="reference_yadopt_load" class="reference-title">yadopt.load</h3>
-                <pre><code class="python">def load(path: str) -&gt; YadOptArgs:</code></pre>
+                <pre><code class="python">def load(path: str, docstr: str = None) -&gt; YadOptArgs:</code></pre>
                 <p>Load a parsed command line arguments from text file.</p>
                 <h4>Args</h4>
                 <table class="pure-table pure-table-bordered"><thead><tr>
@@ -423,7 +455,13 @@ assert isinstance(args.opt, int)</code></pre>
                     <td>Source path.</td>
                 </tr></tbody></table>
                 <h4>Returns</h4>
-                <p><code class="python">YadOptArgs</code>: Restored parsed command line arguments.</p>
+                <table class="pure-table pure-table-bordered"><thead><tr>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr></thead><tbody><tr>
+                    <td><code class="python">YadOptArgs</code></td>
+                    <td>Restored parsed command line arguments.</td>
+                </tr></tbody></table>
                 <!-- }}} -->
 
                 <!-- End of section 4 }}} -->

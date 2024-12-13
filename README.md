@@ -3,7 +3,7 @@
 </div>
 
 <div align="center">
-  <img src="https://img.shields.io/badge/PYTHON-%3E%3D3.9-blue.svg?style=for-the-badge&logo=python&logoColor=white">
+  <img src="https://img.shields.io/badge/PYTHON-%3E%3D3.10-blue.svg?style=for-the-badge&logo=python&logoColor=white">
   &nbsp;
   <img src="https://img.shields.io/badge/LICENSE-MIT-orange.svg?style=for-the-badge">
   &nbsp;
@@ -163,3 +163,12 @@ API
 --------------------------------------------------------------------------------
 
 See [API reference](https://tiskw.github.io/yadopt/index.html#sec4).
+
+
+Developer's note
+--------------------------------------------------------------------------------
+
+### Architecture diagram
+
+![software\_architecture](./docs/images/software_architecture.png)
+

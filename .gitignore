@@ -11,3 +11,6 @@ dist/*
 # Ignore coverage cache
 .coverage
 htmlcov
+
+# ignore backup files
+*.bkp

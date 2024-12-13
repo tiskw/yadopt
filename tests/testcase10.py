@@ -37,8 +37,6 @@ def check(index, args, command):
         args    (YadOptArgs): Parsed command line arguments.
         command (str)       : Command string (source of `args`).
     """
-    print("  ->", args)
-
     if index == 0:
         assert args.subcmd1 == True
         assert args.subcmd2 == False

@@ -4,10 +4,10 @@ Initialize yadopt module.
 
 # Import functions.
 from .yadopt import parse, wrap, to_dict, to_namedtuple, save, load
-from .gendat import YadOptArgs
+from .dtypes import YadOptArgs
 
 # Version information.
-__version__ = "2024.11.30"
+__version__ = "2024.12.10"
 
 # Declare published functions and variables.
 __all__ = ["parse", "wrap", "to_dict", "to_namedtuple", "save", "load", "YadOptArgs", "__version__"]

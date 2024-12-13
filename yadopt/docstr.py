@@ -6,26 +6,30 @@ Docstring parser.
 __all__ = ["parse_docstr", "DocStrInfo"]
 
 # Import standard libraries.
-import dataclasses
+import enum
 import re
 
+# For type hinting.
+from collections.abc import Generator
+
 # Import custom modules.
-from .argopt import parse_argopt, ArgEntry, OptEntry
-from .usage  import parse_usage, UsageEntry
+from .argopt import parse_arg, parse_opt
+from .dtypes import DocStrInfo
+from .usage  import parse_usg
 from .utils  import match_and_get
 
 
-@dataclasses.dataclass
-class DocStrInfo:
+class SectionType(enum.Enum):
     """
-    Parse result of docstring.
+    Type of section in docstring.
     """
-    usages: list[UsageEntry]  # Information of usages.
-    args  : list[ArgEntry]    # Information of argument.
-    opts  : list[OptEntry]    # Information of option.
+    UNKNOWN   = 0
+    USAGES    = 1
+    ARGUMENTS = 2
+    OPTIONS   = 3
 
 
-def split_section(docstr: str) -> tuple[str, list]:
+def split_section(docstr: str) -> Generator[tuple[str, str]]:
     """
     Parse docstring and split it to sections.
 
@@ -33,45 +37,49 @@ def split_section(docstr: str) -> tuple[str, list]:
         docstr (str): Input docstring.
 
     Returns:
-        (tuple): A tuple of section name and section contents.
+        (tuple): A tuple of (section type, line).
+
+    Examples:
+        >>> list(split_section("Usage:\\n usage\\nArgs:\\n arg"))
+        [(<SectionType.USAGES: 1>, ' usage'), (<SectionType.ARGUMENTS: 2>, ' arg')]
+        >>> list(split_section("Usage:\\n usage\\nOpts:\\n --opt"))
+        [(<SectionType.USAGES: 1>, ' usage'), (<SectionType.OPTIONS: 3>, ' --opt')]
     """
     section_patterns_and_indices = [
-        # regular expression, section_name_index, None
-        # --------------------------------------------
-        (r"([\w ]+):\s*$",       (1,), None),  # SectionName:
-        (r"\[([\w ]+)\]\s*$",    (1,), None),  # [SectionName]
+        # regular expression, (section_name_index, None)
+        # ----------------------------------------------
+        (r"^([\w ]+):\s*$",       (1,), None),  # SectionName:
+        (r"^\[([\w ]+)\]\s*$",    (1,), None),  # [SectionName]
     ]
 
-    sec_name, sec_contents = None, []
+    section_name_patterns = {
+        SectionType.USAGES   : ["usage"],
+        SectionType.ARGUMENTS: ["args", "arguments"],
+        SectionType.OPTIONS  : ["opts", "options"],
+    }
+
+    # Initialize the section type.
+    current_sec_type = SectionType.UNKNOWN
 
     for line in docstr.split("\n"):
 
-        # Ignore empty line.
-        if len(line.strip()) == 0:
-            continue
-
         # Try to match the section name patterns.
-        matched_sec_name, *_ = match_and_get(line, section_patterns_and_indices)
+        sec_name, *_ = match_and_get(line.rstrip(), section_patterns_and_indices)
 
         # Case 1: New section found.
-        if matched_sec_name is not None:
+        if sec_name is not None:
 
-            # Returns previous section contents (if exists).
-            if sec_name and sec_contents:
-                yield (sec_name, sec_contents)
-
-            # Initialize section contents.
-            sec_name, sec_contents = matched_sec_name, []
+            # Update the current section if matched to the section patterns.
+            for sec_type, keywords in section_name_patterns.items():
+                if any(sec_name.lower().endswith(keyword) for keyword in keywords):
+                    current_sec_type = sec_type
 
         # Case 2: If not the beginning of section, try to match as section contents.
-        elif re.match(r'\s', line):
-            sec_contents.append(line.rstrip())
-
-    if sec_contents:
-        yield (sec_name, sec_contents)
+        elif re.match(r'^\s', line):
+            yield (current_sec_type, line.rstrip())
 
 
-def parse_docstr(docstr: str) -> tuple[DocStrInfo, str]:
+def parse_docstr(docstr: str) -> DocStrInfo:
     """
     Parse the given docstring and create a data class.
 
@@ -82,39 +90,29 @@ def parse_docstr(docstr: str) -> tuple[DocStrInfo, str]:
         (tuple): A pair of DocStrInfo and usage descriptions.
     """
     # Initialize output variable.
-    dsinfo = DocStrInfo([], [], [])
-    usages = ["Usage:"]
+    dsinfo = DocStrInfo(usgs=[], args=[], opts=[], utxt="Usage:")
+
+    # Create a dictionary of parser function and list to be append.
+    parsers_and_append_targets = {
+        SectionType.USAGES   : (parse_usg, dsinfo.usgs),
+        SectionType.ARGUMENTS: (parse_arg, dsinfo.args),
+        SectionType.OPTIONS  : (parse_opt, dsinfo.opts),
+    }
 
     # Parse each section.
-    for sec_name, sec_contents in split_section(docstr):
+    for sec_type, line in split_section(docstr):
 
-        # Process the usage section.
-        if sec_name.lower().endswith("usage"):
+        # Get corresponding parser function and target list.
+        parser, target = parsers_and_append_targets[sec_type]
 
-            # Store the parsed usage to the output variable.
-            dsinfo.usages += [parse_usage(line) for line in sec_contents]
+        # Parse the line and append to the target list.
+        target.append(parser(line))
 
-            # Store the raw usage strings.
-            usages += sec_contents
+        # Append usage text.
+        if sec_type == SectionType.USAGES:
+            dsinfo.utxt += "\n" + line
 
-        # Process the other sections.
-        else:
-
-            # Parse section lines to ArgInfo/OptInfo.
-            items = [parse_argopt(line) for line in sec_contents]
-
-            # Append to docinfo arguments and options.
-            dsinfo.args += [item for item in items if isinstance(item, ArgEntry)]
-            dsinfo.opts += [item for item in items if isinstance(item, OptEntry)]
-
-    # Adjust data type and default values. If n_args == 0, then the data type
-    # and defualt value should be bool and False, respectively.
-    for item in dsinfo.opts:
-        if item.n_args == 0:
-            item.data_type = bool
-            item.default   = False
-
-    return (dsinfo, "\n".join(usages))
+    return dsinfo
 
 
 # vim: expandtab tabstop=4 shiftwidth=4 fdm=marker
