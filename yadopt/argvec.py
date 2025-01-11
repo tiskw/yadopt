@@ -17,8 +17,9 @@ def parse_argvec(argv: list[str], dsinfo: DocStrInfo) -> UserInput:
     correspondance. Otherwise, returns None.
 
     Args:
-        argv   (list[str]) : Argument vector.
-        dsinfo (DocStrInfo): Parsed result of docstring.
+        argv           (list[str]) : Argument vector.
+        dsinfo         (DocStrInfo): Parsed result of docstring.
+        force_continue (bool)      : Never exit the software if True.
 
     Returns:
         (UserInput): Correspondance of argument/option names and values.
@@ -66,7 +67,8 @@ def parse_argvec(argv: list[str], dsinfo: DocStrInfo) -> UserInput:
 
             return user_input
 
-    return None
+    # If appropriate usage not found, return empty user input.
+    return UserInput(pres={}, args={}, opts={})
 
 
 # vim: expandtab tabstop=4 shiftwidth=4 fdm=marker

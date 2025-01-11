@@ -8,6 +8,10 @@ import pathlib
 import sys
 import traceback
 
+# Import Yadopt.
+sys.path.append(".")
+import yadopt
+
 
 docstring = """
 Usage:
@@ -32,7 +36,7 @@ def check(index, args, command):
         command (str)       : Command string (source of `args`).
     """
     if index == 0:
-        assert args is None
+        assert args == yadopt.YadOptArgs()
 
 
 # vim: expandtab tabstop=4 shiftwidth=4 fdm=marker

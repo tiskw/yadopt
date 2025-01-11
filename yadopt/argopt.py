@@ -9,9 +9,11 @@ __all__ = ["parse_arg", "parse_opt"]
 import re
 
 # Import custom modules.
-from .dtypes import ArgEntry, OptEntry
-from .utils  import get_default, match_and_get
-from .hints  import DTYPE_HINTS
+from .dtypes   import ArgEntry, OptEntry
+from .errors   import YadOptError
+from .hints    import DTYPE_HINTS
+from .matchers import match_arg, match_opt
+from .utils    import get_default
 
 
 def parse_arg(line: str) -> ArgEntry | OptEntry | None:
@@ -21,9 +23,9 @@ def parse_arg(line: str) -> ArgEntry | OptEntry | None:
 
     Examples:
         >>> parse_arg("  arg1 msg")
-        ArgEntry(name='arg1', dtype_str=None, description='msg', default=None)
+        ArgEntry(name='arg1', dtype_str='unknown', desc='msg', default=None)
         >>> parse_arg("  arg1  (INT) msg  [default: 10]")
-        ArgEntry(name='arg1', dtype_str='int', description='msg', default='10')
+        ArgEntry(name='arg1', dtype_str='int', desc='msg', default='10')
     """
     return parse_opt(line)
 
@@ -40,43 +42,25 @@ def parse_opt(line: str) -> ArgEntry | OptEntry | None:
 
     Examples:
         >>> parse_opt("  -o   msg")
-        OptEntry(name='o', name_alt=None, has_value=False, dtype_str='bool', \
-description='msg', default='False')
+        OptEntry(name='o', name_alt=None, has_value=False, dtype_str='bool', desc='msg', default='False')
         >>> parse_opt("  --opt   msg")
-        OptEntry(name='opt', name_alt=None, has_value=False, dtype_str='bool', \
-description='msg', default='False')
+        OptEntry(name='opt', name_alt=None, has_value=False, dtype_str='bool', desc='msg', default='False')
         >>> parse_opt("  -o, --opt   msg")
-        OptEntry(name='opt', name_alt='o', has_value=False, dtype_str='bool', \
-description='msg', default='False')
+        OptEntry(name='opt', name_alt='o', has_value=False, dtype_str='bool', desc='msg', default='False')
         >>> parse_opt("  -o, --opt INT   msg")
-        OptEntry(name='opt', name_alt='o', has_value=True, dtype_str='int', \
-description='msg', default=None)
+        OptEntry(name='opt', name_alt='o', has_value=True, dtype_str='int', desc='msg', default=None)
     """
-    arg_patterns_and_indices = [
-        # regular expression, (name,), None
-        # ---------------------------------
-        (r"\s+(\w+)", (1, ), None),
-    ]
-    opt_patterns_and_indices = [
-        # regular expression,        (name, alt, value), has_value   # | type  | value  | delim |
-        # ---------------------------------------------------------  # --------------------------
-        (r"\s+-(\w+)=(\w+), --(\w+)=(\w+)", (3, 1,    2   ), True),  # | both  | double | equal |
-        (r"\s+-(\w+) (\w+), --(\w+) (\w+)", (3, 1,    2   ), True),  # | both  | double | space |
-        (r"\s+-(\w+), --(\w+)=(\w+)",       (2, 1,    3   ), True),  # | both  | single | equal |
-        (r"\s+-(\w+), --(\w+) (\w+)",       (2, 1,    3   ), True),  # | both  | single | space |
-        (r"\s+-(\w+), --(\w+)",             (2, 1,    None), False), # | both  | none   | -     |
-        (r"\s+--(\w+)=(\w+)",               (1, None, 2   ), True),  # | long  | single | equal |
-        (r"\s+--(\w+) (\w+)",               (1, None, 2   ), True),  # | long  | single | space |
-        (r"\s+--(\w+)",                     (1, None, None), False), # | long  | none   | -     |
-        (r"\s+-(\w+)=(\w+)",                (1, None, 2   ), True),  # | short | single | equal |
-        (r"\s+-(\w+) (\w+)",                (1, None, 2   ), True),  # | short | single | space |
-        (r"\s+-(\w+)",                      (1, None, None), False), # | short | none   | -     |
-    ]
-
     # Try to parse as argument line.
-    name, description, _ = match_and_get(line, arg_patterns_and_indices)
+    outputs, description, _ = match_arg(line)
 
-    if name is not None:
+    if len(outputs) > 0:
+
+        # Get matched argument name.
+        name = outputs[0]
+
+        # The name should not be None.
+        if not isinstance(name, str):
+            raise YadOptError["internal_error"]()
 
         # Get data type.
         dtype_str, description = get_dtype_str(name, description)
@@ -87,9 +71,16 @@ description='msg', default=None)
         return ArgEntry(name, dtype_str, description, default)
 
     # Try to parse as option line.
-    name, name_alt, value, description, has_value = match_and_get(line, opt_patterns_and_indices)
+    outputs, description, has_value = match_opt(line)
 
-    if name is not None:
+    if len(outputs) > 0:
+
+        # Unpack matched results.
+        name, name_alt, value = outputs
+
+        # The name should be a string.
+        if not isinstance(name, str):
+            raise YadOptError["internal_error"]()
 
         # Get data type.
         dtype_str, description = get_dtype_str(value, description)
@@ -107,7 +98,7 @@ description='msg', default=None)
     return None
 
 
-def get_dtype_str(var_name: str, description: str) -> tuple[type, str]:
+def get_dtype_str(var_name: str | None, description: str) -> tuple[str, str]:
     """
     Returns appropriate data type.
 
@@ -115,7 +106,7 @@ def get_dtype_str(var_name: str, description: str) -> tuple[type, str]:
         var_name (str): Variable name.
 
     Returns:
-        (type): An appropriate Python data type.
+        (tuple): A tuple of appropriate Python data type and the rest of description.
 
     Examples:
         >>> get_dtype_str("x_int", "Integer value.")
@@ -134,16 +125,16 @@ def get_dtype_str(var_name: str, description: str) -> tuple[type, str]:
         if dtype_str in DTYPE_HINTS:
             return (dtype_str, description)
 
-    # Returns None if variable name is None.
+    # Returns unknown type if variable name is None.
     if var_name is None:
-        return (None, description)
+        return ("unknown", description)
 
     # Try to get type from the variable name.
     for key in DTYPE_HINTS:
         if var_name.lower().endswith(key):
             return (key, description)
 
-    return (None, description)
+    return ("unknown", description)
 
 
 # vim: expandtab tabstop=4 shiftwidth=4 fdm=marker

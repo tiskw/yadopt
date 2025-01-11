@@ -2,6 +2,7 @@
 Usage:
     04_save_and_load.py train [OPTIONS]
     04_save_and_load.py test  [OPTIONS]
+    04_save_and_load.py --restore PATH
     04_save_and_load.py --help
 
 Example of "yadopt.load" function.
@@ -33,7 +34,7 @@ def main(args: yadopt.YadOptArgs):
     """
     # Restore the saved arguments.
     if args.restore is not None:
-        args = yadopt.load(args.restore, __doc__)
+        args = yadopt.load(args.restore)
 
     print(args)
 

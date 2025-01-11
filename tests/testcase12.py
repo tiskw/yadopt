@@ -8,6 +8,10 @@ import pathlib
 import sys
 import traceback
 
+# Import Yadopt.
+sys.path.append(".")
+import yadopt
+
 
 docstring = """
 Usage:
@@ -38,13 +42,13 @@ def check(index, args, command):
         command (str)       : Command string (source of `args`).
     """
     if index == 0:
-        assert args is None
+        assert args == yadopt.YadOptArgs()
 
     elif index == 1:
         assert args.config_path == pathlib.Path("file.txt")
 
     elif index == 2:
-        assert args is None
+        assert args == yadopt.YadOptArgs()
 
     else:
         raise ValueError(f"Check function for index={index} not found")

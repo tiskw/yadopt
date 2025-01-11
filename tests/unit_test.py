@@ -30,9 +30,7 @@ def run_all_unittests():
         if n_failed > 0:
             exit(-1)
 
-
-if __name__ == "__main__":
-    run_all_unittests()
+        print(f"=> module={target}, n_total={n_total}, n_failed={n_failed}")
 
 
 # vim: expandtab tabstop=4 shiftwidth=4 fdm=marker

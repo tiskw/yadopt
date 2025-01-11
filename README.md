@@ -7,9 +7,9 @@
   &nbsp;
   <img src="https://img.shields.io/badge/LICENSE-MIT-orange.svg?style=for-the-badge">
   &nbsp;
-  <img src="https://img.shields.io/badge/COVERAGE-96%25-green.svg?style=for-the-badge">
+  <img src="https://img.shields.io/badge/COVERAGE-97%25-green.svg?style=for-the-badge">
   &nbsp;
-  <img src="https://img.shields.io/badge/QUALITY-9.95/10.0-yellow.svg?style=for-the-badge">
+  <img src="https://img.shields.io/badge/QUALITY-10.0/10.0-yellow.svg?style=for-the-badge">
 </div>
 
 YadOpt - Yet another docopt
@@ -110,19 +110,54 @@ YadOpt supports the decorator approach for command-line parsing by the decorator
 
 ```python
 @yadopt.wrap(__doc__)
-def main(args: yadopt.YadOptArgs, real_arg: str):
+def main(args: yadopt.YadOptArgs, arg1: int, arg2: str):
     ...
 
 if __name__ == "__main__":
-    main("real argument")
+    main(arg1=1, arg2="2")
 ```
+
+### How to type arguments and options
+
+YadOpt provides two ways to type arguments and options: (1) type name postfix
+and (2) description head declaration.
+
+**(1) Type name opstfix**: Users can type arguments and options by adding
+type name at the end of the arguments/options name, such as the following:
+
+```
+Options:
+    --opt1 FLT    Option of float type.
+    --opt2 STR    Option of string type.
+```
+
+**(2) Description head declaration**: Another way to type an arguments and
+options is to put the type name enclosed by parentheses at the beginning
+of the description.
+
+```
+Options:
+    --opt1 VAL1    (float) Option of float type.
+    --opt2 VAL2    (str)   Option of string type.
+```
+
+The following is the list of available type names.
+
+| Data type in Python | Type name in YadOpt          |
+|---------------------|------------------------------|
+| `bool`              | bool, BOOL, boolean, BOOLEAN |
+| `int`               | int, INT, integer, INTEGER   |
+| `float`             | flt, FLT, float FLOAT        |
+| `str`               | str, STR, string, STRING     |
+| `pathlib.Path`      | path, PATH                   |
+
 
 ### Dictionary and namedtuple support
 
 The returned value of `yadopt.parse` is an instance of `YadOptArgs` that is
 a normal mutable Python class. However, sometimes a dictionary that has
 the `get` accessor, or an immutable namedtuple, may be preferable.
-In that case, please try `yadopt.to_dict` and `yadopt.to_namedtuple` functions.
+In such cases, please try `yadopt.to_dict` or `yadopt.to_namedtuple` function.
 
 ```python
 # Convert the returned value to dictionary.
@@ -132,31 +167,29 @@ args = yadopt.to_dict(yadopt.parse(__doc__))
 args = yadopt.to_namedtuple(yadopt.parse(__doc__))
 ```
 
-### Restore arguments from dictionary or JSON file
+### Restore arguments from JSON file
 
-YadOpt has a function to save parsed argument instances as a text file,
-and to restore the argument instances from the text files.
+YadOpt has a function to save parsed argument instances as a JSON file,
+and to restore the argument instances from the JSON files.
 These functions probably be useful when recalling the same arguments
-that previously executed, for example, machine learning code.
+that previously executed, for example, in machine learning code.
 
 ```python
 # At first, create a parsed arguments (i.e. YadOptArgs instance).
 args = yadopt.parse(__doc__)
 
-# At first, create a parsed arguments (i.e. YadOptArgs instance).
-args = yadopt.parse(__doc__)
-
 # Save the parsed arguments as a JSON file.
-yadopt.save("args.json", args, indent=4)
+yadopt.save("args.json", args)
 
 # Resotre parsed YadOptArgs instance from the JSON file.
 args_restored = yadopt.load("args.json")
 ```
 
-The format of the text file is straightforward — just exactly what you would
-type on a command line under the normal use case. If you want to write
-the text file manually, the author recommends making a text file using
-the save function and investigating the contents of the file at first.
+The format of the JSON file is pretty straightforward &ndash; what the user
+types on the command line is stored in the "argv" key, and the docstring is
+stored in the "docstr" key in the JSON file. If users want to write the JSON
+file manually, the author recommends making a JSON file using the save function
+and investigating the contents of the file.
 
 
 API
@@ -167,6 +200,33 @@ See [API reference](https://tiskw.github.io/yadopt/index.html#sec4).
 
 Developer's note
 --------------------------------------------------------------------------------
+
+### Utility commands for developers
+
+Utility commands are summarized in the Makefile. Run `make` at the root
+directory of this repository to see the details of the subcommands of
+the Makefile.
+
+```console
+$ make
+Usage:
+    make <command>
+
+Build commands:
+    build         Build package
+    testpypi      Upload package to TestPyPi
+    pypi          Upload package to PyPi
+    install-test  Install from TestPyPi
+
+Test and code check commands:
+    check         Check the code quality
+    count         Count the lines of code
+    coverage      Measure code coverage
+
+Other commands:
+    clean         Cleanup cache files
+    help          Show this message
+```
 
 ### Architecture diagram
 

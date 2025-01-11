@@ -144,7 +144,7 @@ def tokenize(usage_line: str) -> Generator[str]:
         usage_line = usage_line[len(token):]
 
 
-def match_argvec_and_usage(argv: list[str], usage: UsgEntry) -> UserInput:
+def match_argvec_and_usage(argv: list[str], usage: UsgEntry) -> UserInput | None:
     """
     Try to match the given argument vector and usage pattern.
     If matched, returns UserInput instance, and otherwise, returns None.
