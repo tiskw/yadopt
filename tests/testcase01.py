@@ -72,7 +72,7 @@ def check(index, args, command):
         assert args_dict["verbose"] == False
 
         args_nt = yadopt.to_namedtuple(args)
-        assert args_nt.__class__.__name__ == "YadOptArgsNamedtuple"
+        assert args_nt.__class__.__name__ == "YadOptArgsNt"
         assert args.config_path == pathlib.Path("config.toml")
         assert args.epochs == 10
         assert args.model == "cnn"
@@ -91,7 +91,7 @@ def check(index, args, command):
         assert args.verbose == True
 
     elif index == 2:
-        assert args is None
+        assert args == yadopt.YadOptArgs()
 
     else:
         raise ValueError(f"Check function for index={index} not found")

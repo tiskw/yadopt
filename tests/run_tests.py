@@ -31,7 +31,6 @@ def main():
     unit_test = importlib.import_module("unit_test")
     unit_test.run_all_unittests()
     print(f"{COLOR_GREEN}Passed{COLOR_NONE}")
-    print(f"-----------------------------------")
     print()
 
     # Run all test cases.
@@ -53,11 +52,10 @@ def main():
             except Exception as error:
                 testcase.check_error(idx, error)
             else:
-                print("->", args)
+                print("=>", args)
                 testcase.check(idx, args, command)
 
             print(f"{COLOR_GREEN}Passed{COLOR_NONE}")
-            print(f"------------------------------")
             print()
 
     # Test wrap function.
@@ -65,8 +63,9 @@ def main():
     testcase = importlib.import_module("testcase_wrap")
     testcase.test()
     print(f"{COLOR_GREEN}Passed{COLOR_NONE}")
-    print(f"-------------------------------")
     print()
+
+    print(f"{COLOR_GREEN}Passed all tests!!{COLOR_NONE}")
 
 
 if __name__ == "__main__":

@@ -5,6 +5,9 @@ Custom error classes.
 # Declare published functins and variables.
 __all__ = ["YadOptError"]
 
+# For type hinting.
+from typing import Any
+
 # Import custom modules.
 from .utils import get_error_marker, remove_indent
 
@@ -18,7 +21,7 @@ class YadOptErrorBase(Exception):
     <https://github.com/tiskw/yadopt/issues>
     """.rstrip())
 
-    def __init__(self, *pargs: tuple):
+    def __init__(self, *pargs: Any):
         """
         Constructor.
         """
@@ -30,7 +33,7 @@ class YadOptErrorBase(Exception):
         """
         return self.stringify(*self.pargs)
 
-    def stringify(self, *pargs: tuple, **kwargs: dict) -> str:
+    def stringify(self, *pargs: Any, **kwargs: Any) -> str:
         """
         Convert myself to a string.
         """
@@ -149,10 +152,24 @@ class YadOptErrorInvalidFileType(YadOptErrorBase):
     Details:
       The "yadopt.save" and "yadopt.load" functions support only ".txt" format, and gzipped
       version of it. However, this error indicates that the other suffixe than
-      ".txt", ".txt.gz" is specified.
+      ".json", ".json.gz" is specified.
 
     Solution:
       Please specify the supported file type.
+    """
+
+
+class YadOptErrorInternal(YadOptErrorBase):
+    """
+    Error summary:
+      Internal error.
+
+    Location:
+      See the traceback above.
+
+    Details:
+      This error means that something happened that the developer(s) didn't anticipate during
+      the execution of the YadOpt code, NOT that the user is using the library incorrectly.
     """
 
 
@@ -162,6 +179,7 @@ YadOptError = {
     "usage_arg_mismatch": YadOptErrorUsageArgMismatch,
     "invalid_type_func" : YadOptErrorInvalidTypeFunc,
     "invalid_file_type" : YadOptErrorInvalidFileType,
+    "internal_error"    : YadOptErrorInternal,
 }
 
 

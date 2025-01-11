@@ -22,8 +22,9 @@ help:
 	@echo "    help          Show this message"
 
 check:
-	pyflakes yadopt/*.py
-	pylint yadopt/*.py
+	pyflakes yadopt
+	pylint --max-line-length=120 yadopt
+	mypy yadopt
 
 count:
 	cloc --by-file yadopt/*.py

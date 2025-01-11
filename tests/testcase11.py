@@ -57,9 +57,9 @@ def check(index, args, command):
         assert args.str == "hello"
         assert args.path == pathlib.Path("./dir")
 
-        for suffix in ["txt", "txt.gz"]:
+        for suffix in ["json", "json.gz"]:
             yadopt.save(f"/tmp/yadopt_test_args.{suffix}", args)
-            args_restore = yadopt.load(f"/tmp/yadopt_test_args.{suffix}", docstring)
+            args_restore = yadopt.load(f"/tmp/yadopt_test_args.{suffix}")
             assert args == args_restore
 
     else:

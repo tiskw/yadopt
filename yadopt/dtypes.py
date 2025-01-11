@@ -18,22 +18,24 @@ class ArgEntry:
     """
     Parsed result of argument definition in docstring.
     """
-    name       : str         # Option name.
-    dtype_str  : str         # Data type string.
-    description: str         # Description of this option.
-    default    : str | None  # Default value (string).
+    name     : str         # Option name.
+    dtype_str: str         # Data type string.
+    desc     : str         # Description of this option.
+    default  : str | None  # Default value (string).
+
 
 @dataclasses.dataclass
 class OptEntry:
     """
     Parsed result of option definition in docstring.
     """
-    name       : str         # Option name.
-    name_alt   : str         # Alternative option name.
-    has_value  : bool        # Number of arguments.
-    dtype_str  : str         # Data type string.
-    description: str         # Description of this option.
-    default    : str | None  # Default value (string).
+    name     : str         # Option name.
+    name_alt : str | None  # Alternative option name.
+    has_value: bool        # Number of arguments.
+    dtype_str: str         # Data type string.
+    desc     : str         # Description of this option.
+    default  : str | None  # Default value (string).
+
 
 @dataclasses.dataclass
 class UsgEntry:
@@ -44,6 +46,7 @@ class UsgEntry:
     args: list[str]                     # Argument tokens.
     opts: dict[str, tuple[bool, bool]]  # Option tokens: name -> (has_value, is_mandatory).
 
+
 @dataclasses.dataclass
 class DocStrInfo:
     """
@@ -53,6 +56,7 @@ class DocStrInfo:
     args: list[ArgEntry]  # Information of argument.
     opts: list[OptEntry]  # Information of option.
     utxt: str             # Usage raw text.
+    dstr: str             # Original docstring.
 
 
 ############################################################
@@ -77,39 +81,33 @@ class YadOptArgs:
     """
     Command line arguments parsed by YadOpt.
     """
-    def __init__(self, args_dict=None):
-        """
-        Constructor.
-        """
-        if args_dict is not None:
-            for key, value in args_dict.items():
-                setattr(self, key, value)
-
-    @property
-    def __normal_dict__(self):
+    def __normal_dict__(self) -> dict:
         """
         Returns "normal" dictionary that contains keys not starting with the underscore.
         """
         return {key:value for key, value in self.__dict__.items() if not key.startswith("_")}
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """
         Representation of this class.
         """
-        contents = ", ".join(f"{key}={val}" for key, val in self.__normal_dict__.items())
+        contents = ", ".join(f"{key}={val}" for key, val in self.__normal_dict__().items())
         return f"{self.__class__.__name__}({contents})"
 
-    def __str__(self):
+    def __str__(self) -> str:
         """
         String expression of this class.
         """
         return self.__repr__()
 
-    def __eq__(self, other):
+    def __eq__(self, other: object) -> bool:
         """
         Returns True if equivarent.
         """
-        return self.__normal_dict__ == other.__normal_dict__
+        if isinstance(other, self.__class__):
+            return self.__normal_dict__() == other.__normal_dict__()
+
+        raise NotImplementedError()
 
 
 # vim: expandtab tabstop=4 shiftwidth=4 fdm=marker

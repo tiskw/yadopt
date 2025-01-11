@@ -60,48 +60,10 @@ def get_error_marker(line: str, token: str) -> str:
     return " " * pos + "^" * len(token) + " " * (len(line) - len(token) - pos)
 
 
-def match_and_get(line: str, patterns_and_indices: list) -> tuple[str]:
-    """
-    Parse the given string and returns specified matched strings.
-
-    Args:
-        line                 (str) : The target line.
-        patterns_and_indices (list): A list of patterns and indices.
-
-    Returns:
-        (tuple[str]): A tuple of matched strings corresponding to the indices,
-                      and the rest of matched strings.
-
-    Examples:
-        >>> match_and_get("-h, --help", [(r"-(\\w+), --(\\w+)", (2, 1), None)])
-        ('help', 'h', '', None)
-    """
-    # Get the number of indices for each pattern.
-    n_indices = len(patterns_and_indices[0][1])
-
-    for pattern, indices, optional_value in patterns_and_indices:
-
-        # Compute regular expression match, and continue the loop if not matched.
-        if (m := re.match(pattern, line, re.ASCII)) is None:
-            continue
-
-        # Get the required matched strings.
-        output = [None if idx is None else m[idx] for idx in indices]
-
-        # Get the rest of the matched strings.
-        output.append(line[len(m.group(0)):])
-
-        # Append the optional value.
-        output.append(optional_value)
-
-        return tuple(output)
-
-    return tuple([None] * (n_indices + 2))
-
-
-def remove_indent(text: str) -> str:
+def remove_indent(text: str | None) -> str:
     """
     Remove common indent from the given text.
+    If the input text is None then this function returns empty string.
 
     Args:
         text (str): Input text.
@@ -113,16 +75,21 @@ def remove_indent(text: str) -> str:
         >>> remove_indent("  A\\n  B\\n  C")
         'A\\nB\\nC'
     """
-    # Get non-empty lines.
-    lines = [line for line in text.split("\n") if line.strip()]
+    # Returns None if the input text is None.
+    if isinstance(text, str):
 
-    # Compute minimum indent of the non-empty lines.
-    min_indent = min(len(line) - len(line.lstrip()) for line in lines)
+        # Get non-empty lines.
+        lines = [line for line in text.split("\n") if line.strip()]
 
-    return "\n".join(line[min_indent:] for line in text.split("\n"))
+        # Compute minimum indent of the non-empty lines.
+        min_indent = min(len(line) - len(line.lstrip()) for line in lines)
+
+        return "\n".join(line[min_indent:] for line in text.split("\n"))
+
+    return ""
 
 
-def strtobool(s: str) -> bool:
+def strtobool(s: str) -> bool | None:
     """
     Convert the given string to bool instance. The function `bool(...)` is not suitable
     for this purpose, because `bool("False")` returns `True`.
@@ -132,6 +99,12 @@ def strtobool(s: str) -> bool:
 
     Returns:
         (bool): Corresponding boolean value.
+
+    Examples:
+        >>> strtobool("True")
+        True
+        >>> strtobool("False")
+        False
     """
     if s.lower() in {"t", "true", "y", "yes", "on", "1"}:
         return True
