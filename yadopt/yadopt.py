@@ -123,7 +123,7 @@ def wrap(*pargs: Any, **kwargs: Any) -> Callable:
         (Callable): Decorator function.
 
     Note:
-        This function atually returns a decorator function bacause this function
+        This function atually returns a function bacause this function
         is designed as a decorator function with argument (= docstr).
     """
     # Parse command line arguments.
@@ -163,11 +163,12 @@ def to_namedtuple(args: YadOptArgs) -> tuple[Any, ...]:
 
 def save(path: str, args: YadOptArgs, indent: int = 4) -> None:
     """
-    Save the parsed command line arguments as a text file.
+    Save the parsed command line arguments as a JSON file.
 
     Args:
-        path (str)       : Destination path.
-        args (YadOptArgs): Parsed command line arguments to be saved.
+        path   (str)       : Destination path.
+        args   (YadOptArgs): Parsed command line arguments to be saved.
+        indent (int)       : Indent size of the output JSON file.
     """
     # Conver the given path as an instance of pathlib.Path.
     path_out: pathlib.Path = pathlib.Path(path)

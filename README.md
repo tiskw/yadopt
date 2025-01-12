@@ -13,14 +13,13 @@
 </div>
 
 YadOpt - Yet another docopt
-================================================================================
+====================================================================================================
 
-YadOpt is a Python re-implementation of [docopt](https://github.com/docopt/docopt)
-and [docopt-ng](https://github.com/jazzband/docopt-ng), a human-friendly
-command-line argument parser with type hinting and utility functions.
-YadOpt helps you to create beautiful command-line interfaces, just like docopt
-and docopt-ng, however, **YadOpt also supports: (1) date type hinting,
-(2) conversion to dictionaries and namedtuples, and (3) saving and loading functions**.
+YadOpt is a Python re-implementation of [docopt](https://github.com/docopt/docopt) and
+[docopt-ng](https://github.com/jazzband/docopt-ng), a human-friendly command-line argument parser
+with type hinting and utility functions. YadOpt helps you creating beautiful command-line
+interfaces, just like docopt and docopt-ng. However, **YadOpt also supports (1) date type hinting,
+(2) conversion to dictionaries and named tuples, and (3) save and load functions**.
 
 The following is the typical usage of YadOpt:
 
@@ -51,17 +50,16 @@ if __name__ == "__main__":
     print(args)
 ```
 
-Please save the above code as `sample.py`, and run it as follows:
+Please save the above code as `sample.py` and run it as follows:
 
 ```console
 $ python3 sample.py config.toml --epochs 10 --model=cnn
 YadOptArgs(config_path=config.toml, epochs=10, model=cnn, lr=0.001, help=False)
 ```
 
-In the above code, the parsed command-line arguments are stored in the `arg`
-and you can access each argument using dot notation, like `arg.config_path`.
-Also, the parsed command-line arguments are typed, in other words,
-the `arg` variable satisfies the following assertions:
+In the above code, the parsed command-line arguments are stored in the `args` variable, and you can
+access each argument using dot notation, like `arg.config_path`. Also, the parsed command-line
+arguments are typed, in other words, the `args` variable satisfies the following assertions:
 
 ```python
 assert isinstance(args.config_path, pathlib.Path)
@@ -71,12 +69,11 @@ assert isinstance(args.lr, float)
 assert isinstance(args.help, bool)
 ```
 
-More realistic examples can be found in the [examples](./examples/README.md)
-directory.
+More realistic examples can be found in the [examples](./examples/README.md) directory.
 
 
 Installation
---------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
 
 Please install from [pip](https://pip.pypa.io/en/stable/).
 
@@ -86,14 +83,13 @@ $ pip install yadopt
 
 
 Usage
---------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
 
 ### Use `parse` function
 
-The `yadopt.parse` function allows you to parse command-line arguments based on
-your docstring. The function is designed to parse `sys.argv` by default, but
-you can explicitly specify the argument vector by using the second argument
-of the function, just like as follows:
+The `yadopt.parse` function allows you to parse command-line arguments based on your docstring.
+The function is designed to parse `sys.argv` by default, but you can explicitly specify the argument
+vector by using the second argument of the function, just like as follows:
 
 ```python
 # Parse "sys.argv" (default behaviour).
@@ -105,8 +101,8 @@ args = yadopt.parse(__doc__, argv)
 
 ### Use `wrap` function
 
-YadOpt supports the decorator approach for command-line parsing by the decorator
-`@yadopt.wrap` which takes the same arguments as the function `yadopt.parse`.
+YadOpt supports the decorator approach for command-line parsing by the decorator `@yadopt.wrap`
+which takes the same arguments as the function `yadopt.parse`.
 
 ```python
 @yadopt.wrap(__doc__)
@@ -119,11 +115,11 @@ if __name__ == "__main__":
 
 ### How to type arguments and options
 
-YadOpt provides two ways to type arguments and options: (1) type name postfix
-and (2) description head declaration.
+YadOpt provides two ways to type arguments and options: (1) type name postfix and (2) description
+head declaration.
 
-**(1) Type name opstfix**: Users can type arguments and options by adding
-type name at the end of the arguments/options name, such as the following:
+**(1) Type name postfix**: Users can type arguments and options by adding a type name at the end of
+the arguments/options name, such as the following:
 
 ```
 Options:
@@ -131,9 +127,8 @@ Options:
     --opt2 STR    Option of string type.
 ```
 
-**(2) Description head declaration**: Another way to type an arguments and
-options is to put the type name enclosed by parentheses at the beginning
-of the description.
+**(2) Description head declaration**: An alternative way to type arguments and options is
+to precede the description with the type name in parentheses.
 
 ```
 Options:
@@ -152,12 +147,11 @@ The following is the list of available type names.
 | `pathlib.Path`      | path, PATH                   |
 
 
-### Dictionary and namedtuple support
+### Dictionary and named tuple support
 
-The returned value of `yadopt.parse` is an instance of `YadOptArgs` that is
-a normal mutable Python class. However, sometimes a dictionary that has
-the `get` accessor, or an immutable namedtuple, may be preferable.
-In such cases, please try `yadopt.to_dict` or `yadopt.to_namedtuple` function.
+The returned value of `yadopt.parse` is an instance of `YadOptArgs`, a regular mutable Python class.
+However, sometimes a dictionary with the `get` accessor, or an immutable named tuple, may
+be preferable. In such cases, please try `yadopt.to_dict` or `yadopt.to_namedtuple` function.
 
 ```python
 # Convert the returned value to dictionary.
@@ -169,10 +163,9 @@ args = yadopt.to_namedtuple(yadopt.parse(__doc__))
 
 ### Restore arguments from JSON file
 
-YadOpt has a function to save parsed argument instances as a JSON file,
-and to restore the argument instances from the JSON files.
-These functions probably be useful when recalling the same arguments
-that previously executed, for example, in machine learning code.
+YadOpt has a function to save parsed argument instances as a JSON file and to restore the argument
+instances from the JSON files. These functions are probably useful when recalling the same arguments
+that were previously executed, for example, in machine learning code.
 
 ```python
 # At first, create a parsed arguments (i.e. YadOptArgs instance).
@@ -185,27 +178,37 @@ yadopt.save("args.json", args)
 args_restored = yadopt.load("args.json")
 ```
 
-The format of the JSON file is pretty straightforward &ndash; what the user
-types on the command line is stored in the "argv" key, and the docstring is
-stored in the "docstr" key in the JSON file. If users want to write the JSON
-file manually, the author recommends making a JSON file using the save function
-and investigating the contents of the file.
+The format of the JSON file is pretty straightforward &mdash; what the user types on the command
+line is stored in the `"argv"` key, and the docstring is stored in the `"docstr"` key in the JSON
+file. If users want to write the JSON file manually, the author recommends making a JSON file using
+the `yadopt.save` function and investigating the contents of the file.
 
 
-API
---------------------------------------------------------------------------------
+API reference
+----------------------------------------------------------------------------------------------------
 
-See [API reference](https://tiskw.github.io/yadopt/index.html#sec4).
+See [API reference page](https://tiskw.github.io/yadopt/index.html#sec4) of the online document.
 
 
 Developer's note
---------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
+
+### Preparation
+
+Additional commands and Python packages are required for developers to measure the number of lines
+in the code, code quality, etc. Please run the following command (the author recommends using
+[venv](https://docs.python.org/3/library/venv.html) to avoid polluting your development
+environment).
+
+```console
+$ apt install cloc
+$ pip install -r requirements-dev.txt
+```
 
 ### Utility commands for developers
 
-Utility commands are summarized in the Makefile. Run `make` at the root
-directory of this repository to see the details of the subcommands of
-the Makefile.
+Utility commands are summarized in the Makefile. Please run `make` at the root directory of this
+repository to see the details of the subcommands in the Makefile.
 
 ```console
 $ make
