@@ -36,8 +36,7 @@
                 <li class="pure-menu-item"><a href="#sec1" class="pure-menu-link">What's YadOpt?</a></li>
                 <li class="pure-menu-item"><a href="#sec2" class="pure-menu-link">Installation</a></li>
                 <li class="pure-menu-item"><a href="#sec3" class="pure-menu-link">Usage</a></li>
-                <li class="pure-menu-item"><a href="#sec4" class="pure-menu-link">Type hints</a></li>
-                <li class="pure-menu-item"><a href="#sec5" class="pure-menu-link">API reference</a></li>
+                <li class="pure-menu-item"><a href="#sec4" class="pure-menu-link">API reference</a></li>
             </ul>
         </div></div>
         <!-- }}} -->
@@ -58,9 +57,9 @@
                 <h2 id="sec1" class="content-subhead">What's YadOpt?</h2>
                 <p>YadOpt is a Python re-implementation of <a href="https://github.com/docopt/docopt">docopt</a> <!--
                 -->and <a href="https://github.com/jazzband/docopt-ng">docopt-ng</a>, a human-friendly command-line argument parser <!--
-                -->with type hinting and utility functions. YadOpt helps you to create beautiful command-line interfaces, just like <!--
-                -->docopt and docopt-ng, however, <strong>YadOpt also supports: (1) date type hinting, <!--
-                -->(2) conversion to dictionaries and namedtuples, and (3) saving and loading functions</strong>.</p>
+                -->with type hinting and utility functions. YadOpt helps you creating beautiful command-line interfaces, just like <!--
+                -->docopt and docopt-ng. However, <strong>YadOpt also supports (1) date type hinting, (2) conversion to dictionaries <!--
+                -->and named tuples, and (3) save and load functions</strong>.</p>
                 <p>The following is the typical usage of YadOpt:</p>
                 <pre><code class="python">&quot;&quot;&quot;
 Usage:
@@ -86,20 +85,20 @@ import yadopt
 if __name__ == &quot;__main__&quot;:
     args = yadopt.parse(__doc__)
     print(args)</code></pre>
-                <p>Please save the above code as <code class="shell inline">sample.py</code>, and run it as follows:</p>
+                <p>Please save the above code as <code class="shell inline">sample.py</code> and run it as follows:</p>
                 <pre><code class="console">$ python3 sample.py config.toml --epochs 10 --model=cnn
 YadOptArgs(config_path=config.toml, epochs=10, model=cnn, lr=0.001, help=False)</code></pre>
-                <p>In the above code, the parsed command-line arguments are stored in the <code class="python">arg</code> <!--
-                -->and you can access each argument using dot notation, like <code class="python">arg.config_path</code>. <!--
-                -->Also, the parsed command-line arguments are typed, in other words, the <code class="python">arg</code> <!--
-                -->variable satisfies the following assertions:</p>
+                <p>In the above code, the parsed command-line arguments are stored in the <code class="python">args</code> <!--
+                -->variable, and you can access each argument using dot notation, like <code class="python">arg.config_path</code>. <!--
+                -->Also, the parsed command-line arguments are typed, in other words, the <code class="python">args</code> variable <!--
+                -->satisfies the following assertions:</p>
                 <pre><code class="python">assert isinstance(args.config_path, pathlib.Path)
 assert isinstance(args.epochs, int)
 assert isinstance(args.model, str)
 assert isinstance(args.lr, float)
 assert isinstance(args.help, bool)</code></pre>
                 <p>More realistic examples can be found in the <a href="https://github.com/tiskw/yadopt/tree/main/examples">examples</a> <!--
-                -->directory of YadOpt repository.</p>
+                -->directory of the YadOpt repository.</p>
                 <!-- End of section 1 }}} -->
 
                 <!-- Section 2: Installation {{{ -->
@@ -112,9 +111,9 @@ assert isinstance(args.help, bool)</code></pre>
                 <h2 id="sec3" class="content-subhead">Usage</h2>
 
                 <h3>Use yadopt.parse function</h3>
-                <p>The yadopt.parse function allows you to parse command-line arguments based on your docstring. The function is designed <!--
-                -->to parse sys.argv by default, but you can explicitly specify the argument vector by using the second argument of <!--
-                -->the function, just like as follows:</p>
+                <p>The <code class="pytnon">yadopt.parse</code> function allows you to parse command-line arguments based on your docstring. <!--
+                -->The function is designed to parse <code class="python">sys.argv</code> by default, but you can explicitly specify <!--
+                -->the argument vector by using the second argument of the function, just like as follows:</p>
                 <pre><code class="python"># Parse sys.argv
 args = yadopt.parse(__doc__)
 
@@ -122,8 +121,9 @@ args = yadopt.parse(__doc__)
 args = yadopt.parse(__doc__, argv)</code></pre>
 
                 <h3>Use yadopt.wrap function</h3>
-                <p>YadOpt supports the decorator approach for command-line parsing by the decorator @yadopt.wrap which takes <!--
-                -->the same arguments as the function yadopt.parse.</p>
+                <p>YadOpt supports the decorator approach for command-line parsing by the decorator <!--
+                --><code class="python">@yadopt.wrap</code> which takes the same arguments as the function <!--
+                --><code class="python">yadopt.parse</code>.</p>
                 <pre><code class="python">@yadopt.wrap(__doc__)
 def main(args: yadopt.YadOptArgs, real_arg: str):
     ...
@@ -131,119 +131,21 @@ def main(args: yadopt.YadOptArgs, real_arg: str):
 if __name__ == "__main__":
     main("real argument")</code></pre>
 
-                <h3>Dictionary and namedtuple support</h3>
-                <p>The returned value of yadopt.parse is an instance of YadOptArgs that is a normal mutable Python class. <!--
-                -->However, sometimes a dictionary that has the get accessor, or an immutable namedtuple, may be preferable. <!--
-                -->In that case, please try .to_dict and .to_namedtuple functions.</p>
-                <pre><code class="python"># Convert the returned value to dictionary.
-args = yadopt.parse(__doc__).to_dict()
-
-# Convert the returned value to namedtuple.
-args = yadopt.parse(__doc__).to_namedtuple()</code></pre>
-
-                <h3>Restore arguments from a text file</h3>
-                <p>YadOpt has a function to save parsed argument instances as a text file, <!--
-                -->and to restore the argument instances from the text files. These functions probably be useful when <!--
-                -->recalling the same arguments that previously executed, for example, machine learning code.</p>
-                <pre><code class="python"># At first, create a parsed arguments (i.e. YadOptArgs instance).
-args = yadopt.parse(__doc__)
-
-# Save the parsed arguments as a text file.
-yadopt.save("args.txt", args)
-
-# Resotre parsed YadOptArgs instance from the JSON file.
-args_restored = yadopt.load("args.txt")
-
-# The restored arguments are the same as the original.
-assert args == args_restored</code></pre>
-                <p>The format of the text file is straightforward &mdash; just exactly what you would type on a command line <!--
-                -->under the normal use case. If you want to write the text file manually, the author recommends making <!--
-                -->a text file using the <code>save</code> function and investigating the contents of the file at first.</p>
-                <!-- End of section 3 }}} -->
-
-                <!-- Section 4: Type hints {{{ -->
-                <h2 id="sec4" class="content-subhead">Type hints</h2>
-                <p>One of the features of YadOpt is that users can provide type hints to arguments and options. <!--
-                -->For example, if an option <code class="console">--opt</code> is defined as <code class="console">--opt INT</code>, <!--
-                -->then the value of <code class="console">--opt</code> is parsed as an integer. There are several ways <!--
-                -->to provide type hints to arguments and options, we list them all below with minimal example code.</p>
-
-                <h3>1. Type hints for arguments</h3>
-
-                <h4>1.1 Parentheses rule</h4>
-                <p>If a description begins with parentheses, the content within the parentheses is treated as a type name, <!--
-                -->and the argument value is converted to the specified type. Note that the argument value is kept as a string <!--
-                -->if the specified type name is invalid.</p>
-                <pre><code class="python">"""
-Usage:
-    sample.py &lt;arg&gt;
-
-Options:
-    arg    (int) Integer argument.
-"""
-
-import yadopt
-
-args = yadopt.parse(__doc__)
-
-assert isinstance(args.arg, int)</code></pre>
-
-                <h4>1.2 Postfix rule for argument name</h4>
-                <p>Another way to provide type hints to arguments is adding type name at the end of argument names. <!--
-                -->For example, argument <code class="console">x_int</code> is parsed as an integer value.</p>
-                <pre><code class="python">"""
-Usage:
-    sample.py &lt;arg_int&gt;
-
-Options:
-    arg_int    Integer argument.
-"""
-
-import yadopt
-
-args = yadopt.parse(__doc__)
-
-assert isinstance(args.arg_int, int)</code></pre>
-
-
-                <h3>2. Type hints for options</h3>
-
-                <h4>2.1 Parentheses rule</h4>
-                <p>The same as the parentheses rule for arguments.</p>
-                <pre><code class="python">"""
-Usage:
-    sample.py [--opt VALUE]
-
-Options:
-    --opt VALUE   (int) Integer option.
-"""
-
-import yadopt
-
-args = yadopt.parse(__doc__)
-
-assert isinstance(args.opt, int)</code></pre>
-
-                <h4>2.2 Postfix rule for option value name</h4>
-                <p>The prefix rules also work for option arguments. However, please note that <!--
-                -->the type name should be added at the end of the option value name, not the option name. <!--
-                -->You'll see this form of type hinting most often in code examples.</p>
-                <pre><code class="python">"""
-Usage:
-    sample.py [--opt INT]
-
-Options:
-    --opt INT   Integer option.
-"""
-
-import yadopt
-
-args = yadopt.parse(__doc__)
-
-assert isinstance(args.opt, int)</code></pre>
-
-                <h3>Available type names</h3>
-                <table class="pure-table pure-table-bordered"><thead><tr>
+                <h3>How to type arguments and options</h3>
+                <p>YadOpt provides two ways to type arguments and options: (1) type name postfix <!--
+                -->and (2) description head declaration.</p>
+                <p><strong>(1) Type name postfix</strong>: Users can type arguments and options by adding <!--
+                -->a type name at the end of the arguments/options name, such as the following:</p>
+                <pre><code class="plaintext">Options:
+    --opt1 FLT    Option of float type.
+    --opt2 STR    Option of string type.</pre></code>
+                <p><strong>(2) Description head declaration</strong>: An alternative way to type arguments <!--
+                -->and options is to precede the description with the type name in parentheses.</p>
+                <pre><code class="plaintext">Options:
+    --opt1 VAL1    (float) Option of float type.
+    --opt2 VAL2    (str)   Option of string type.</pre></code>
+                <p>The following is the list of available type names.</p>
+                <div align="center"><table class="pure-table pure-table-bordered"><thead><tr>
                     <th>Data type in Python</th>
                     <th>Type name in YadOpt</th>
                 </tr></thead><tbody><tr>
@@ -261,12 +163,46 @@ assert isinstance(args.opt, int)</code></pre>
                 </tr><tr>
                     <td><code class="python">pathlib.Path</code></td>
                     <td>path, PATH</td>
-                </tr></tbody></table>
+                </tr></tbody></table></div>
 
-                <!-- End of section 4 }}} -->
+                <h3>Dictionary and namedtuple support</h3>
+                <p>The returned value of <code class="python">yadopt.parse</code> is an instance of YadOptArgs, <!--
+                -->a regular mutable Python class. However, sometimes a dictionary with the get accessor, <!--
+                -->or an immutable named tuple, may be preferable. In such cases, please try <!--
+                --><code class="python">yadopt.to_dict</code> or <code class="python">yadopt.to_namedtuple</code> function.</p>
+                <pre><code class="python"># Convert the returned value to dictionary.
+args = yadopt.parse(__doc__).to_dict()
 
-                <!-- Section 5: API reference {{{ -->
-                <h2 id="sec5" class="content-subhead">API reference</h2>
+# Convert the returned value to namedtuple.
+args = yadopt.parse(__doc__).to_namedtuple()</code></pre>
+
+                <h3>Restore arguments from JSON file</h3>
+                <p>YadOpt has a function to save parsed argument instances as a JSON file and to restore <!--
+                -->the argument instances from the JSON files. These functions are probably useful when recalling <!--
+                -->the same arguments that were previously executed, for example, in machine learning code.
+                <pre><code class="python"># At first, create a parsed arguments (i.e. YadOptArgs instance).
+args = yadopt.parse(__doc__)
+
+# Save the parsed arguments as a text file.
+yadopt.save("args.txt", args)
+
+# Resotre parsed YadOptArgs instance from the JSON file.
+args_restored = yadopt.load("args.txt")
+
+# The restored arguments are the same as the original.
+assert args == args_restored</code></pre>
+                <p>The format of the text file is straightforward &mdash; just exactly what you would type on a command line <!--
+                -->under the normal use case. If you want to write the text file manually, the author recommends making <!--
+                -->a text file using the <code>save</code> function and investigating the contents of the file at first.</p>
+
+                <p>The format of the JSON file is pretty straightforward &mdash; what the user types on the command line <!--
+                -->is stored in the <code class="python">"argv"</code> key, and the docstring is stored in <!--
+                -->the <code class="python">"docstr"</code> key in the JSON file. If users want to write the JSON file manually, <!--
+                -->the author recommends making a JSON file using the <code>yadopt.save</code> function and investigating the contents of the file.
+                <!-- End of section 3 }}} -->
+
+                <!-- Section 4: API reference {{{ -->
+                <h2 id="sec4" class="content-subhead">API reference</h2>
 
                 <!-- Table of contents -->
                 <h3>Contents</h3>
@@ -282,8 +218,8 @@ assert isinstance(args.opt, int)</code></pre>
                 <!-- yadopt.parse {{{ -->
                 <h3 id="reference_yadopt_parse" class="reference-title">yadopt.parse</h3>
                 <pre><code class="python">def yadopt.parse(docstr: str,
-                 argv: list[str] = None,
-                 default_type: Callable = None,
+                 argv: list[str] = sys.argv,
+                 default_type: Callable = auto_type,
                  force_continue: bool = False) -&gt; YadOptArgs:</code></pre>
                 <p>Parse docstring and returns YadoptArgs instance.</p>
                 <h4>Args</h4>
@@ -302,13 +238,13 @@ assert isinstance(args.opt, int)</code></pre>
                 </tr><tr>
                     <td><code class="python">argv</code></td>
                     <td><code class="python">list[str]</code></td>
-                    <td><code class="python">None</code></td>
+                    <td><code class="python">sys.argv</code></td>
                     <td>An argument vector to be parsed. YadOpt uses the command line arguments passed to your<!--
                     --> Python script, <code class="python">sys.argv[1:]</code>, by default.</td>
                 </tr><tr>
                     <td><code class="python">default_type</code></td>
                     <td><code class="python">Callable</code></td>
-                    <td><code class="python">None</code></td>
+                    <td><code class="python">auto_type</code></td>
                     <td>A function that assign types to arguments and option values. <!--
                     -->The default value <code class="python">None</code> means using default function.</td>
                 </tr><tr>
@@ -327,17 +263,19 @@ assert isinstance(args.opt, int)</code></pre>
                     <td><code class="python">YadOptArgs</code></td>
                     <td>The returned value is an instance of the <code class="python">YadOptArgs</code> class that <!--
                      -->represents parsed command line arguments. The <code class="python">YadOptArgs</code> class is <!--
-                     -->a normal mutable Python class and users can access to parsed command line arguments by <!--
+                     -->a regular mutable Python class and users can access to parsed command line arguments by <!--
                      -->the dot notation. If you wish to convert <code class="python">YadOptArgs</code> to dictionary type, <!--
-                     -->please use <code class="python">.to_dict()</code> function. Likewise, if you prefer an immutable <!--
-                     -->data type, please try <code class="python">.to_namedtuple()</code> function.</td>
+                     -->please use <code class="python">yadopt.to_dict</code> function. Likewise, if you prefer an immutable <!--
+                     -->data type, please try <code class="python">yadopt.to_namedtuple</code> function.</td>
                 </tr></tbody></table>
                 <!-- }}} -->
 
                 <!-- yadopt.wrap {{{ -->
                 <h3 id="reference_yadopt_wrap" class="reference-title">yadopt.wrap</h3>
-                <pre><code class="python">def yadopt.wrap(*pargs: list, **kwargs: dict) -&gt; Callable:</code></pre>
-                <p>Wrapper function for the command line parsing.</p>
+                <pre><code class="python">def yadopt.wrap(*pargs: Any, **kwargs: Any) -&gt; Callable:</code></pre>
+                <p>Wrapper function for the command line parsing. <!--
+                -->This function atually returns a decorator function bacause this function <!--
+                -->is designed as a decorator function with argument.</p>
                 <h4>Args</h4>
                 <p>The same as the arguments of <code class="python">yadopt.parse</code> function.</p>
                 <h4>Returns</h4>
@@ -355,7 +293,7 @@ assert isinstance(args.opt, int)</code></pre>
 
                 <!-- yadopt.to_dict {{{ -->
                 <h3 id="reference_yadopt_to_dict" class="reference-title">yadopt.to_dict</h3>
-                <pre><code class="python">def to_dict(args: YadOptArgs) -&gt; dict:</code></pre>
+                <pre><code class="python">def yadopt.to_dict(args: YadOptArgs) -&gt; dict:</code></pre>
                 <p>Convert <code class="python">YadOptArgs</code> instance to a dictionary.</p>
                 <h4>Args</h4>
                 <table class="pure-table pure-table-bordered"><thead><tr>
@@ -381,7 +319,7 @@ assert isinstance(args.opt, int)</code></pre>
 
                 <!-- yadopt.to_namedtuple {{{ -->
                 <h3 id="reference_yadopt_to_namedtuple" class="reference-title">yadopt.to_namedtuple</h3>
-                <pre><code class="python">def to_namedtuple(args: YadOptArgs) -&gt; collections.namedtuple:</code></pre>
+                <pre><code class="python">def to_namedtuple(args: YadOptArgs) -&gt; tuple[Any, ...]:</code></pre>
                 <p>Convert YadOptArgs instance to a named tuple.</p>
                 <h4>Args</h4>
                 <table class="pure-table pure-table-bordered"><thead><tr>
@@ -401,15 +339,15 @@ assert isinstance(args.opt, int)</code></pre>
                     <th>Type</th>
                     <th>Description</th>
                 </tr></thead><tbody><tr>
-                    <td><code class="python">collections.namedtuple</code></td>
+                    <td><code class="python">tuple[Any, ...]</code></td>
                     <td>Namedtuple of the given parsed arguments.</td>
                 </tr></tbody></table>
                 <!-- }}} -->
 
                 <!-- yadopt.save {{{ -->
                 <h3 id="reference_yadopt_save" class="reference-title">yadopt.save</h3>
-                <pre><code class="python">def save(path: str, args: YadOptArgs) -&gt; None:</code></pre>
-                <p>Save the parsed command line arguments as a text file.</p>
+                <pre><code class="python">def save(path: str, args: YadOptArgs, indent: int = 4) -&gt; None:</code></pre>
+                <p>Save the parsed command line arguments as a JSON file.</p>
                 <h4>Args</h4>
                 <table class="pure-table pure-table-bordered"><thead><tr>
                     <th>Name</th>
@@ -426,6 +364,11 @@ assert isinstance(args.opt, int)</code></pre>
                     <td><code class="python">YadOptArgs</code></td>
                     <td>-</td>
                     <td>Parsed command line arguments to be saved.</td>
+                </tr><tr>
+                    <td><code class="python">indent</code></td>
+                    <td><code class="python">int</code></td>
+                    <td>4</td>
+                    <td>Indent size of the output JSON file.</td>
                 </tr></tbody></table>
                 <h4>Returns</h4>
 
@@ -440,7 +383,7 @@ assert isinstance(args.opt, int)</code></pre>
 
                 <!-- yadopt.load {{{ -->
                 <h3 id="reference_yadopt_load" class="reference-title">yadopt.load</h3>
-                <pre><code class="python">def load(path: str, docstr: str = None) -&gt; YadOptArgs:</code></pre>
+                <pre><code class="python">def load(path: str) -&gt; YadOptArgs:</code></pre>
                 <p>Load a parsed command line arguments from text file.</p>
                 <h4>Args</h4>
                 <table class="pure-table pure-table-bordered"><thead><tr>
