@@ -3,7 +3,7 @@ Usage line parser.
 """
 
 # Declare published functins and variables.
-__all__ = ["UsageInfo"]
+__all__ = ["UsageInfo", "parse_docstr_usage"]
 
 # Import standard libraries.
 import copy
@@ -15,7 +15,7 @@ import textwrap
 from collections.abc import Generator
 
 # Import custom modules.
-from .dtypes import UsageOpt, UsageEntry
+from .dtypes import OptsInfo, UsageOpt, UsageEntry
 from .errors import YadOptError
 from .utils  import get_section_lines
 
@@ -53,7 +53,7 @@ class UsageInfo:
 
         return text.strip()
 
-    def expand_options(self, opts) -> None:
+    def expand_options(self, opts: OptsInfo) -> None:
         """
         Expand [OPTIONS] token in the usage.
         """
@@ -65,6 +65,9 @@ class UsageInfo:
 def parse_docstr_usage(docstr: str) -> UsageInfo:
     """
     Parse docstring and return usage info.
+
+    Args:
+        (UsageInfo): Parsed usage information.
     """
     return UsageInfo(docstr)
 
@@ -75,6 +78,9 @@ def parse_usage_line(line: str) -> UsageEntry:
 
     Args:
         line (str): Input usage string.
+
+    Returns:
+        (UsageEntry): Parsed result of one usage.
 
     Examples:
         >>> parse_usage_line("sample.py <a1> <a2> [--o1]")
@@ -114,7 +120,7 @@ def parse_usage_line(line: str) -> UsageEntry:
         elif token.startswith("-"):
 
             # Get the option name.
-            opt_key = token.lstrip("-")
+            opt_key: str = token.lstrip("-")
 
             # Case 2.1: Option with value.
             if tokens and all(not tokens[0].startswith(s) for s in ["<", "[", "-"]):
@@ -152,6 +158,9 @@ def tokenize(usage_line: str) -> Generator[str]:
     Args:
         usage_line (str) : Usage string.
         strip      (bool): Strip whitespace from returned tokens if true.
+
+    Returns:
+        (Generator[str]): Tokens in the usage line.
 
     Examples:
         >>> list(tokenize("sample.py <arg1> [--opt1]"))

@@ -3,7 +3,7 @@ Collections of data types and classes.
 """
 
 # Declare published functions and variables.
-__all__ = ["ArgEntry", "ArgsInfo", "OptEntry", "OptsInfo", "UsageOpt", "UsageEntry", "ArgVector"]
+__all__ = ["ArgEntry", "ArgsInfo", "OptEntry", "OptsInfo", "UsageOpt", "UsageEntry", "ArgVector", "YadOptArgs"]
 
 # Import standard libraries.
 import dataclasses
@@ -86,6 +86,10 @@ class UsageEntry:
     args: list[str]       # Argument tokens.
     opts: list[UsageOpt]  # Option tokens.
 
+
+############################################################
+# Data types for parsing argument vector
+############################################################
 
 @dataclasses.dataclass
 class ArgVector:

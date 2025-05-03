@@ -76,6 +76,12 @@ def match_and_get(line: str, patterns_and_indices: list[PatternType]) -> Matched
 def match_arg(line: str) -> MatchedType:
     """
     Parse arguments line.
+
+    Args:
+        line (str): Target string.
+
+    Returns:
+        (MatchedType): A tuple of matched strings.
     """
     return match_and_get(line, PATTERNS_AND_INDICES_ARG)
 
@@ -83,6 +89,12 @@ def match_arg(line: str) -> MatchedType:
 def match_opt(line: str) -> MatchedType:
     """
     Parse arguments line.
+
+    Args:
+        line (str): Target string.
+
+    Returns:
+        (MatchedType): A tuple of matched strings.
 
     Examples:
         >>> match_opt("  -h, --help   show this message and exit.")
@@ -94,6 +106,12 @@ def match_opt(line: str) -> MatchedType:
 def match_sec(line: str) -> MatchedType:
     """
     Parse section line.
+
+    Args:
+        line (str): Target string.
+
+    Returns:
+        (MatchedType): A tuple of matched strings.
     """
     return match_and_get(line, PATTERNS_AND_INDICES_SEC)
 

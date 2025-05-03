@@ -23,9 +23,9 @@ def parse_argvec(argv: list[str], usage: UsageInfo, opts: OptsInfo) -> ArgVector
     correspondance. Otherwise, returns None.
 
     Args:
-        argv           (list[str]) : Argument vector.
-        dsinfo         (DocStrInfo): Parsed result of docstring.
-        force_continue (bool)      : Never exit the software if True.
+        argv  (list[str]): Argument vector.
+        usage (UsageInfo): Parsed result of docstring.
+        opts  (OptsInfo) : Options information of docstring.
 
     Returns:
         (ArgVector): Correspondance of argument/option names and values.
@@ -68,10 +68,17 @@ def parse_argvec(argv: list[str], usage: UsageInfo, opts: OptsInfo) -> ArgVector
     return ArgVector(pres={}, args={}, opts={})
 
 
-def standerdize_option_names_in_argument_vector(argv, alt_names) -> Generator[str]:
+def standerdize_option_names_in_argument_vector(argv: list[str], alt_names: dict[str, str]) -> Generator[str]:
     """
     Standardize option names of argument vector.
     For example, "-h" -> "--help".
+
+    Args:
+        argv      (list[str])     : Argument vector.
+        alt_names (dict[str, str]): A map from altanative name to standard name.
+
+    Returns:
+        (Generator[str]): Standerdized option names.
     """
     for idx, (prefix, key) in enumerate((token[0], token[1:]) for token in argv):
         yield f"--{alt_names[key]}" if (prefix == "-") and (key in alt_names) else argv[idx]
@@ -85,7 +92,7 @@ def match_argvec_and_usage(argv: list[str], usage: UsageEntry, usage_opt_dict: d
     Args:
         argv           (list[str])          : Argument vector.
         usage          (UsageEntry)         : Usage pattern.
-        usage_opt_dict (dict[str, UsageOpt]): 
+        usage_opt_dict (dict[str, UsageOpt]): Dictionary form of options in usage.
 
     Returns:
         (ArgVector): ArgVector instance if matched, and None otherwise.
@@ -148,6 +155,9 @@ def proc_arg_token(token: str, argvec: ArgVector, available_args: list[str]) -> 
         token          (str)      : Input token.
         argvec         (ArgVector): User input instance.
         available_args (list[str]): Rest of available arguments.
+
+    Returns:
+        (bool): True if matched.
     """
     # NOT MATRCHED!: too many arguments.
     if not available_args:
@@ -182,6 +192,9 @@ def proc_opt_token(token: str, argv: list[str], user_input: ArgVector, usage_opt
         argv       (list[str]) : Argument vector.
         user_input (ArgVector) : User input instance.
         usage      (UsageEntry): Usage pattern.
+
+    Returns:
+        (bool): True if matched.
     """
     # Remove hyphens.
     token = token.lstrip("-")

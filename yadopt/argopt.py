@@ -19,6 +19,12 @@ from .utils    import get_default, get_section_lines
 def parse_docstr_args(docstr: str) -> ArgsInfo:
     """
     Parse docstring and returns arguments info.
+
+    Args:
+        docstr (str): Docstring to be parsed.
+
+    Returns:
+        (ArgsInfo): Arguments information of docstring.
     """
     # Get arguments information.
     items: list[ArgEntry] = []
@@ -35,6 +41,12 @@ def parse_docstr_args(docstr: str) -> ArgsInfo:
 def parse_docstr_opts(docstr: str) -> OptsInfo:
     """
     Parse docstring and returns options info.
+
+    Args:
+        docstr (str): Docstring to be parsed.
+
+    Returns:
+        (OptsInfo): Options information of docstring.
     """
     # Get options information.
     items: list[OptEntry] = []

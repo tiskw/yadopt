@@ -24,7 +24,7 @@ from typing          import Any
 from .argopt  import parse_docstr_args, parse_docstr_opts
 from .argvec  import ArgVector, parse_argvec
 from .checker import check_user_input
-from .dtypes  import YadOptArgs, ArgsInfo, OptsInfo
+from .dtypes  import ArgsInfo, OptsInfo, YadOptArgs
 from .errors  import YadOptError
 from .gendat  import generate_data
 from .hints   import auto_type, type_hint
@@ -100,8 +100,8 @@ def wrap(*pargs: Any, **kwargs: Any) -> Callable:
     Wrapper function for the command line parsing.
 
     Args:
-        pargs  (list): Positional arguments for 'yadopt.parse' function.
-        kwargs (dict): Keyword arguments for 'yadopt.parse' function.
+        pargs  (Any): Positional arguments for 'yadopt.parse' function.
+        kwargs (Any): Keyword arguments for 'yadopt.parse' function.
 
     Returns:
         (Callable): Decorator function.

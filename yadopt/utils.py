@@ -69,10 +69,11 @@ def get_section_lines(docstr: str, section_name: str) -> Generator[str]:
     Parse docstring and split it to sections.
 
     Args:
-        docstr (str): Input docstring.
+        docstr       (str): Input docstring.
+        section_name (str): Target section name.
 
     Returns:
-        (tuple): A tuple of (section type, line).
+        (Generator[str]): Lines of specified section.
     """
     # Initialize the section type.
     is_target_section: bool = False
@@ -104,7 +105,7 @@ def strtobool(s: str) -> bool | None:
         s (str): Input string.
 
     Returns:
-        (bool): Corresponding boolean value.
+        (bool | None): Corresponding boolean value.
 
     Examples:
         >>> strtobool("True")
@@ -124,7 +125,7 @@ def retokenize(argv: list[str]) -> Generator[str]:
     Tokenize the argument vector.
 
     Args:
-        target (str): Target string to be tokenized.
+        argv (list[str]): Argument vector to be tokenized.
 
     Returns:
         (Generator[str]): Re-tokenized tokens.
@@ -137,9 +138,13 @@ def retokenize(argv: list[str]) -> Generator[str]:
         yield from token.split("=", maxsplit=1)
 
 
-def repr_dataclass_items(name: str, data: Any):
+def repr_dataclass_items(name: str, data: Any) -> str:
     """
     String expression of dataclass that has items.
+
+    Args:
+        name (str): Name of the dataclass.
+        data (Any): Instance of dataclass.
     """
     # Header of the string expression.
     text: str = f"{name}:\n"

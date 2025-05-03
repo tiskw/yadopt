@@ -3,7 +3,7 @@ Generate YadoptArgument data class.
 """
 
 # Declare published functions and variables.
-__all__ = ["generate_data", "YadOptArgs"]
+__all__ = ["generate_data"]
 
 # Import standard libraries.
 import copy
@@ -23,6 +23,9 @@ def generate_data(argvec: ArgVector, args: ArgsInfo, opts: OptsInfo, argv: list[
         opts   (OptsInfo)  : Options information.
         argv   (list[str]) : Argument vector.
         docstr (str)       : Docstring.
+
+    Returns:
+        (YadOptArgs): Parsed command line arguments.
     """
     # Create data instance.
     data: YadOptArgs = YadOptArgs()
