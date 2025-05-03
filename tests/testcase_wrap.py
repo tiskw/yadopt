@@ -54,6 +54,9 @@ def main(args: yadopt.YadOptArgs, real_arg: str):
     # Check the other arguments.
     assert real_arg == "real argument"
 
+    # Print YadOptArgs just for a test.
+    print(args)
+
 
 def test():
     """

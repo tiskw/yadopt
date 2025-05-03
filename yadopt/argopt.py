@@ -3,61 +3,52 @@ Docstring parser.
 """
 
 # Declare published functions and variables.
-__all__ = ["parse_docstr_arg", "parse_docstr_opt"]
+__all__ = ["parse_docstr_args", "parse_docstr_opts"]
 
 # Import standard libraries.
 import re
 
 # Import custom modules.
-from .dtypes   import ArgEntry, OptEntry
-from .docstr   import get_section_lines
+from .dtypes   import ArgEntry, ArgsInfo, OptEntry, OptsInfo
 from .errors   import YadOptError
 from .hints    import DTYPE_HINTS
 from .matchers import match_arg, match_opt
-from .utils    import get_default
+from .utils    import get_default, get_section_lines
 
 
-def parse_docstr_arg(docstr: str) -> list[ArgEntry]:
+def parse_docstr_args(docstr: str) -> ArgsInfo:
     """
-    Read docstring and parse argument section.
-
-    Args:
-        docstr (str): Docstring to be parsed.
-
-    Returns:
-        (list[ArgEntry]): List of argument entries.
+    Parse docstring and returns arguments info.
     """
-    return [parse_arg_line(line) for line in get_section_lines(docstr, "arguments")]
+    # Get arguments information.
+    items: list[ArgEntry] = []
+    for item in map(parse_line, get_section_lines(docstr, "arguments")):
+        if isinstance(item, ArgEntry):
+            items.append(item)
+
+    # Get arguments sections of docstring.
+    docstr_args: str = "Arguments:\n" + "\n".join(get_section_lines(docstr, "arguments"))
+
+    return ArgsInfo(items, docstr_args)
 
 
-def parse_docstr_opt(docstr: str) -> list[OptEntry]:
+def parse_docstr_opts(docstr: str) -> OptsInfo:
     """
-    Read docstring and parse option section.
-
-    Args:
-        docstr (str): Docstring to be parsed.
-
-    Returns:
-        (UsageInfo): List of option entries.
+    Parse docstring and returns options info.
     """
-    return [parse_opt_line(line) for line in get_section_lines(docstr, "options")]
+    # Get options information.
+    items: list[OptEntry] = []
+    for item in map(parse_line, get_section_lines(docstr, "options")):
+        if isinstance(item, OptEntry):
+            items.append(item)
+
+    # Get options sections of docstring.
+    docstr_opts: str = "Options:\n" + "\n".join(get_section_lines(docstr, "options"))
+
+    return OptsInfo(items, docstr_opts)
 
 
-def parse_arg_line(line: str) -> ArgEntry | OptEntry | None:
-    """
-    Parse an entry of argument section.
-    Now `parse_opt_line` can manage both arguments and options.
-
-    Examples:
-        >>> parse_arg_line("  arg1 msg")
-        ArgEntry(name='arg1', dtype_str='unknown', desc='msg', default=None)
-        >>> parse_arg_line("  arg1  (INT) msg  [default: 10]")
-        ArgEntry(name='arg1', dtype_str='int', desc='msg', default='10')
-    """
-    return parse_opt_line(line)
-
-
-def parse_opt_line(line: str) -> ArgEntry | OptEntry | None:
+def parse_line(line: str) -> ArgEntry | OptEntry | None:
     """
     Parse an entry of argument and option sections.
 
@@ -68,17 +59,21 @@ def parse_opt_line(line: str) -> ArgEntry | OptEntry | None:
         (ArgEntry | OptEntry | None): Parsed result.
 
     Examples:
-        >>> parse_opt_line("  -o   msg")
+        >>> parse_line("  -o   msg")
         OptEntry(name='o', name_alt=None, has_value=False, dtype_str='bool', desc='msg', default='False')
-        >>> parse_opt_line("  --opt   msg")
+        >>> parse_line("  --opt   msg")
         OptEntry(name='opt', name_alt=None, has_value=False, dtype_str='bool', desc='msg', default='False')
-        >>> parse_opt_line("  -o, --opt   msg")
+        >>> parse_line("  -o, --opt   msg")
         OptEntry(name='opt', name_alt='o', has_value=False, dtype_str='bool', desc='msg', default='False')
-        >>> parse_opt_line("  -o, --opt INT   msg")
+        >>> parse_line("  -o, --opt INT   msg")
         OptEntry(name='opt', name_alt='o', has_value=True, dtype_str='int', desc='msg', default=None)
+        >>> parse_line("  arg1 msg")
+        ArgEntry(name='arg1', dtype_str='unknown', desc='msg', default=None)
+        >>> parse_line("  arg1  (INT) msg  [default: 10]")
+        ArgEntry(name='arg1', dtype_str='int', desc='msg', default='10')
     """
     # Try to parse as argument line.
-    outputs, description, _ = match_arg(line)
+    (outputs, description, _) = match_arg(line)
 
     if len(outputs) > 0:
 
@@ -90,15 +85,15 @@ def parse_opt_line(line: str) -> ArgEntry | OptEntry | None:
             raise YadOptError["internal_error"]()
 
         # Get data type.
-        dtype_str, description = get_dtype_str(name, description)
+        (dtype_str, description) = get_dtype_str(name, description)
 
         # Get default value.
-        description, default = get_default(description)
+        (description, default) = get_default(description)
 
         return ArgEntry(name, dtype_str, description, default)
 
     # Try to parse as option line.
-    outputs, description, has_value = match_opt(line)
+    (outputs, description, has_value) = match_opt(line)
 
     if len(outputs) > 0:
 
@@ -110,15 +105,15 @@ def parse_opt_line(line: str) -> ArgEntry | OptEntry | None:
             raise YadOptError["internal_error"]()
 
         # Get data type.
-        dtype_str, description = get_dtype_str(value, description)
+        (dtype_str, description) = get_dtype_str(value, description)
 
         # Get default value.
-        description, default = get_default(description)
+        (description, default) = get_default(description)
 
         # If the option has no value (i.e. has_value is False),
         # then the data type and defualt value should be bool and False, respectively.
         if has_value is False:
-            dtype_str, default = "bool", "False"
+            (dtype_str, default) = ("bool", "False")
 
         return OptEntry(name, name_alt, has_value, dtype_str, description, default)
 

@@ -63,10 +63,10 @@ def match_and_get(line: str, patterns_and_indices: list[PatternType]) -> Matched
             continue
 
         # Get the required matched strings.
-        output = [None if idx < 0 else m[idx] for idx in indices]
+        output: list[str | None] = [None if idx < 0 else m[idx] for idx in indices]
 
         # Get the rest of the matched strings.
-        rest = line[len(m.group(0)):]
+        rest: str = line[len(m.group(0)):]
 
         return (tuple(output), rest, optional_flag)
 

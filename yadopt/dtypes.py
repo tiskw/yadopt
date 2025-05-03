@@ -3,10 +3,16 @@ Collections of data types and classes.
 """
 
 # Declare published functions and variables.
-__all__ = ["ArgEntry", "OptEntry", "UsageEntry", "UserInput"]
+__all__ = ["ArgEntry", "ArgsInfo", "OptEntry", "OptsInfo", "UsageOpt", "UsageEntry", "ArgVector"]
 
 # Import standard libraries.
 import dataclasses
+
+# For type hinting.
+from typing import Any
+
+# Import custom modules.
+from .utils import repr_dataclass_items
 
 
 ############################################################
@@ -25,6 +31,18 @@ class ArgEntry:
 
 
 @dataclasses.dataclass
+class ArgsInfo:
+    """
+    Arguments information of docstring.
+    """
+    items : list[ArgEntry]  # Arguments information.
+    docstr: str             # Arguments section of docstring.
+
+    def __str__(self) -> str:
+        return repr_dataclass_items("ArgsInfo", self)
+
+
+@dataclasses.dataclass
 class OptEntry:
     """
     Parsed result of option definition in docstring.
@@ -38,7 +56,19 @@ class OptEntry:
 
 
 @dataclasses.dataclass
-class UsageOption:
+class OptsInfo:
+    """
+    Options information of docstring.
+    """
+    items : list[OptEntry]  # Options information.
+    docstr: str             # Options section of docstring.
+
+    def __str__(self) -> str:
+        return repr_dataclass_items("OptsInfo", self)
+
+
+@dataclasses.dataclass
+class UsageOpt:
     """
     Parsed result of usage definition in docstring.
     """
@@ -52,35 +82,26 @@ class UsageEntry:
     """
     Parsed result of usage definition in docstring.
     """
-    pres: list[str]          # Preceding tokens.
-    args: list[str]          # Argument tokens.
-    opts: list[UsageOption]  # Option tokens.
+    pres: list[str]       # Preceding tokens.
+    args: list[str]       # Argument tokens.
+    opts: list[UsageOpt]  # Option tokens.
 
-
-# @dataclasses.dataclass
-# class DocStrInfo:
-#     """
-#     Parse result of docstring.
-#     """
-#     # usgs: list[UsgEntry]  # Information of usages.
-#     args: list[ArgEntry]  # Information of argument.
-#     opts: list[OptEntry]  # Information of option.
-#     utxt: str             # Usage raw text.
-#     dstr: str             # Original docstring.
-
-
-############################################################
-# Data types for parsing user inputs
-############################################################
 
 @dataclasses.dataclass
-class UserInput:
+class ArgVector:
     """
     Information of user input.
     """
-    pres: dict  # Preceding tokens.
-    args: dict  # Argument tokens.
-    opts: dict  # Option tokens.
+    pres: dict[str, bool]
+    args: dict[str, Any]
+    opts: dict[str, str|None]
+
+    def __str__(self):
+        text  = "ArgVector:\n"
+        text += " |- pres = " + str(self.pres) + "\n"
+        text += " |- args = " + str(self.args) + "\n"
+        text += " |- opts = " + str(self.opts) + "\n"
+        return text.strip()
 
 
 ############################################################
@@ -101,7 +122,7 @@ class YadOptArgs:
         """
         Representation of this class.
         """
-        contents = ", ".join(f"{key}={val}" for key, val in self.__normal_dict__().items())
+        contents: str = ", ".join(f"{key}={val}" for key, val in self.__normal_dict__().items())
         return f"{self.__class__.__name__}({contents})"
 
     def __str__(self) -> str:

@@ -12,6 +12,7 @@ import textwrap
 # Import Yadopt.
 sys.path.append(".")
 import yadopt
+import yadopt.errors
 
 
 # Define color code.
@@ -36,7 +37,7 @@ def run_test(testcase):
         # Run the testcase.
         try:
             args = yadopt.parse(docstring, shlex.split(command), verbose=True)
-        except Exception as error:
+        except yadopt.errors.YadOptErrorBase as error:
             args = error
         except SystemExit as error:
             args = error
