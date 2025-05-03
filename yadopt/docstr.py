@@ -3,34 +3,25 @@ Docstring parser.
 """
 
 # Declare published functions and variables.
-__all__ = ["parse_docstr", "DocStrInfo"]
+__all__ = ["get_section_lines"]
 
 # Import standard libraries.
-import enum
-import re
+# import enum
+# import re
+import string
 
 # For type hinting.
-from collections.abc import Generator, Callable
+from collections.abc import Generator
 
 # Import custom modules.
-from .argopt   import parse_arg, parse_opt
-from .dtypes   import DocStrInfo
-from .errors   import YadOptError
-from .matchers import match_sec
-from .usage    import parse_usg
+# from .argopt   import parse_docstr_arg, parse_docstr_opt
+# from .dtypes   import DocStrInfo
+# from .errors   import YadOptError
+# from .matchers import match_sec
+# from .usage    import parse_usg
 
 
-class SectionType(enum.Enum):
-    """
-    Type of section in docstring.
-    """
-    UNKNOWN   = 0
-    USAGES    = 1
-    ARGUMENTS = 2
-    OPTIONS   = 3
-
-
-def split_section(docstr: str) -> Generator[tuple[SectionType, str]]:
+def get_section_lines(docstr: str, section_name: str) -> Generator[str]:
     """
     Parse docstring and split it to sections.
 
@@ -39,81 +30,122 @@ def split_section(docstr: str) -> Generator[tuple[SectionType, str]]:
 
     Returns:
         (tuple): A tuple of (section type, line).
-
-    Examples:
-        >>> list(split_section("Usage:\\n usage\\nArgs:\\n arg"))
-        [(<SectionType.USAGES: 1>, ' usage'), (<SectionType.ARGUMENTS: 2>, ' arg')]
-        >>> list(split_section("Usage:\\n usage\\nOpts:\\n --opt"))
-        [(<SectionType.USAGES: 1>, ' usage'), (<SectionType.OPTIONS: 3>, ' --opt')]
     """
-    section_name_patterns = {
-        SectionType.USAGES   : ["usage"],
-        SectionType.ARGUMENTS: ["args", "arguments"],
-        SectionType.OPTIONS  : ["opts", "options"],
-    }
-
     # Initialize the section type.
-    current_sec_type = SectionType.UNKNOWN
+    is_target_section: bool = False
 
     for line in docstr.split("\n"):
 
-        # Try to match the section name patterns.
-        outputs, *_ = match_sec(line.rstrip())
+        # Strip unnecessary whitespaces from right.
+        line = line.rstrip()
 
-        # Case 1: New section found.
-        if len(outputs) > 0:
+        # Update the section flag (colon expression).
+        if line.endswith(":"):
+            is_target_section = line[:-1].lower().endswith(section_name)
 
-            # Get the matched section name.
-            sec_name = outputs[0]
+        # Update the section flag (bracket expression).
+        elif line.startswith("[") and line.endswith("]"):
+            is_target_section = line[1:-1].lower().endswith(section_name)
 
-            # The section name should be a string.
-            if not isinstance(sec_name, str):
-                raise YadOptError["internal_error"]()
-
-            # Update the current section if matched to the section patterns.
-            for sec_type, keywords in section_name_patterns.items():
-                if any(sec_name.lower().endswith(keyword) for keyword in keywords):
-                    current_sec_type = sec_type
-
-        # Case 2: If not the beginning of section, try to match as section contents.
-        elif re.match(r'^\s', line):
-            yield (current_sec_type, line.rstrip())
+        # Returns the current line if the line is inside the target section.
+        elif is_target_section and line.strip() and (line[0] in string.whitespace):
+            yield line
 
 
-def parse_docstr(docstr: str) -> DocStrInfo:
-    """
-    Parse the given docstring and create a data class.
+# class SectionType(enum.Enum):
+#     """
+#     Type of section in docstring.
+#     """
+#     UNKNOWN   = 0
+#     USAGES    = 1
+#     ARGUMENTS = 2
+#     OPTIONS   = 3
+# 
+# 
+# def split_section(docstr: str) -> Generator[tuple[SectionType, str]]:
+#     """
+#     Parse docstring and split it to sections.
+# 
+#     Args:
+#         docstr (str): Input docstring.
+# 
+#     Returns:
+#         (tuple): A tuple of (section type, line).
+# 
+#     Examples:
+#         >>> list(split_section("Usage:\\n usage\\nArgs:\\n arg"))
+#         [(<SectionType.USAGES: 1>, ' usage'), (<SectionType.ARGUMENTS: 2>, ' arg')]
+#         >>> list(split_section("Usage:\\n usage\\nOpts:\\n --opt"))
+#         [(<SectionType.USAGES: 1>, ' usage'), (<SectionType.OPTIONS: 3>, ' --opt')]
+#     """
+#     section_name_patterns = {
+#         SectionType.USAGES   : ["usage"],
+#         SectionType.ARGUMENTS: ["args", "arguments"],
+#         SectionType.OPTIONS  : ["opts", "options"],
+#     }
+# 
+#     # Initialize the section type.
+#     current_sec_type = SectionType.UNKNOWN
+# 
+#     for line in docstr.split("\n"):
+# 
+#         # Try to match the section name patterns.
+#         outputs, *_ = match_sec(line.rstrip())
+# 
+#         # Case 1: New section found.
+#         if len(outputs) > 0:
+# 
+#             # Get the matched section name.
+#             sec_name = outputs[0]
+# 
+#             # The section name should be a string.
+#             if not isinstance(sec_name, str):
+#                 raise YadOptError["internal_error"]()
+# 
+#             # Update the current section if matched to the section patterns.
+#             for sec_type, keywords in section_name_patterns.items():
+#                 if any(sec_name.lower().endswith(keyword) for keyword in keywords):
+#                     current_sec_type = sec_type
+# 
+#         # Case 2: If not the beginning of section, try to match as section contents.
+#         elif re.match(r'^\s', line):
+#             yield (current_sec_type, line.rstrip())
 
-    Args:
-        docstr (str) : The target docstring.
 
-    Returns:
-        (tuple): A pair of DocStrInfo and usage descriptions.
-    """
-    # Initialize output variable.
-    dsinfo = DocStrInfo(usgs=[], args=[], opts=[], utxt="Usage:", dstr=docstr)
-
-    # Create a dictionary of parser function and list to be append.
-    parsers_and_append_targets: dict[SectionType, tuple[Callable, list]] = {
-        SectionType.USAGES   : (parse_usg, dsinfo.usgs),
-        SectionType.ARGUMENTS: (parse_arg, dsinfo.args),
-        SectionType.OPTIONS  : (parse_opt, dsinfo.opts),
-    }
-
-    # Parse each section.
-    for sec_type, line in split_section(docstr):
-
-        # Get corresponding parser function and target list.
-        parser, target = parsers_and_append_targets[sec_type]
-
-        # Parse the line and append to the target list.
-        target.append(parser(line))
-
-        # Append usage text.
-        if sec_type == SectionType.USAGES:
-            dsinfo.utxt += "\n" + line
-
-    return dsinfo
+# def parse_docstr(docstr: str) -> DocStrInfo:
+#     """
+#     Parse the given docstring and create a data class.
+# 
+#     Args:
+#         docstr (str) : The target docstring.
+# 
+#     Returns:
+#         (tuple): A pair of DocStrInfo and usage descriptions.
+#     """
+#     # Initialize output variable.
+#     dsinfo = DocStrInfo(usgs=[], args=[], opts=[], utxt="Usage:", dstr=docstr)
+# 
+#     # Create a dictionary of parser function and list to be append.
+#     parsers_and_append_targets: dict[SectionType, tuple[Callable, list]] = {
+#         SectionType.USAGES   : (parse_usg, dsinfo.usgs),
+#         SectionType.ARGUMENTS: (parse_arg, dsinfo.args),
+#         SectionType.OPTIONS  : (parse_opt, dsinfo.opts),
+#     }
+# 
+#     # Parse each section.
+#     for sec_type, line in split_section(docstr):
+# 
+#         # Get corresponding parser function and target list.
+#         parser, target = parsers_and_append_targets[sec_type]
+# 
+#         # Parse the line and append to the target list.
+#         target.append(parser(line))
+# 
+#         # Append usage text.
+#         if sec_type == SectionType.USAGES:
+#             dsinfo.utxt += "\n" + line
+# 
+#     return dsinfo
 
 
 # vim: expandtab tabstop=4 shiftwidth=4 fdm=marker

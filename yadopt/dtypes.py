@@ -3,7 +3,7 @@ Collections of data types and classes.
 """
 
 # Declare published functions and variables.
-__all__ = ["ArgEntry", "OptEntry", "UsgEntry", "UserInput", "DocStrInfo"]
+__all__ = ["ArgEntry", "OptEntry", "UsageEntry", "UserInput"]
 
 # Import standard libraries.
 import dataclasses
@@ -38,25 +38,35 @@ class OptEntry:
 
 
 @dataclasses.dataclass
-class UsgEntry:
+class UsageOption:
     """
     Parsed result of usage definition in docstring.
     """
-    pres: list[str]                     # Preceding tokens.
-    args: list[str]                     # Argument tokens.
-    opts: dict[str, tuple[bool, bool]]  # Option tokens: name -> (has_value, is_mandatory).
+    name     : str   # Option name.
+    has_value: bool  # True if this option has a value.
+    required : bool  # True if this option is mandatory.
 
 
 @dataclasses.dataclass
-class DocStrInfo:
+class UsageEntry:
     """
-    Parse result of docstring.
+    Parsed result of usage definition in docstring.
     """
-    usgs: list[UsgEntry]  # Information of usages.
-    args: list[ArgEntry]  # Information of argument.
-    opts: list[OptEntry]  # Information of option.
-    utxt: str             # Usage raw text.
-    dstr: str             # Original docstring.
+    pres: list[str]          # Preceding tokens.
+    args: list[str]          # Argument tokens.
+    opts: list[UsageOption]  # Option tokens.
+
+
+# @dataclasses.dataclass
+# class DocStrInfo:
+#     """
+#     Parse result of docstring.
+#     """
+#     # usgs: list[UsgEntry]  # Information of usages.
+#     args: list[ArgEntry]  # Information of argument.
+#     opts: list[OptEntry]  # Information of option.
+#     utxt: str             # Usage raw text.
+#     dstr: str             # Original docstring.
 
 
 ############################################################

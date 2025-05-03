@@ -6,12 +6,12 @@ Check argument vector based on the parsed arguments and options.
 __all__ = ["check_user_input"]
 
 # Import custom modules.
-from .docstr import DocStrInfo
+from .dtypes import ArgEntry, OptEntry
 from .argvec import UserInput
 from .errors import YadOptError
 
 
-def check_user_input(user_input: UserInput, docinfo: DocStrInfo) -> bool:
+def check_user_input(user_input: UserInput, args: list[ArgEntry], opts: list[OptEntry]) -> bool:
     """
     Check all user input variables are defined in arguments/options section.
 
@@ -23,11 +23,11 @@ def check_user_input(user_input: UserInput, docinfo: DocStrInfo) -> bool:
         (bool): Returns True if all checks are passed.
     """
     # Generate a set of all available argument names.
-    available_args = {item.name for item in docinfo.args}
+    available_args = {item.name for item in args}
 
     # Generate a set of all available option names.
-    available_opts  = {item.name     for item in docinfo.opts}
-    available_opts |= {item.name_alt for item in docinfo.opts if item.name_alt is not None}
+    available_opts  = {item.name     for item in opts}
+    available_opts |= {item.name_alt for item in opts if item.name_alt is not None}
 
     # Check all user input is defined in argument sections.
     for name, value in user_input.args.items():

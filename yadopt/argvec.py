@@ -6,11 +6,11 @@ Argment vector parsers.
 __all__ = ["parse_argvec"]
 
 # Import custom modules.
-from .dtypes import DocStrInfo, UserInput
+from .dtypes import ArgEntry, OptEntry, UsageOption, UsageEntry, UserInput
 from .usage  import match_argvec_and_usage
 
 
-def parse_argvec(argv: list[str], dsinfo: DocStrInfo) -> UserInput:
+def parse_argvec(argv: list[str], args: list[ArgEntry], opts: list[OptEntry], usages: list[UsageEntry]) -> UserInput:
     """
     Try to match with the given arguemtn vector and usage patterns.
     If matched usage found, this function returns a dictionary that represents name-value
@@ -34,36 +34,44 @@ def parse_argvec(argv: list[str], dsinfo: DocStrInfo) -> UserInput:
             yield f"--{alt_names[key]}" if (prefix == "-") and (key in alt_names) else argv[idx]
 
     # Get a map from altanative name to standard name.
-    alt_names = {item.name_alt:item.name for item in dsinfo.opts if item.name_alt is not None}
+    alt_names = {item.name_alt:item.name for item in opts if item.name_alt is not None}
 
     # Standardize option names of argument vector.
     argv_std = list(standerdize_option_names_in_argument_vector(argv, alt_names))
 
-    for usage in dsinfo.usgs:
+    for usage in usages:
+
+        # Convert options in usage to dict.
+        usage_opt_dict: dict[str, UsageOption] = {usage_opt.name: usage_opt for usage_opt in usage.opts}
 
         # Expand [OPTIONS] token in the usage.
-        if "OPTIONS" in usage.opts:
+        if "OPTIONS" in usage_opt_dict:
 
             # Remove the OPTIONS key from the usage.
-            usage.opts.pop("OPTIONS")
+            usage_opt_dict.pop("OPTIONS")
 
             # Append all options.
-            usage.opts = {opt.name: (opt.has_value, False) for opt in dsinfo.opts}
+            usage_opt_dict = {opt.name: UsageOption(name=opt.name, has_value=opt.has_value, required=False) for opt in opts}
 
         # Standardize option names of usage pattern.
-        usage.opts = {alt_names.get(key, key): value for key, value in usage.opts.items()}
+        usage_opt_dict = {alt_names.get(key, key): value for key, value in usage_opt_dict.items()}
 
         # Try to match the argument vector and usage pattern.
-        user_input = match_argvec_and_usage(argv_std, usage)
+        user_input = match_argvec_and_usage(argv_std, usage, usage_opt_dict)
 
         # If matched, returns the UserInput instance.
         if user_input is not None:
 
             # Append all unused precesing tokens as False.
-            for u in dsinfo.usgs:
+            for u in usages:
                 for token_pre in u.pres[1:]:
                     if token_pre not in user_input.pres:
                         user_input.pres[token_pre] = False
+
+            # Append all optional arguments that has default value but not appears in the user input.
+            for opt in opts:
+                if (opt.name not in user_input.opts) and (opt.default is not None) and (opt.name in usage_opt_dict) and (not usage_opt_dict[opt.name].required):
+                    user_input.opts[opt.name] = opt.default
 
             return user_input
 

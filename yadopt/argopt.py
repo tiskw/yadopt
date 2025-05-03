@@ -3,34 +3,61 @@ Docstring parser.
 """
 
 # Declare published functions and variables.
-__all__ = ["parse_arg", "parse_opt"]
+__all__ = ["parse_docstr_arg", "parse_docstr_opt"]
 
 # Import standard libraries.
 import re
 
 # Import custom modules.
 from .dtypes   import ArgEntry, OptEntry
+from .docstr   import get_section_lines
 from .errors   import YadOptError
 from .hints    import DTYPE_HINTS
 from .matchers import match_arg, match_opt
 from .utils    import get_default
 
 
-def parse_arg(line: str) -> ArgEntry | OptEntry | None:
+def parse_docstr_arg(docstr: str) -> list[ArgEntry]:
+    """
+    Read docstring and parse argument section.
+
+    Args:
+        docstr (str): Docstring to be parsed.
+
+    Returns:
+        (list[ArgEntry]): List of argument entries.
+    """
+    return [parse_arg_line(line) for line in get_section_lines(docstr, "arguments")]
+
+
+def parse_docstr_opt(docstr: str) -> list[OptEntry]:
+    """
+    Read docstring and parse option section.
+
+    Args:
+        docstr (str): Docstring to be parsed.
+
+    Returns:
+        (UsageInfo): List of option entries.
+    """
+    return [parse_opt_line(line) for line in get_section_lines(docstr, "options")]
+
+
+def parse_arg_line(line: str) -> ArgEntry | OptEntry | None:
     """
     Parse an entry of argument section.
-    Now `parse_opt` can manage both arguments and options.
+    Now `parse_opt_line` can manage both arguments and options.
 
     Examples:
-        >>> parse_arg("  arg1 msg")
+        >>> parse_arg_line("  arg1 msg")
         ArgEntry(name='arg1', dtype_str='unknown', desc='msg', default=None)
-        >>> parse_arg("  arg1  (INT) msg  [default: 10]")
+        >>> parse_arg_line("  arg1  (INT) msg  [default: 10]")
         ArgEntry(name='arg1', dtype_str='int', desc='msg', default='10')
     """
-    return parse_opt(line)
+    return parse_opt_line(line)
 
 
-def parse_opt(line: str) -> ArgEntry | OptEntry | None:
+def parse_opt_line(line: str) -> ArgEntry | OptEntry | None:
     """
     Parse an entry of argument and option sections.
 
@@ -41,13 +68,13 @@ def parse_opt(line: str) -> ArgEntry | OptEntry | None:
         (ArgEntry | OptEntry | None): Parsed result.
 
     Examples:
-        >>> parse_opt("  -o   msg")
+        >>> parse_opt_line("  -o   msg")
         OptEntry(name='o', name_alt=None, has_value=False, dtype_str='bool', desc='msg', default='False')
-        >>> parse_opt("  --opt   msg")
+        >>> parse_opt_line("  --opt   msg")
         OptEntry(name='opt', name_alt=None, has_value=False, dtype_str='bool', desc='msg', default='False')
-        >>> parse_opt("  -o, --opt   msg")
+        >>> parse_opt_line("  -o, --opt   msg")
         OptEntry(name='opt', name_alt='o', has_value=False, dtype_str='bool', desc='msg', default='False')
-        >>> parse_opt("  -o, --opt INT   msg")
+        >>> parse_opt_line("  -o, --opt INT   msg")
         OptEntry(name='opt', name_alt='o', has_value=True, dtype_str='int', desc='msg', default=None)
     """
     # Try to parse as argument line.

@@ -14,6 +14,8 @@ import inspect
 import json
 import os
 import pathlib
+import pprint
+import textwrap
 import sys
 
 # For type hinting.
@@ -21,13 +23,15 @@ from collections.abc import Callable
 from typing          import Any
 
 # Import custom modules.
+from .argopt  import parse_docstr_arg, parse_docstr_opt
 from .argvec  import parse_argvec
 from .checker import check_user_input
-from .docstr  import parse_docstr
-from .dtypes  import YadOptArgs, DocStrInfo, UserInput
+from .docstr  import get_section_lines
+from .dtypes  import YadOptArgs, ArgEntry, OptEntry, UsageEntry, UserInput
 from .errors  import YadOptError
 from .gendat  import generate_data
 from .hints   import auto_type, type_hint
+from .usage   import parse_docstr_usage
 from .utils   import retokenize
 
 
@@ -52,16 +56,25 @@ def print_error_message_user_input_not_match(usage: str, frame_info: inspect.Fra
     print(f"Error at {err_pos}: error: user input does not match with the usage")
 
 
-def parse(docstr: str, argv: list[str] = sys.argv, type_fn: Callable = auto_type,
-          force_continue: bool = False) -> YadOptArgs:
+def pretty_print(header: str, obj, indent: int = 4):
     """
-    Parse docstring and returns YadoptArgs instance.
+    Pretty print.
+    """
+    print(header)
+    print(textwrap.indent(pprint.pformat(obj), " " * indent))
+
+
+def parse(docstr: str, argv: list[str] = sys.argv, type_fn: Callable = auto_type,
+          force_continue: bool = False, verbose: bool = False) -> YadOptArgs:
+    """
+    Parse a given docstring and an argument vector, and return a YadoptArgs instance.
 
     Args:
         docstr         (str)      : Docstring to be parsed.
         argv           (list[str]): Argument vector.
         type_fn        (Callable) : A function that assign types to values.
         force_continue (bool)     : Never exit the software if True.
+        verbose        (bool)     : Displays verbose messages that are useful for debugging.
 
     Returns:
         (YadOptArgs): Parsed command line arguments.
@@ -70,20 +83,37 @@ def parse(docstr: str, argv: list[str] = sys.argv, type_fn: Callable = auto_type
     if not callable(type_fn):
         raise YadOptError["invalid_type_func"](type_fn)
 
+    # Parse usage section.
+    usage_docstr: str = "Usage:\n" + "\n".join(get_section_lines(docstr, "usage"))
+    usages: list[UsageEntry] = parse_docstr_usage(docstr)
+    if verbose:
+        pretty_print("yadopt: Info: usages = ", usages)
+
+    #
+    args: list[ArgEntry] = parse_docstr_arg(docstr)
+    if verbose:
+        pretty_print("yadopt: Info: args = ", args)
+
+    #
+    opts: list[OptEntry] = parse_docstr_opt(docstr)
+    if verbose:
+        pretty_print("yadopt: Info: opts = ", opts)
+
     # Retokenize the input vector.
     argv = list(retokenize(copy.copy(argv)))
-
-    # Parse the given docstring and create a data class.
-    dsinfo: DocStrInfo = parse_docstr(copy.copy(docstr))
+    if verbose:
+        pretty_print("yadopt: Info: argv = ", argv)
 
     # Parse the given command line arguments.
-    user_input: UserInput = parse_argvec(argv, dsinfo)
+    user_input: UserInput = parse_argvec(argv, args, opts, usages)
+    if verbose:
+        print("yadopt: Info: user_input =", user_input)
 
     # If appropriate usage not found, print message and return or exit.
     if len(user_input.pres) == len(user_input.args) == len(user_input.opts) == 0:
 
         # Print error message.
-        print_error_message_user_input_not_match(dsinfo.utxt, inspect.stack()[1])
+        print_error_message_user_input_not_match(usage_docstr, inspect.stack()[1])
 
         # Return if force_continue is True, otherwise exit.
         if force_continue:
@@ -91,10 +121,10 @@ def parse(docstr: str, argv: list[str] = sys.argv, type_fn: Callable = auto_type
         sys.exit(os.EX_USAGE)
 
     # Check argvec using the parsed doc info.
-    check_user_input(user_input, dsinfo)
+    check_user_input(user_input, args, opts)
 
     # Apply type hints. This function also fill default values.
-    type_hint(user_input, dsinfo, type_fn, fill_default=True)
+    type_hint(user_input, args, opts, type_fn, fill_default=True)
 
     # Print help message and exit if --help is specified, and return or exit.
     if user_input.opts.get("help", False) or ("help" in user_input.pres):
@@ -102,13 +132,13 @@ def parse(docstr: str, argv: list[str] = sys.argv, type_fn: Callable = auto_type
         # Print help message.
         print(docstr.strip())
 
-        # Return if force_continue is True, otherwise exit.
+        # Return if force_continue is True, otherwise exit this function.
         if force_continue:
             return YadOptArgs()
         sys.exit(os.EX_USAGE)
 
     # Returns data instance.
-    return generate_data(user_input, dsinfo, argv)
+    return generate_data(user_input, args, opts, argv, docstr)
 
 
 def wrap(*pargs: Any, **kwargs: Any) -> Callable:
@@ -180,7 +210,7 @@ def save(path: str, args: YadOptArgs, indent: int = 4) -> None:
     if any(path_out.name.endswith(sfx) for sfx in [".json", ".json.gz"]):
 
         # Create the contents to save.
-        data_json: dict = {"argv": getattr(args, "_argv_"), "docstr": getattr(args, "_info_").dstr}
+        data_json: dict = {"argv": getattr(args, "_argv_"), "docstr": getattr(args, "_dstr_")}
 
         # Write as a JSON file.
         with open_fn(path_out, "wt") as ofp:

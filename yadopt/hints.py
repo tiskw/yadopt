@@ -13,13 +13,20 @@ import pathlib
 from collections.abc import Callable
 
 # Import custom modules.
-from .dtypes  import ArgEntry, OptEntry, DocStrInfo, UserInput
+from .dtypes  import ArgEntry, OptEntry, UserInput
 from .utils   import strtobool
 
 # Define a map from data type string to data type.
 DTYPE_HINTS: dict[str, Callable] = {
-    "bool": strtobool, "boolean": strtobool, "int": int, "integer": int,
-    "flt": float, "float": float, "str": str, "string": str, "path": pathlib.Path
+    "bool": strtobool,
+    "boolean": strtobool,
+    "int": int,
+    "integer": int,
+    "flt": float,
+    "float": float,
+    "str": str,
+    "string": str,
+    "path": pathlib.Path
 }
 
 
@@ -33,7 +40,7 @@ def auto_type(value: str) -> int | float | str | pathlib.Path:
         return str(value)
 
 
-def fill_default_values(user_input: UserInput, dsinfo: DocStrInfo):
+def fill_default_values(user_input: UserInput, opts: list[OptEntry]):
     """
     Fill default values.
 
@@ -41,14 +48,14 @@ def fill_default_values(user_input: UserInput, dsinfo: DocStrInfo):
         user_input (UserInput) : Parsed user input.
         dsinfo     (DocStrInfo): Parsed docstring info.
     """
-    for opt_entry in dsinfo.opts:
+    for opt_entry in opts:
         if opt_entry.name not in user_input.opts:
             user_input.opts[opt_entry.name] = opt_entry.default
 
     return user_input
 
 
-def type_hint(user_input: UserInput, dsinfo: DocStrInfo, type_fn: Callable, fill_default: bool) -> None:
+def type_hint(user_input: UserInput, args, opts, type_fn: Callable, fill_default: bool) -> None:
     """
     Apply type hints.
 
@@ -85,11 +92,11 @@ def type_hint(user_input: UserInput, dsinfo: DocStrInfo, type_fn: Callable, fill
 
     # Fill deafult values to the user input.
     if fill_default:
-        fill_default_values(user_input, dsinfo)
+        fill_default_values(user_input, opts)
 
     # Assign type to the values.
-    set_typed_value(user_input.args, dsinfo.args, type_fn)
-    set_typed_value(user_input.opts, dsinfo.opts, type_fn)
+    set_typed_value(user_input.args, args, type_fn)
+    set_typed_value(user_input.opts, opts, type_fn)
 
 
 # vim: expandtab tabstop=4 shiftwidth=4 fdm=marker

@@ -3,7 +3,7 @@ Usage line parser.
 """
 
 # Declare published functins and variables.
-__all__ = ["parse_usg"]
+__all__ = ["parse_docstr_usage"]
 
 # Import standard libraries.
 import copy
@@ -13,11 +13,25 @@ import re
 from collections.abc import Generator
 
 # Import custom modules.
-from .dtypes import UsgEntry, UserInput
+from .dtypes import UsageEntry, UserInput, UsageOption
 from .errors import YadOptError
+from .docstr import get_section_lines
 
 
-def parse_usg(line: str) -> UsgEntry:
+def parse_docstr_usage(docstr: str) -> list[UsageEntry]:
+    """
+    Read docstring and parse usage section.
+
+    Args:
+        docstr (str): Docstring to be parsed.
+
+    Returns:
+        (list[UsageEntry]): List of usage entries.
+    """
+    return [parse_usage_line(line) for line in get_section_lines(docstr, "usage")]
+
+
+def parse_usage_line(line: str) -> UsageEntry:
     """
     Parse usage line.
 
@@ -25,12 +39,12 @@ def parse_usg(line: str) -> UsgEntry:
         line (str): Input usage string.
 
     Examples:
-        >>> parse_usg("sample.py <arg1> <arg2> [--opt1]")
-        UsgEntry(pres=['sample.py'], args=['arg1', 'arg2'], opts={'opt1': (False, False)})
-        >>> parse_usg("sample.py subcmd <arg1> [--opt1 INT]")
-        UsgEntry(pres=['sample.py', 'subcmd'], args=['arg1'], opts={'opt1': (True, False)})
-        >>> parse_usg("sample.py subcmd <arg1> --opt1")
-        UsgEntry(pres=['sample.py', 'subcmd'], args=['arg1'], opts={'opt1': (False, True)})
+        >>> parse_usage_line("sample.py <arg1> <arg2> [--opt1]")
+        UsageEntry(pres=['sample.py'], args=['arg1', 'arg2'], opts=[UsageOption(name='opt1', has_value=False, required=False)])
+        >>> parse_usage_line("sample.py subcmd <arg1> [--opt1 INT]")
+        UsageEntry(pres=['sample.py', 'subcmd'], args=['arg1'], opts=[UsageOption(name='opt1', has_value=True, required=False)])
+        >>> parse_usage_line("sample.py subcmd <arg1> --opt1")
+        UsageEntry(pres=['sample.py', 'subcmd'], args=['arg1'], opts=[UsageOption(name='opt1', has_value=False, required=True)])
     """
     def is_arg(token):
         return token.startswith("<") and token.endswith(">")
@@ -39,7 +53,7 @@ def parse_usg(line: str) -> UsgEntry:
         return token.strip("[]").startswith("-") or (token == "[OPTIONS]")
 
     # Initialize output variable.
-    usage = UsgEntry(pres=[], args=[], opts={})
+    usage = UsageEntry(pres=[], args=[], opts=[])
 
     # Tokenize usage string.
     tokens = list(tokenize(line))
@@ -71,11 +85,11 @@ def parse_usg(line: str) -> UsgEntry:
                 _ = tokens.pop(0)
 
                 # Add option entry.
-                usage.opts[opt_key] = (True, True)
+                usage.opts.append(UsageOption(name=opt_key, has_value=True, required=True))
 
             # Case 2.2: Option without value.
             else:
-                usage.opts[opt_key] = (False, True)
+                usage.opts.append(UsageOption(name=opt_key, has_value=False, required=True))
 
         # Case 3: Non-mandatory option token.
         elif (token.startswith("[-") and token.endswith("]")) or (token == "[OPTIONS]"):
@@ -84,7 +98,7 @@ def parse_usg(line: str) -> UsgEntry:
             subtokens = re.split("[ =]", token.strip("[]").lstrip("-"), maxsplit=1)
 
             # Add option entry.
-            usage.opts[subtokens[0]] = (len(subtokens) > 1, False)
+            usage.opts.append(UsageOption(name=subtokens[0], has_value=len(subtokens)>1, required=False))
 
         else:
             raise YadOptError["invalid_constant"](token, line)
@@ -144,7 +158,7 @@ def tokenize(usage_line: str) -> Generator[str]:
         usage_line = usage_line[len(token):]
 
 
-def match_argvec_and_usage(argv: list[str], usage: UsgEntry) -> UserInput | None:
+def match_argvec_and_usage(argv: list[str], usage: UsageEntry, usage_opt_dict: dict[str, UsageOption]) -> UserInput | None:
     """
     Try to match the given argument vector and usage pattern.
     If matched, returns UserInput instance, and otherwise, returns None.
@@ -185,7 +199,7 @@ def match_argvec_and_usage(argv: list[str], usage: UsgEntry) -> UserInput | None
 
         # Case 1: Option token.
         if token.startswith("-"):
-            is_matched = proc_opt_token(token, argv, user_input, usage)
+            is_matched = proc_opt_token(token, argv, user_input, usage_opt_dict)
 
         # Case 2: Argument token.
         else:
@@ -200,7 +214,7 @@ def match_argvec_and_usage(argv: list[str], usage: UsgEntry) -> UserInput | None
         return None
 
     # If any of the required options are missing, that means the usage does not match.
-    if not all(name in user_input.opts for name, (_, is_mand) in usage.opts.items() if is_mand):
+    if not all(name in user_input.opts for name, opt in usage_opt_dict.items() if opt.required):
         return None
 
     return user_input
@@ -239,7 +253,7 @@ def proc_arg_token(token: str, user_input: UserInput, available_args: list[str])
     return True
 
 
-def proc_opt_token(token: str, argv: list[str], user_input: UserInput, usage: UsgEntry) -> bool:
+def proc_opt_token(token: str, argv: list[str], user_input: UserInput, usage_opt_dict: dict[str, UsageOption]) -> bool:
     """
     Process option token.
 
@@ -253,14 +267,14 @@ def proc_opt_token(token: str, argv: list[str], user_input: UserInput, usage: Us
     token = token.lstrip("-")
 
     # NOT MATRCHED!: unknown option.
-    if token not in usage.opts:
+    if token not in usage_opt_dict:
         return False
 
-    # Get the properties of the target option.
-    has_value, _ = usage.opts[token]
+    # Get the target option.
+    usage_opt = usage_opt_dict[token]
 
     # Case 1.1: Option with value.
-    if has_value:
+    if usage_opt.has_value:
 
         # NOT MATRCHED!: option value not found: there is no remaining token.
         if not argv:
