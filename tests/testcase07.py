@@ -1,5 +1,5 @@
 """
-Testcase 7: error check - user input not match
+Testcase 14: strange indent
 """
 
 # Import standard libraries.
@@ -13,30 +13,39 @@ sys.path.append(".")
 import yadopt
 
 
-docstring = """
-Usage:
-    sample.py subcmd <arg>
-
-Arguments:
-    arg    Input argument.
-"""
-
-commands = [
-    "sample.py cmdsub argument",
-]
-
-
-def check(index, args, command):
+class Testcase07_01:
     """
-    Checker function for testcases.
+    Usage:
+        sample.py [--opt STR]
+        sample.py --help
 
-    Args:
-        index   (int)       : Index of testcases.
-        args    (YadOptArgs): Parsed command line arguments.
-        command (str)       : Command string (source of `args`).
+    Options:
+        --opt STR    Option with value.    [default: value]
+        -h, --help     Show this help message and exit.
     """
-    if index == 0:
-        assert args == yadopt.YadOptArgs()
+    commands = [
+        "sample.py",
+        "sample.py --help",
+    ]
+
+    @staticmethod
+    def check(index, args, command):
+        """
+        Checker function for testcases.
+
+        Args:
+            index   (int)       : Index of testcases.
+            args    (YadOptArgs): Parsed command line arguments.
+            command (str)       : Command string (source of `args`).
+        """
+        if index == 0:
+            assert args.opt == "value"
+
+        elif index == 1:
+            assert isinstance(args, SystemExit)
+
+        else:
+            raise ValueError(f"Check function for index={index} not found")
 
 
 # vim: expandtab tabstop=4 shiftwidth=4 fdm=marker

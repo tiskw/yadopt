@@ -1,5 +1,5 @@
 """
-Test for wrap function
+Test for wrap function of YadOpt.
 """
 
 # Import standard libraries.

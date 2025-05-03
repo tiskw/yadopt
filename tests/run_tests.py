@@ -7,6 +7,7 @@ import importlib
 import pathlib
 import shlex
 import sys
+import textwrap
 
 # Import Yadopt.
 sys.path.append(".")
@@ -19,6 +20,33 @@ COLOR_YELLOW = "\x1b[33m"
 COLOR_NONE   = "\x1b[0m"
 
 
+def run_test(testcase):
+    """
+    Run testcase class instance.
+
+    Args:
+        testcase (obj): Testcase* class instance.
+    """
+    for idx, command in enumerate(testcase.commands):
+
+        print(f"----- Test: {testcase.__class__.__name__}.commands[{idx}] -----")
+
+        docstring = textwrap.dedent(testcase.__doc__)
+
+        # Run the testcase.
+        try:
+            args = yadopt.parse(docstring, shlex.split(command), verbose=True)
+        except Exception as error:
+            args = error
+        except SystemExit as error:
+            args = error
+
+        testcase.check(idx, args, command)
+
+        print(f"{COLOR_GREEN}Passed{COLOR_NONE}")
+        print()
+
+
 def main():
     """
     Main function of test.
@@ -27,7 +55,7 @@ def main():
     print()
 
     # Run unittests.
-    print(f"----- Test: run_all_unittests -----")
+    print("----- Test: run_all_unittests -----")
     unit_test = importlib.import_module("unit_test")
     unit_test.run_all_unittests()
     print(f"{COLOR_GREEN}Passed{COLOR_NONE}")
@@ -40,26 +68,14 @@ def main():
         module_name = path_py.with_suffix("").name
 
         # Import testcase module.
-        testcase = importlib.import_module(module_name)
+        testcase_module = importlib.import_module(module_name)
 
-        for idx, command in enumerate(testcase.commands):
-
-            print(f"----- Test: {module_name}.{idx} -----")
-
-            # Run the testcase.
-            try:
-                args = yadopt.parse(testcase.docstring, shlex.split(command), force_continue=True)
-            except Exception as error:
-                testcase.check_error(idx, error)
-            else:
-                print("=>", args)
-                testcase.check(idx, args, command)
-
-            print(f"{COLOR_GREEN}Passed{COLOR_NONE}")
-            print()
+        for testcase_class_name in dir(testcase_module):
+            if testcase_class_name.startswith("Testcase"):
+                run_test(getattr(testcase_module, testcase_class_name)())
 
     # Test wrap function.
-    print(f"----- Test: testcase_wrap -----")
+    print("----- Test: testcase_wrap -----")
     testcase = importlib.import_module("testcase_wrap")
     testcase.test()
     print(f"{COLOR_GREEN}Passed{COLOR_NONE}")
