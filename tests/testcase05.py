@@ -1,50 +1,61 @@
 """
-Testcase 5: error check - usage parse
+Testcase 5: Preceding tokens.
 """
 
-# Import standard libraries.
-import os
-import pathlib
-import sys
-import traceback
-
-
-docstring = """
-Usage:
-    sample.py (-h|--help)
-
-Options:
-    -h, --help   Show help message.
-"""
-
-commands = [
-    "sample.py --help",
-]
-
-
-def check(index, args, command):
+class Testcase05_01:
     """
-    Checker function for testcases.
+    Usage:
+        train.py subcmd1 [--opt1 INT]
+        train.py subcmd2 [--opt2 INT]
+        train.py subcmd3 [--opt3 INT]
 
-    Args:
-        index   (int)       : Index of testcases.
-        args    (YadOptArgs): Parsed command line arguments.
-        command (str)       : Command string (source of `args`).
+    Options:
+        --opt1 INT  Option 1.  [default: 0]
+        --opt2 INT  Option 2.  [default: 0]
+        --opt3 INT  Option 3.  [default: 0]
     """
-    raise NotImplementedError("This function cannot be called")
+    commands = [
+        "train.py subcmd1",
+        "train.py subcmd2 --opt2 1",
+        "train.py subcmd3",
+    ]
 
+    @staticmethod
+    def check(index, args, command):
+        """
+        Checker function for testcases.
 
-def check_error(index, error):
-    """
-    Checker function for error object caused in testcases.
+        Args:
+            index   (int)       : Index of testcases.
+            args    (YadOptArgs): Parsed command line arguments.
+            command (str)       : Command string (source of `args`).
+        """
+        if index == 0:
+            assert args.subcmd1 == True
+            assert args.subcmd2 == False
+            assert args.subcmd3 == False
+            assert args.opt1 == 0
+            assert args.opt2 == 0
+            assert args.opt3 == 0
 
-    Args:
-        index (int)      : Index of testcases.
-        error (Exception): Cathed error object.
-    """
-    print("  ->", type(error))
-    assert error.__class__.__name__ == "YadOptErrorUsageParse"
-    assert str(error).strip().startswith("Error summary:\n  ")
+        elif index == 1:
+            assert args.subcmd1 == False
+            assert args.subcmd2 == True
+            assert args.subcmd3 == False
+            assert args.opt1 == 0
+            assert args.opt2 == 1
+            assert args.opt3 == 0
+
+        elif index == 2:
+            assert args.subcmd1 == False
+            assert args.subcmd2 == False
+            assert args.subcmd3 == True
+            assert args.opt1 == 0
+            assert args.opt2 == 0
+            assert args.opt3 == 0
+
+        else:
+            raise ValueError(f"Check function for index={index} not found")
 
 
 # vim: expandtab tabstop=4 shiftwidth=4 fdm=marker

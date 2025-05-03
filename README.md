@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="docs/images/yadopt_logo.svg" width="90%">
+  <img src="docs/images/yadopt_logo.svg" width="80%">
 </div>
 
 <div align="center">
@@ -7,7 +7,7 @@
   &nbsp;
   <img src="https://img.shields.io/badge/LICENSE-MIT-orange.svg?style=for-the-badge">
   &nbsp;
-  <img src="https://img.shields.io/badge/COVERAGE-97%25-green.svg?style=for-the-badge">
+  <img src="https://img.shields.io/badge/COVERAGE-98%25-green.svg?style=for-the-badge">
   &nbsp;
   <img src="https://img.shields.io/badge/QUALITY-10.0/10.0-yellow.svg?style=for-the-badge">
 </div>
@@ -233,5 +233,5 @@ Other commands:
 
 ### Architecture diagram
 
-![software\_architecture](./docs/images/software_architecture.png)
+![software\_architecture](./docs/images/software_architecture.svg)
 

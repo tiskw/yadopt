@@ -220,7 +220,7 @@ assert args == args_restored</code></pre>
                 <pre><code class="python">def yadopt.parse(docstr: str,
                  argv: list[str] = sys.argv,
                  default_type: Callable = auto_type,
-                 force_continue: bool = False) -&gt; YadOptArgs:</code></pre>
+                 verbose: bool = False) -&gt; YadOptArgs:</code></pre>
                 <p>Parse docstring and returns YadoptArgs instance.</p>
                 <h4>Args</h4>
                 <table class="pure-table pure-table-bordered"><thead><tr>
@@ -248,11 +248,10 @@ assert args == args_restored</code></pre>
                     <td>A function that assign types to arguments and option values. <!--
                     -->The default value <code class="python">None</code> means using default function.</td>
                 </tr><tr>
-                    <td><code class="python">force_continue</code></td>
+                    <td><code class="python">verbose</code></td>
                     <td><code class="python">bool</code></td>
                     <td><code class="python">False</code></td>
-                    <td>If <code class="python">True</code>, do not exit the software regardless of whether YadOpt<!--
-                    --> succeeds command line parsing or not.</td>
+                    <td>Displays verbose messages that are useful for debugging.</td>
                 </tr></tbody></table>
 
                 <h4>Returns</h4>

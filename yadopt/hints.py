@@ -13,13 +13,22 @@ import pathlib
 from collections.abc import Callable
 
 # Import custom modules.
-from .dtypes  import ArgEntry, OptEntry, DocStrInfo, UserInput
-from .utils   import strtobool
+from .argvec import ArgVector
+from .dtypes import ArgsInfo, OptsInfo
+from .utils  import strtobool
 
 # Define a map from data type string to data type.
 DTYPE_HINTS: dict[str, Callable] = {
-    "bool": strtobool, "boolean": strtobool, "int": int, "integer": int,
-    "flt": float, "float": float, "str": str, "string": str, "path": pathlib.Path
+    # Booleans.
+    "bool": strtobool, "boolean": strtobool,
+    # Integers.
+    "int": int, "integer": int,
+    # Floating numbers.
+    "flt": float, "float": float,
+    # Strings.
+    "str": str, "string": str,
+    # Path.
+    "path": pathlib.Path
 }
 
 
@@ -33,35 +42,40 @@ def auto_type(value: str) -> int | float | str | pathlib.Path:
         return str(value)
 
 
-def fill_default_values(user_input: UserInput, dsinfo: DocStrInfo):
+def fill_default_values(argvec: ArgVector, opts: OptsInfo) -> ArgVector:
     """
     Fill default values.
 
     Args:
-        user_input (UserInput) : Parsed user input.
-        dsinfo     (DocStrInfo): Parsed docstring info.
+        argvec (ArgVector): Parsed user input.
+        opts   (OptsInfo) : Options information of docstring.
+
+    Returns:
+        (ArgVector): Parsed user input.
     """
-    for opt_entry in dsinfo.opts:
-        if opt_entry.name not in user_input.opts:
-            user_input.opts[opt_entry.name] = opt_entry.default
+    for opt_entry in opts.items:
+        if opt_entry.name not in argvec.opts:
+            argvec.opts[opt_entry.name] = opt_entry.default
 
-    return user_input
+    return argvec
 
 
-def type_hint(user_input: UserInput, dsinfo: DocStrInfo, type_fn: Callable, fill_default: bool) -> None:
+def type_hint(argvec: ArgVector, args: ArgsInfo, opts: OptsInfo, type_fn: Callable, fill_default: bool) -> None:
     """
     Apply type hints.
 
     Args:
-        user_input (UserInput) : Parsed user input.
-        dsinfo     (DocStrInfo): Parsed docstring info.
-        type_fn    (Callable)  : A function that assign types to values.
+        argvec       (ArgVector): Parsed user input.
+        args         (ArgsInfo) : Arguments information of docstring.
+        opts         (OptsInfo) : Options information of docstring.
+        type_fn      (Callable) : A function that assign types to values.
+        fill_default (bool)     : Fill default values if True.
     """
-    def set_typed_value(val_dict: dict, list_entries: list[ArgEntry] | list[OptEntry], type_fn: Callable) -> None:
+    def set_typed_value(val_dict: dict, args_or_opts: ArgsInfo | OptsInfo, type_fn: Callable) -> None:
         """
         Get typed value.
         """
-        for entry in list_entries:
+        for entry in args_or_opts.items:
 
             # Do nothing if the entry is not in the value dictionary.
             if entry.name not in val_dict:
@@ -85,11 +99,11 @@ def type_hint(user_input: UserInput, dsinfo: DocStrInfo, type_fn: Callable, fill
 
     # Fill deafult values to the user input.
     if fill_default:
-        fill_default_values(user_input, dsinfo)
+        fill_default_values(argvec, opts)
 
     # Assign type to the values.
-    set_typed_value(user_input.args, dsinfo.args, type_fn)
-    set_typed_value(user_input.opts, dsinfo.opts, type_fn)
+    set_typed_value(argvec.args, args, type_fn)
+    set_typed_value(argvec.opts, opts, type_fn)
 
 
 # vim: expandtab tabstop=4 shiftwidth=4 fdm=marker

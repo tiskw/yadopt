@@ -5,18 +5,22 @@ Custom error classes.
 # Declare published functins and variables.
 __all__ = ["YadOptError"]
 
+# Import standard libraries.
+import os
+import textwrap
+
 # For type hinting.
 from typing import Any
 
 # Import custom modules.
-from .utils import get_error_marker, remove_indent
+from .utils import get_error_marker
 
 
 class YadOptErrorBase(Exception):
     """
     Base class of exception in YadOpt.
     """
-    EPILOGUE = remove_indent("""
+    EPILOGUE = textwrap.dedent("""
     If you find a bug in YadOpt, please let me know via GitHub issue.
     <https://github.com/tiskw/yadopt/issues>
     """.rstrip())
@@ -37,7 +41,11 @@ class YadOptErrorBase(Exception):
         """
         Convert myself to a string.
         """
-        return "\n" + remove_indent(self.__doc__).format(*pargs, **kwargs) + self.EPILOGUE
+        # Get a docstring.
+        docstr: str = self.__doc__ if (self.__doc__ is not None) else ""
+
+        # Returns a string expression of the error class.
+        return "\n" + textwrap.dedent(docstr).format(*pargs, **kwargs) + self.EPILOGUE
 
 
 class YadOptErrorUsageParse(YadOptErrorBase):
@@ -159,6 +167,33 @@ class YadOptErrorInvalidFileType(YadOptErrorBase):
     """
 
 
+class YadOptErrorValidUsageNotFound(YadOptErrorBase):
+    """
+    Error summary:
+      Valid usage not found
+
+    Location:
+      {1}
+
+    Details:
+      The user input does not match any of the command usage.
+
+    Solution:
+      Please check the user input and the command usage.
+
+    {0}
+    """
+    def __str__(self) -> str:
+        """
+        Returns string expression of this error.
+        """
+        line_num = self.pargs[1].lineno
+        funcname = self.pargs[1].function
+        filename = os.path.basename(self.pargs[1].filename)
+        err_pos  = f"{filename} : {funcname} : L.{line_num}"
+        return self.stringify(self.pargs[0], err_pos)
+
+
 class YadOptErrorInternal(YadOptErrorBase):
     """
     Error summary:
@@ -174,12 +209,13 @@ class YadOptErrorInternal(YadOptErrorBase):
 
 
 YadOptError = {
-    "usage_parse"       : YadOptErrorUsageParse,
-    "invalid_constant"  : YadOptErrorInvalidConstant,
-    "usage_arg_mismatch": YadOptErrorUsageArgMismatch,
-    "invalid_type_func" : YadOptErrorInvalidTypeFunc,
-    "invalid_file_type" : YadOptErrorInvalidFileType,
-    "internal_error"    : YadOptErrorInternal,
+    "usage_parse"          : YadOptErrorUsageParse,
+    "invalid_constant"     : YadOptErrorInvalidConstant,
+    "usage_arg_mismatch"   : YadOptErrorUsageArgMismatch,
+    "invalid_type_func"    : YadOptErrorInvalidTypeFunc,
+    "invalid_file_type"    : YadOptErrorInvalidFileType,
+    "valid_usage_not_found": YadOptErrorValidUsageNotFound,
+    "internal_error"       : YadOptErrorInternal,
 }
 
 

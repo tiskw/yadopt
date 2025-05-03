@@ -3,13 +3,17 @@ Collection of utility functions.
 """
 
 # Import standard libraries.
+import pprint
 import re
+import string
+import textwrap
 
 # For type hinting.
 from collections.abc import Generator
+from typing          import Any
 
 
-def get_default(description: str) -> tuple:
+def get_default(description: str) -> tuple[str, str | None]:
     """
     Get default value.
 
@@ -23,10 +27,10 @@ def get_default(description: str) -> tuple:
         >>> get_default("sample description [default: value]")
         ('sample description', 'value')
     """
-    default_pattern = r"^(.*)\s+\[default:\s*([^\]]+)\]\s*$"
+    default_pattern: str = r"^(.*)\s+\[default:\s*([^\]]+)\]\s*$"
 
     # Search default string.
-    m = re.fullmatch(default_pattern, description)
+    m: re.Match[str] | None = re.fullmatch(default_pattern, description)
 
     # Returns entire description and None if no default string found.
     if m is None:
@@ -51,7 +55,7 @@ def get_error_marker(line: str, token: str) -> str:
         >>> get_error_marker("this is a pen", "pencil")
         '             '
     """
-    pos = line.find(token)
+    pos: int = line.find(token)
 
     # Returns whitespace if the token not found in the line.
     if pos < 0:
@@ -60,33 +64,36 @@ def get_error_marker(line: str, token: str) -> str:
     return " " * pos + "^" * len(token) + " " * (len(line) - len(token) - pos)
 
 
-def remove_indent(text: str | None) -> str:
+def get_section_lines(docstr: str, section_name: str) -> Generator[str]:
     """
-    Remove common indent from the given text.
-    If the input text is None then this function returns empty string.
+    Parse docstring and split it to sections.
 
     Args:
-        text (str): Input text.
+        docstr       (str): Input docstring.
+        section_name (str): Target section name.
 
     Returns:
-        (str): Text after removing the common indent.
-
-    Examples:
-        >>> remove_indent("  A\\n  B\\n  C")
-        'A\\nB\\nC'
+        (Generator[str]): Lines of specified section.
     """
-    # Returns None if the input text is None.
-    if isinstance(text, str):
+    # Initialize the section type.
+    is_target_section: bool = False
 
-        # Get non-empty lines.
-        lines = [line for line in text.split("\n") if line.strip()]
+    for line in docstr.split("\n"):
 
-        # Compute minimum indent of the non-empty lines.
-        min_indent = min(len(line) - len(line.lstrip()) for line in lines)
+        # Strip unnecessary whitespaces from right.
+        line = line.rstrip()
 
-        return "\n".join(line[min_indent:] for line in text.split("\n"))
+        # Update the section flag (colon expression).
+        if line.endswith(":"):
+            is_target_section = line[:-1].lower().endswith(section_name)
 
-    return ""
+        # Update the section flag (bracket expression).
+        elif line.startswith("[") and line.endswith("]"):
+            is_target_section = line[1:-1].lower().endswith(section_name)
+
+        # Returns the current line if the line is inside the target section.
+        elif is_target_section and line.strip() and (line[0] in string.whitespace):
+            yield line
 
 
 def strtobool(s: str) -> bool | None:
@@ -98,7 +105,7 @@ def strtobool(s: str) -> bool | None:
         s (str): Input string.
 
     Returns:
-        (bool): Corresponding boolean value.
+        (bool | None): Corresponding boolean value.
 
     Examples:
         >>> strtobool("True")
@@ -118,7 +125,7 @@ def retokenize(argv: list[str]) -> Generator[str]:
     Tokenize the argument vector.
 
     Args:
-        target (str): Target string to be tokenized.
+        argv (list[str]): Argument vector to be tokenized.
 
     Returns:
         (Generator[str]): Re-tokenized tokens.
@@ -129,6 +136,27 @@ def retokenize(argv: list[str]) -> Generator[str]:
     """
     for token in argv:
         yield from token.split("=", maxsplit=1)
+
+
+def repr_dataclass_items(name: str, data: Any) -> str:
+    """
+    String expression of dataclass that has items.
+
+    Args:
+        name (str): Name of the dataclass.
+        data (Any): Instance of dataclass.
+    """
+    # Header of the string expression.
+    text: str = f"{name}:\n"
+
+    # Append item info.
+    for idx, item in enumerate(data.items):
+        text += f" |-({idx:02d}) " + textwrap.indent(pprint.pformat(item), " |      ")[8:] + "\n"
+
+    # Append docstring info.
+    text += f" |-(docstr) str of length {len(data.docstr)}"
+
+    return text.strip()
 
 
 # vim: expandtab tabstop=4 shiftwidth=4 fdm=marker

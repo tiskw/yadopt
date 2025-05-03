@@ -6,36 +6,36 @@ Check argument vector based on the parsed arguments and options.
 __all__ = ["check_user_input"]
 
 # Import custom modules.
-from .docstr import DocStrInfo
-from .argvec import UserInput
+from .argvec import ArgVector
+from .dtypes import ArgsInfo, OptsInfo
 from .errors import YadOptError
 
 
-def check_user_input(user_input: UserInput, docinfo: DocStrInfo) -> bool:
+def check_user_input(argvec: ArgVector, args: ArgsInfo, opts: OptsInfo) -> bool:
     """
     Check all user input variables are defined in arguments/options section.
 
     Args:
-        user_input (UserInput) : User input info.
-        docinfo    (DocStrInfo): Parse result of arguments/options section.
+        argvec  (ArgVector) : User input info.
+        docinfo (DocStrInfo): Parse result of arguments/options section.
 
     Returns:
         (bool): Returns True if all checks are passed.
     """
     # Generate a set of all available argument names.
-    available_args = {item.name for item in docinfo.args}
+    available_args: set[str] = {item.name for item in args.items}
 
     # Generate a set of all available option names.
-    available_opts  = {item.name     for item in docinfo.opts}
-    available_opts |= {item.name_alt for item in docinfo.opts if item.name_alt is not None}
+    available_opts  = {item.name     for item in opts.items}
+    available_opts |= {item.name_alt for item in opts.items if item.name_alt is not None}
 
     # Check all user input is defined in argument sections.
-    for name, value in user_input.args.items():
+    for name, value in argvec.args.items():
         if name not in available_args:
             raise YadOptError["usage_arg_mismatch"](name, value)
 
     # Check all user input is defined in option sections.
-    for name, value in user_input.opts.items():
+    for name, value in argvec.opts.items():
         if name not in available_opts:
             raise YadOptError["usage_arg_mismatch"](name, value)
 

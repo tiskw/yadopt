@@ -1,5 +1,5 @@
 """
-Test for wrap function
+Test for wrap function of YadOpt.
 """
 
 # Import standard libraries.
@@ -53,6 +53,9 @@ def main(args: yadopt.YadOptArgs, real_arg: str):
 
     # Check the other arguments.
     assert real_arg == "real argument"
+
+    # Print YadOptArgs just for a test.
+    print(args)
 
 
 def test():
