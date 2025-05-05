@@ -22,3 +22,9 @@ $ python3 03_subcommand.py foo --foo_opt 10
 YadOptArgs(foo_opt=0, bar_opt=0, help=False, foo=True)
 ```
 
+### 04_save_and_load.py
+
+```console
+$ python3 04_save_and_load.py --restore 04_saved_arguments.json
+YadOptArgs(train=True, test=False, epochs=100, model=cnn, optimizer=radam, lr=0.001, weight_decay=0.0005, batch_size=64, restore=None, help=False)
+```
