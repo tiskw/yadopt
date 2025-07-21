@@ -4,12 +4,12 @@ Initialize yadopt module.
 
 # Import functions.
 from .yadopt import parse, wrap, to_dict, to_namedtuple, save, load
-from .dtypes import YadOptArgs
+from .dtypes import YadOptArgs, Path
 
 # Version information.
-__version__ = "2025.06.18"
+__version__ = "2025.07.21"
 
 # Declare published functions and variables.
-__all__ = ["parse", "wrap", "to_dict", "to_namedtuple", "save", "load", "YadOptArgs", "__version__"]
+__all__ = ["parse", "wrap", "to_dict", "to_namedtuple", "save", "load", "YadOptArgs", "Path", "__version__"]
 
 # vim: expandtab tabstop=4 shiftwidth=4 fdm=marker

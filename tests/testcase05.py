@@ -2,6 +2,14 @@
 Testcase 5: Preceding tokens.
 """
 
+# Import standard libraries.
+import sys
+
+# Import Yadopt.
+sys.path.append(".")
+import yadopt
+
+
 class Testcase05_01:
     """
     Usage:

@@ -3,7 +3,11 @@ Testcase 3: Data type hints.
 """
 
 # Import standard libraries.
-import pathlib
+import sys
+
+# Import Yadopt.
+sys.path.append(".")
+import yadopt
 
 
 class Testcase03_01:
@@ -70,10 +74,10 @@ class Testcase03_01:
         elif index == 2:
             assert isinstance(args.arg_int, int)
             assert isinstance(args.arg_integer, int)
-            assert isinstance(args.arg_path, pathlib.Path)
+            assert isinstance(args.arg_path, yadopt.Path)
             assert isinstance(args.d, int)
             assert isinstance(args.e, int)
-            assert isinstance(args.f, pathlib.Path)
+            assert isinstance(args.f, yadopt.Path)
 
         elif index == 3:
             assert isinstance(args.arg_flt, float)
@@ -129,20 +133,20 @@ class Testcase03_02:
             command (str)       : Command string (source of `args`).
         """
         if index == 0:
-            assert args.config == pathlib.Path("config.toml")
+            assert args.config == yadopt.Path("config.toml")
             assert args.epochs == 10
             assert args.model == "cnn"
             assert abs(args.lr - 1.0E-3) < 1.0E-8
-            assert args.output == pathlib.Path("runs")
+            assert args.output == yadopt.Path("runs")
             assert args.help == False
             assert args.verbose == False
 
         elif index == 1:
-            assert args.config == pathlib.Path("config.toml")
+            assert args.config == yadopt.Path("config.toml")
             assert args.epochs == 100
             assert args.model == "mlp"
             assert abs(args.lr - 1.0E-3) < 1.0E-8
-            assert args.output == pathlib.Path("runs")
+            assert args.output == yadopt.Path("runs")
             assert args.help == False
             assert args.verbose == True
 

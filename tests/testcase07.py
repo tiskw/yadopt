@@ -3,10 +3,7 @@ Testcase 7: strange indent
 """
 
 # Import standard libraries.
-import os
-import pathlib
 import sys
-import traceback
 
 # Import Yadopt.
 sys.path.append(".")

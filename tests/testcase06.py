@@ -3,7 +3,6 @@ Testcase 6: save and load
 """
 
 # Import standard libraries.
-import pathlib
 import sys
 
 # Import Yadopt.
@@ -53,7 +52,7 @@ class Testcase06_01:
             assert args.int == 6
             assert abs(args.float - 3.1416) < 1.0E-5
             assert args.str == "hello"
-            assert args.path == pathlib.Path("./dir")
+            assert args.path == yadopt.Path("./dir")
 
             for suffix in ["json", "json.gz"]:
                 yadopt.save(f"/tmp/yadopt_test_args.{suffix}", args)

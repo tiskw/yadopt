@@ -2,7 +2,12 @@
 Collection of utility functions.
 """
 
+# Declare published functins and variables.
+__all__ = ["get_default", "get_error_marker", "get_section_lines",
+           "strtobool", "strtostr", "retokenize", "repr_dataclass_items"]
+
 # Import standard libraries.
+import ast
 import pprint
 import re
 import string
@@ -147,6 +152,30 @@ def strtobool(s: str) -> bool | None:
     if s.lower() in {"f", "false", "n", "no", "off", "0"}:
         return False
     return None
+
+
+def strtostr(s: str) -> str:
+    """
+    Convert string expression to string.
+
+    Args:
+        s (str): Input string.
+
+    Returns:
+        (bool | None): Corresponding boolean value.
+
+    Examples:
+        >>> strtostr("this is a pen")
+        'this is a pen'
+        >>> strtostr("'this is a pen'")
+        'this is a pen'
+        >>> strtostr("'''this is a pen'''")
+        'this is a pen'
+    """
+    try:
+        return ast.literal_eval(s)
+    except (SyntaxError, ValueError):
+        return s
 
 
 def retokenize(argv: list[str]) -> Generator[str]:

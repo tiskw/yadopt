@@ -3,7 +3,6 @@ Test for wrap function of YadOpt.
 """
 
 # Import standard libraries.
-import pathlib
 import sys
 
 # Import Yadopt.
@@ -43,11 +42,11 @@ def main(args: yadopt.YadOptArgs, real_arg: str):
     Target of yadopt.wrap function.
     """
     # Check parsed arguments.
-    assert args.config_path == pathlib.Path("config.toml")
+    assert args.config_path == yadopt.Path("config.toml")
     assert args.epochs == 10
     assert args.model == "cnn"
     assert abs(args.lr - 1.0E-3) < 1.0E-8
-    assert args.output == pathlib.Path("runs")
+    assert args.output == yadopt.Path("runs")
     assert args.help == False
     assert args.verbose == False
 

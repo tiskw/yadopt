@@ -3,7 +3,11 @@ Testcase 2: Short and long options.
 """
 
 # Import standard libraries.
-import pathlib
+import sys
+
+# Import Yadopt.
+sys.path.append(".")
+import yadopt
 
 
 class Testcase02_01:
@@ -48,24 +52,24 @@ class Testcase02_01:
         """
         if index == 0:
             assert len(args.filepath) == 3
-            assert args.filepath[0] == pathlib.Path("path1")
-            assert args.filepath[1] == pathlib.Path("path2")
-            assert args.filepath[2] == pathlib.Path("path3")
+            assert args.filepath[0] == yadopt.Path("path1")
+            assert args.filepath[1] == yadopt.Path("path2")
+            assert args.filepath[2] == yadopt.Path("path3")
 
         elif index == 1:
             assert args.x == True
             assert args.y == "Y"
             assert args.z == "Z"
             assert len(args.filepath) == 2
-            assert args.filepath[0] == pathlib.Path("path1")
-            assert args.filepath[1] == pathlib.Path("path2")
+            assert args.filepath[0] == yadopt.Path("path1")
+            assert args.filepath[1] == yadopt.Path("path2")
 
         elif index == 2:
             assert args.alice == True
             assert args.bob == "BOB"
             assert args.charlie == "CHARLIE"
             assert len(args.filepath) == 1
-            assert args.filepath[0] == pathlib.Path("path1")
+            assert args.filepath[0] == yadopt.Path("path1")
 
         elif index == 3:
             assert args.dave == True
@@ -74,7 +78,7 @@ class Testcase02_01:
             assert args.george == "GEORGE"
             assert args.henry == "HENRY"
             assert len(args.filepath) == 1
-            assert args.filepath[0] == pathlib.Path("path1")
+            assert args.filepath[0] == yadopt.Path("path1")
 
         else:
             raise ValueError(f"Check function for index={index} not found")
