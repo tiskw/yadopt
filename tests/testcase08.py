@@ -3,10 +3,7 @@ Testcase 8: multiline usages and options.
 """
 
 # Import standard libraries.
-import os
-import pathlib
 import sys
-import traceback
 
 # Import Yadopt.
 sys.path.append(".")

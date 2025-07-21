@@ -6,13 +6,25 @@ Collections of data types and classes.
 __all__ = ["ArgEntry", "ArgsInfo", "OptEntry", "OptsInfo", "UsageOpt", "UsageEntry", "ArgVector", "YadOptArgs"]
 
 # Import standard libraries.
+import collections
 import dataclasses
+import pathlib
 
 # For type hinting.
 from typing import Any
 
 # Import custom modules.
 from .utils import repr_dataclass_items
+
+
+############################################################
+# Path class for YadOpt
+############################################################
+
+class Path(pathlib.Path):
+    """
+    File path class for YadOpt.
+    """
 
 
 ############################################################
@@ -122,12 +134,18 @@ class YadOptArgs:
         """
         return {key:value for key, value in self.__dict__.items() if not key.startswith("_")}
 
+    def __named_tuple__(self) -> tuple[Any, ...]:
+        """
+        """
+        args_d: dict = self.__normal_dict__()
+        fields: list = list(args_d.keys())
+        return collections.namedtuple("YadOptArgs", fields)(**args_d)
+
     def __repr__(self) -> str:
         """
         Representation of this class.
         """
-        contents: str = ", ".join(f"{key}={val}" for key, val in self.__normal_dict__().items())
-        return f"{self.__class__.__name__}({contents})"
+        return str(self.__named_tuple__())
 
     def __str__(self) -> str:
         """

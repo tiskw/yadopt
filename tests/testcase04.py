@@ -2,6 +2,14 @@
 Testcase 4: Error checks.
 """
 
+# Import standard libraries.
+import sys
+
+# Import Yadopt.
+sys.path.append(".")
+import yadopt
+
+
 class Testcase04_01:
     """
     Error check - usage and arguments not match

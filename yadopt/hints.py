@@ -7,15 +7,14 @@ __all__ = ["auto_type", "type_hint"]
 
 # Import standard libraries.
 import ast
-import pathlib
 
 # For type hinting.
 from collections.abc import Callable
 
 # Import custom modules.
 from .argvec import ArgVector
-from .dtypes import ArgsInfo, OptsInfo
-from .utils  import strtobool
+from .dtypes import ArgsInfo, OptsInfo, Path
+from .utils  import strtobool, strtostr
 
 # Define a map from data type string to data type.
 DTYPE_HINTS: dict[str, Callable] = {
@@ -26,13 +25,13 @@ DTYPE_HINTS: dict[str, Callable] = {
     # Floating numbers.
     "flt": float, "float": float,
     # Strings.
-    "str": str, "string": str,
+    "str": strtostr, "string": strtostr,
     # Path.
-    "path": pathlib.Path
+    "path": Path,
 }
 
 
-def auto_type(value: str) -> int | float | str | pathlib.Path:
+def auto_type(value: str) -> int | float | str | Path:
     """
     Automatically determine the data type.
     """

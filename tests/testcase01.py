@@ -3,7 +3,6 @@ Testcase 1: Standard usage of YadOpt.
 """
 
 # Import standard libraries.
-import pathlib
 import sys
 
 # Import Yadopt.
@@ -54,44 +53,44 @@ class Testcase01_01:
             command (str)       : Command string (source of `args`).
         """
         if index == 0:
-            assert args.config_path == pathlib.Path("config.toml")
+            assert args.config_path == yadopt.Path("config.toml")
             assert args.epochs == 10
             assert args.model == "cnn"
             assert abs(args.lr - 1.0E-3) < 1.0E-8
             assert args.weights is None
-            assert args.output == pathlib.Path("runs")
+            assert args.output == yadopt.Path("runs")
             assert args.help == False
             assert args.verbose == False
 
             args_dict = yadopt.to_dict(args)
             assert isinstance(args_dict, dict)
-            assert args_dict["config_path"] == pathlib.Path("config.toml")
+            assert args_dict["config_path"] == yadopt.Path("config.toml")
             assert args_dict["epochs"] == 10
             assert args_dict["model"] == "cnn"
             assert abs(args_dict["lr"] - 1.0E-3) < 1.0E-8
             assert args.weights is None
-            assert args_dict["output"] == pathlib.Path("runs")
+            assert args_dict["output"] == yadopt.Path("runs")
             assert args_dict["help"] == False
             assert args_dict["verbose"] == False
 
             args_nt = yadopt.to_namedtuple(args)
             assert args_nt.__class__.__name__ == "YadOptArgsNt"
-            assert args.config_path == pathlib.Path("config.toml")
+            assert args.config_path == yadopt.Path("config.toml")
             assert args.epochs == 10
             assert args.model == "cnn"
             assert abs(args.lr - 1.0E-3) < 1.0E-8
             assert args.weights is None
-            assert args.output == pathlib.Path("runs")
+            assert args.output == yadopt.Path("runs")
             assert args.help == False
             assert args.verbose == False
 
         elif index == 1:
-            assert args.config_path == pathlib.Path("config.toml")
+            assert args.config_path == yadopt.Path("config.toml")
             assert args.epochs == 100
             assert args.model == "mlp"
             assert abs(args.lr - 1.0E-3) < 1.0E-8
             assert args.weights is None
-            assert args.output == pathlib.Path("runs")
+            assert args.output == yadopt.Path("runs")
             assert args.help == False
             assert args.verbose == True
 
@@ -115,7 +114,7 @@ class Testcase01_02:
 
     [Training options]
         --epochs=INT    The number of training epochs.   [default: 100]
-        --model=STR     Neural network model name.       [default: mlp]
+        --model=STR     Neural network model name.       [default: "mlp"]
         --lr=FLT        Learning rate.                   [default: 1.0E-3]
 
     [Output options]
@@ -142,40 +141,40 @@ class Testcase01_02:
             command (str)       : Command string (source of `args`).
         """
         if index == 0:
-            assert args.config_path == pathlib.Path("config.toml")
+            assert args.config_path == yadopt.Path("config.toml")
             assert args.epochs == 10
             assert args.model == "cnn"
             assert abs(args.lr - 1.0E-3) < 1.0E-8
-            assert args.output == pathlib.Path("runs")
+            assert args.output == yadopt.Path("runs")
             assert args.help == False
             assert args.verbose == False
 
             args_dict = yadopt.to_dict(args)
             assert isinstance(args_dict, dict)
-            assert args_dict["config_path"] == pathlib.Path("config.toml")
+            assert args_dict["config_path"] == yadopt.Path("config.toml")
             assert args_dict["epochs"] == 10
             assert args_dict["model"] == "cnn"
             assert abs(args_dict["lr"] - 1.0E-3) < 1.0E-8
-            assert args_dict["output"] == pathlib.Path("runs")
+            assert args_dict["output"] == yadopt.Path("runs")
             assert args_dict["help"] == False
             assert args_dict["verbose"] == False
 
             args_nt = yadopt.to_namedtuple(args)
             assert args_nt.__class__.__name__ == "YadOptArgsNt"
-            assert args.config_path == pathlib.Path("config.toml")
+            assert args.config_path == yadopt.Path("config.toml")
             assert args.epochs == 10
             assert args.model == "cnn"
             assert abs(args.lr - 1.0E-3) < 1.0E-8
-            assert args.output == pathlib.Path("runs")
+            assert args.output == yadopt.Path("runs")
             assert args.help == False
             assert args.verbose == False
 
         elif index == 1:
-            assert args.config_path == pathlib.Path("config.toml")
+            assert args.config_path == yadopt.Path("config.toml")
             assert args.epochs == 100
             assert args.model == "mlp"
             assert abs(args.lr - 1.0E-3) < 1.0E-8
-            assert args.output == pathlib.Path("runs")
+            assert args.output == yadopt.Path("runs")
             assert args.help == False
             assert args.verbose == True
 
