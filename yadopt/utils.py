@@ -162,7 +162,7 @@ def strtostr(s: str) -> str:
         s (str): Input string.
 
     Returns:
-        (bool | None): Corresponding boolean value.
+        (str): Corresponding string value.
 
     Examples:
         >>> strtostr("this is a pen")
@@ -171,11 +171,15 @@ def strtostr(s: str) -> str:
         'this is a pen'
         >>> strtostr("'''this is a pen'''")
         'this is a pen'
+        >>> strtostr("'1'")
+        '1'
+        >>> strtostr("'1.0'")
+        '1.0'
     """
     try:
-        return ast.literal_eval(s)
+        return str(ast.literal_eval(s))
     except (SyntaxError, ValueError):
-        return s
+        return str(s)
 
 
 def retokenize(argv: list[str]) -> Generator[str]:
