@@ -40,6 +40,7 @@ class Testcase04_01:
         if index == 0:
             assert args.__class__.__name__ == "YadOptErrorUsageArgMismatch"
             assert str(args).strip().startswith("Error summary:\n  ")
+            print(str(args).strip())
 
         else:
             raise ValueError(f"Check function for index={index} not found")
@@ -72,6 +73,7 @@ class Testcase04_02:
         if index == 0:
             assert args.__class__.__name__ == "YadOptErrorUsageParse"
             assert str(args).strip().startswith("Error summary:\n  ")
+            print(str(args).strip())
 
         else:
             raise ValueError(f"Check function for index={index} not found")
@@ -104,6 +106,7 @@ class Testcase04_03:
         if index == 0:
             assert args.__class__.__name__ == "YadOptErrorInvalidConstant"
             assert str(args).strip().startswith("Error summary:\n  ")
+            print(str(args).strip())
 
         else:
             raise ValueError(f"Check function for index={index} not found")
@@ -136,6 +139,7 @@ class Testcase04_04:
         if index == 0:
             assert args.__class__.__name__ == "YadOptErrorValidUsageNotFound"
             assert str(args).strip().startswith("Error summary:\n  ")
+            print(str(args).strip())
 
         else:
             raise ValueError(f"Check function for index={index} not found")
@@ -173,6 +177,7 @@ class Testcase04_05:
         if index == 0:
             assert args.__class__.__name__ == "YadOptErrorValidUsageNotFound"
             assert str(args).strip().startswith("Error summary:\n  ")
+            print(str(args).strip())
 
         elif index == 1:
             assert isinstance(args, SystemExit)
@@ -211,6 +216,7 @@ class Testcase04_06:
         if index == 0:
             assert args.__class__.__name__ == "YadOptErrorValidUsageNotFound"
             assert str(args).strip().startswith("Error summary:\n  ")
+            print(str(args).strip())
 
         elif index == 1:
             assert isinstance(args, SystemExit)

@@ -130,6 +130,43 @@ def get_section_lines(docstr: str, section_name: str) -> Generator[str]:
         yield line
 
 
+def levenshtein_distance(src: str, dst: str) -> int:
+    """
+    Simple implementation of Levenshtein distance from "src" to "dst", the minimum number of
+    single-character edits (insertions, deletions or substitutions) required to change one word
+    into the other.
+
+    Args:
+        src (str): Source string.
+        dst (str): Destination string.
+
+    Returns:
+        (int): Levenshtein distance between "src" and "dst".
+
+    Example:
+        >>> levenshtein_distance("kitten", "sitting")
+        3
+    """
+    n_src: int = len(src)
+    n_dst: int = len(dst)
+
+    # Initialize the distance metrix.
+    mat: list[list[int]] = [[0] * (n_dst + 1) for _ in range(n_src + 1)]
+    for i in range(n_src + 1):
+        mat[i][0] = i
+    for j in range(n_dst + 1):
+        mat[0][j] = j
+
+    for i in range(1, n_src + 1):
+        for j in range(1, n_dst + 1):
+            cost: int = 0 if (src[i - 1] == dst[j - 1]) else 1
+            mat[i][j] = min(mat[i-1][j  ] + 1,     # insertion
+                            mat[i  ][j-1] + 1,     # deletion
+                            mat[i-1][j-1] + cost)  # replacement
+
+    return mat[n_src][n_dst]
+
+
 def strtobool(s: str) -> bool | None:
     """
     Convert the given string to bool instance. The function `bool(...)` is not suitable
@@ -146,6 +183,8 @@ def strtobool(s: str) -> bool | None:
         True
         >>> strtobool("False")
         False
+        >>> strtobool("-") is None
+        True
     """
     if s.lower() in {"t", "true", "y", "yes", "on", "1"}:
         return True

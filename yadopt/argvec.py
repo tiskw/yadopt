@@ -13,7 +13,9 @@ from collections.abc import Generator
 
 # Import custom modules.
 from .dtypes import OptsInfo, ArgVector
+from .errors import YadOptError
 from .usage  import UsageEntry, UsageOpt, UsageInfo
+from .utils  import levenshtein_distance
 
 
 def parse_argvec(argv: list[str], usage: UsageInfo, opts: OptsInfo) -> ArgVector:
@@ -30,6 +32,9 @@ def parse_argvec(argv: list[str], usage: UsageInfo, opts: OptsInfo) -> ArgVector
     Returns:
         (ArgVector): Correspondance of argument/option names and values.
     """
+    # Validate argv.
+    validate_argv(argv, opts)
+
     # Get a map from altanative name to standard name.
     alt_names: dict[str, str] = {opt.name_alt: opt.name for opt in opts.items if opt.name_alt is not None}
 
@@ -66,6 +71,43 @@ def parse_argvec(argv: list[str], usage: UsageInfo, opts: OptsInfo) -> ArgVector
 
     # If appropriate usage not found, return empty user input.
     return ArgVector(pres={}, args={}, opts={})
+
+
+def validate_argv(argv: list[str], opts: OptsInfo) -> None:
+    """
+    Validate the contents of the argument vector.
+    """
+    # Get a set of option names including short expression, except None.
+    opt_names: set[str] = {opt.name     for opt in opts.items if opt.name     is not None}
+    opt_names          |= {opt.name_alt for opt in opts.items if opt.name_alt is not None}
+
+    #
+    for arg_opt in (arg for arg in argv if arg.startswith("-")):
+        if arg_opt.lstrip("-") not in opt_names:
+
+            # Initialize the additional message.
+            message: str = ""
+
+            # If long option, try to search similar option name.
+            if arg_opt.startswith("--") and (len(opt_names) > 0):
+
+                # Get the name of the target unknown option.
+                arg_opt_name: str = arg_opt.lstrip("-")
+
+                # Get a list of long options.
+                long_opt_names: list[str] = sorted([opt.name for opt in opts.items])
+
+                # Find a word that has minimum Levenshtein distance.
+                (idx_min, min_val) = (0, levenshtein_distance(arg_opt_name, long_opt_names[0]))
+                for idx, name in enumerate(long_opt_names[1:], start=1):
+                    val: int = levenshtein_distance(arg_opt_name, name)
+                    if val < min_val:
+                        (idx_min, min_val) = (idx, val)
+
+                # Create the extra message.
+                message = f"Do you mean '--{long_opt_names[idx_min]}'?"
+
+            raise YadOptError["unknown_option"](arg_opt, message)
 
 
 def standerdize_option_names_in_argument_vector(argv: list[str], alt_names: dict[str, str]) -> Generator[str]:

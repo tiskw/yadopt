@@ -42,10 +42,10 @@ class YadOptErrorBase(Exception):
         Convert myself to a string.
         """
         # Get a docstring.
-        docstr: str = self.__doc__ if (self.__doc__ is not None) else ""
+        docstr: str = textwrap.dedent(self.__doc__) if (self.__doc__ is not None) else ""
 
         # Returns a string expression of the error class.
-        return "\n" + textwrap.dedent(docstr).format(*pargs, **kwargs) + self.EPILOGUE
+        return "\n" + docstr.format(*pargs, **kwargs).strip() + "\n" + self.EPILOGUE
 
 
 class YadOptErrorUsageParse(YadOptErrorBase):
@@ -167,6 +167,24 @@ class YadOptErrorInvalidFileType(YadOptErrorBase):
     """
 
 
+class YadOptErrorUnknownOption(YadOptErrorBase):
+    """
+    Error summary:
+      Unknown option detected in the argument vector.
+
+    Details:
+      Unknown option '{0}' detected in the argument vector.
+      {1}
+    """
+    def __str__(self) -> str:
+        """
+        Returns string expression of this error.
+        """
+        unknown_opt  : str = self.pargs[0]
+        opt_candidate: str = self.pargs[1]
+        return self.stringify(unknown_opt, opt_candidate)
+
+
 class YadOptErrorValidUsageNotFound(YadOptErrorBase):
     """
     Error summary:
@@ -214,6 +232,7 @@ YadOptError = {
     "usage_arg_mismatch"   : YadOptErrorUsageArgMismatch,
     "invalid_type_func"    : YadOptErrorInvalidTypeFunc,
     "invalid_file_type"    : YadOptErrorInvalidFileType,
+    "unknown_option"       : YadOptErrorUnknownOption,
     "valid_usage_not_found": YadOptErrorValidUsageNotFound,
     "internal_error"       : YadOptErrorInternal,
 }
