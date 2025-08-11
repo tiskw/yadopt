@@ -18,11 +18,11 @@ def generate_data(argvec: ArgVector, args: ArgsInfo, opts: OptsInfo, argv: list[
     Create YadOptArgs instance, fill the values, and return it.
 
     Args:
-        argvec (ArgVector) : Parsed user input.
-        args   (ArgsInfo)  : Arguments information.
-        opts   (OptsInfo)  : Options information.
-        argv   (list[str]) : Argument vector.
-        docstr (str)       : Docstring.
+        argvec (ArgVector) : [IN] Parsed user input.
+        args   (ArgsInfo)  : [IN] Arguments information.
+        opts   (OptsInfo)  : [IN] Options information.
+        argv   (list[str]) : [IN] Argument vector.
+        docstr (str)       : [IN] Docstring.
 
     Returns:
         (YadOptArgs): Parsed command line arguments.

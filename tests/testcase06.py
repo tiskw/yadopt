@@ -1,5 +1,5 @@
 """
-Testcase 6: save and load
+Testcase 6: Save and load functions.
 """
 
 # Import standard libraries.
@@ -54,7 +54,7 @@ class Testcase06_01:
             assert args.str == "hello"
             assert args.path == yadopt.Path("./dir")
 
-            for suffix in ["json", "json.gz"]:
+            for suffix in ["json", "json.gz", "txt", "txt.gz"]:
                 yadopt.save(f"/tmp/yadopt_test_args.{suffix}", args)
                 args_restore = yadopt.load(f"/tmp/yadopt_test_args.{suffix}")
                 assert args == args_restore

@@ -23,7 +23,7 @@ def get_default(description: str) -> tuple[str, str | None]:
     Get default value.
 
     Args:
-        description (str): Description message contains default value.
+        description (str): [IN] Description message contains default value.
 
     Returns:
         (tuple): A tuple of (rest of description, default value string).
@@ -48,8 +48,8 @@ def get_default(description: str) -> tuple[str, str | None]:
 def get_error_marker(line: str, token: str) -> str:
     """
     Args:
-        line  (str): Entire line.
-        token (str): Target token.
+        line  (str): [IN] Entire line.
+        token (str): [IN] Target token.
 
     Returns:
         (str): Error marker string like.
@@ -69,16 +69,31 @@ def get_error_marker(line: str, token: str) -> str:
     return " " * pos + "^" * len(token) + " " * (len(line) - len(token) - pos)
 
 
-def get_section_lines(docstr: str, section_name: str) -> Generator[str]:
+def get_section_lines(docstr: str, pattern: str) -> Generator[str]:
     """
     Parse docstring and split it to sections.
 
     Args:
-        docstr       (str): Input docstring.
-        section_name (str): Target section name.
+        docstr  (str): [IN] Input docstring.
+        pattern (str): [IN] Target section name pattern.
 
     Returns:
         (Generator[str]): Lines of specified section.
+    """
+    for line, _ in get_section_lines_and_names(docstr, pattern):
+        yield line
+
+
+def get_section_lines_and_names(docstr: str, pattern: str) -> Generator[tuple[str, str]]:
+    """
+    Parse docstring and split it to sections.
+
+    Args:
+        docstr  (str): [IN] Input docstring.
+        pattern (str): [IN] Target section name pattern.
+
+    Returns:
+        (Generator[tuple[str, str]]): Lines of specified section.
     """
     def get_indent(text: str) -> str:
         """
@@ -88,10 +103,11 @@ def get_section_lines(docstr: str, section_name: str) -> Generator[str]:
         return match.group(1) if (match is not None) else ""
 
     # Initialize the section type.
+    section_name     : str  = ""
     is_target_section: bool = False
 
     # Initialize output lines.
-    lines: list[str] = []
+    lines: list[tuple[str, str]] = []
 
     for line in docstr.split("\n"):
 
@@ -100,71 +116,97 @@ def get_section_lines(docstr: str, section_name: str) -> Generator[str]:
 
         # Update the section flag (colon expression).
         if line.endswith(":"):
-            is_target_section = line[:-1].lower().endswith(section_name)
+            section_name = line[:-1].strip()
+            is_target_section = pattern in section_name.lower()
 
         # Update the section flag (bracket expression).
         elif line.startswith("[") and line.endswith("]"):
-            is_target_section = line[1:-1].lower().endswith(section_name)
+            section_name = line[1:-1].strip()
+            is_target_section = pattern in section_name.lower()
 
         # Returns the current line if the line is inside the target section.
         elif is_target_section and line.strip() and (line[0] in string.whitespace):
-            lines.append(line)
+            lines.append((line, section_name))
 
     # Do nothing if the target section is empty.
     if len(lines) == 0:
-        yield from lines
         return
 
     # Get indent of the target section.
-    indent: str = get_indent(lines[0])
+    indent: str = get_indent(lines[0][0])
 
     # Process multiple line.
     while lines:
 
-        line = lines.pop(0)
+        (line, name) = lines.pop(0)
 
         # Appent lines if the indent does not match.
-        while lines and (get_indent(lines[0]) != indent):
-            line += " " + lines.pop(0).lstrip()
+        while lines and (get_indent(lines[0][0]) != indent) and (lines[0][1] == name):
+            line += " " + lines.pop(0)[0].lstrip()
 
-        yield line
+        yield (line, name)
 
 
-def levenshtein_distance(src: str, dst: str) -> int:
+def find_nearest_str(target: str, texts: set[str]) -> str:
     """
-    Simple implementation of Levenshtein distance from "src" to "dst", the minimum number of
-    single-character edits (insertions, deletions or substitutions) required to change one word
-    into the other.
+    Returns the nearest string in the string list (in terms of Levenshtein distance).
 
     Args:
-        src (str): Source string.
-        dst (str): Destination string.
+        target (str)     : Target string.
+        texts  (set[str]): Set of strings to be searched.
 
     Returns:
-        (int): Levenshtein distance between "src" and "dst".
-
-    Example:
-        >>> levenshtein_distance("kitten", "sitting")
-        3
+        (str): Nearest string in the texts.
     """
-    n_src: int = len(src)
-    n_dst: int = len(dst)
+    def levenshtein_distance(src: str, dst: str) -> int:
+        """
+        Simple implementation of Levenshtein distance from "src" to "dst", the minimum number of
+        single-character edits (insertions, deletions or substitutions) required to change one word
+        into the other.
 
-    # Initialize the distance metrix.
-    mat: list[list[int]] = [[0] * (n_dst + 1) for _ in range(n_src + 1)]
-    for i in range(n_src + 1):
-        mat[i][0] = i
-    for j in range(n_dst + 1):
-        mat[0][j] = j
+        Args:
+            src (str): [IN] Source string.
+            dst (str): [IN] Destination string.
 
-    for i in range(1, n_src + 1):
-        for j in range(1, n_dst + 1):
-            cost: int = 0 if (src[i - 1] == dst[j - 1]) else 1
-            mat[i][j] = min(mat[i-1][j  ] + 1,     # insertion
-                            mat[i  ][j-1] + 1,     # deletion
-                            mat[i-1][j-1] + cost)  # replacement
+        Returns:
+            (int): Levenshtein distance between "src" and "dst".
 
-    return mat[n_src][n_dst]
+        Example:
+            >>> levenshtein_distance("kitten", "sitting")
+            3
+        """
+        n_src: int = len(src)
+        n_dst: int = len(dst)
+
+        # Initialize the distance metrix.
+        mat: list[list[int]] = [[0] * (n_dst + 1) for _ in range(n_src + 1)]
+        for i in range(n_src + 1):
+            mat[i][0] = i
+        for j in range(n_dst + 1):
+            mat[0][j] = j
+
+        for i in range(1, n_src + 1):
+            for j in range(1, n_dst + 1):
+                cost: int = 0 if (src[i - 1] == dst[j - 1]) else 1
+                mat[i][j] = min(mat[i-1][j  ] + 1,     # insertion
+                                mat[i  ][j-1] + 1,     # deletion
+                                mat[i-1][j-1] + cost)  # replacement
+
+        return mat[n_src][n_dst]
+
+    # Convert the set of strings to list.
+    list_texts: list[str] = list(texts)
+
+    # Initialize the minimum Levenshtein distance and it's index.
+    (idx_min, min_val) = (0, levenshtein_distance(target, list_texts[0]))
+
+    # Update the minimum distance and it's index.
+    for idx, text in enumerate(list_texts[1:], start=1):
+        val: int = levenshtein_distance(target, text)
+        if val < min_val:
+            (idx_min, min_val) = (idx, val)
+
+    return list_texts[idx_min]
 
 
 def strtobool(s: str) -> bool | None:
@@ -173,7 +215,7 @@ def strtobool(s: str) -> bool | None:
     for this purpose, because `bool("False")` returns `True`.
 
     Args:
-        s (str): Input string.
+        s (str): [IN] Input string.
 
     Returns:
         (bool | None): Corresponding boolean value.
@@ -198,7 +240,7 @@ def strtostr(s: str) -> str:
     Convert string expression to string.
 
     Args:
-        s (str): Input string.
+        s (str): [IN] Input string.
 
     Returns:
         (str): Corresponding string value.
@@ -226,7 +268,7 @@ def retokenize(argv: list[str]) -> Generator[str]:
     Tokenize the argument vector.
 
     Args:
-        argv (list[str]): Argument vector to be tokenized.
+        argv (list[str]): [IN] Argument vector to be tokenized.
 
     Returns:
         (Generator[str]): Re-tokenized tokens.
@@ -244,14 +286,17 @@ def repr_dataclass_items(name: str, data: Any) -> str:
     String expression of dataclass that has items.
 
     Args:
-        name (str): Name of the dataclass.
-        data (Any): Instance of dataclass.
+        name (str): [IN] Name of the dataclass.
+        data (Any): [IN] Instance of dataclass.
+
+    Returns:
+        (str): String expression of the given dataclass.
     """
     # Header of the string expression.
     text: str = f"{name}:\n"
 
     # Append item info.
-    for idx, item in enumerate(data.items):
+    for idx, item in enumerate(data.entries):
         text += f" |-({idx:02d}) " + textwrap.indent(pprint.pformat(item), " |      ")[8:] + "\n"
 
     # Append docstring info.

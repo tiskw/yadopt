@@ -11,7 +11,7 @@ import dataclasses
 import pathlib
 
 # For type hinting.
-from typing import Any
+from typing import Any, TypeAlias
 
 # Import custom modules.
 from .utils import repr_dataclass_items
@@ -21,10 +21,8 @@ from .utils import repr_dataclass_items
 # Path class for YadOpt
 ############################################################
 
-class Path(pathlib.Path):
-    """
-    File path class for YadOpt.
-    """
+# File path class for YadOpt.
+Path: TypeAlias = pathlib.Path
 
 
 ############################################################
@@ -36,10 +34,11 @@ class ArgEntry:
     """
     Parsed result of argument definition in docstring.
     """
-    name     : str         # Option name.
-    dtype_str: str         # Data type string.
-    desc     : str         # Description of this option.
-    default  : str | None  # Default value (string).
+    name    : str         # Option name.
+    type_dsc: str | None  # Data type string written in the head of description.
+    desc    : str         # Description of this option.
+    default : str | None  # Default value (string).
+    group   : str         # Group name of this entry.
 
 
 @dataclasses.dataclass
@@ -47,8 +46,8 @@ class ArgsInfo:
     """
     Arguments information of docstring.
     """
-    items : list[ArgEntry]  # Arguments information.
-    docstr: str             # Arguments section of docstring.
+    entries: list[ArgEntry]  # Arguments information.
+    docstr : str             # Arguments section of docstring.
 
     def __str__(self) -> str:
         return repr_dataclass_items("ArgsInfo", self)
@@ -61,10 +60,11 @@ class OptEntry:
     """
     name     : str         # Option name.
     name_alt : str | None  # Alternative option name.
-    has_value: bool        # Number of arguments.
-    dtype_str: str         # Data type string.
+    val_name : str | None  # Name of option value (used for type hinting).
+    type_dsc : str | None  # Data type string written in the head of description.
     desc     : str         # Description of this option.
     default  : str | None  # Default value (string).
+    group    : str         # Group name of this entry.
 
 
 @dataclasses.dataclass
@@ -72,8 +72,8 @@ class OptsInfo:
     """
     Options information of docstring.
     """
-    items : list[OptEntry]  # Options information.
-    docstr: str             # Options section of docstring.
+    entries: list[OptEntry]  # Options information.
+    docstr : str             # Options section of docstring.
 
     def __str__(self) -> str:
         return repr_dataclass_items("OptsInfo", self)
@@ -84,9 +84,9 @@ class UsageOpt:
     """
     Parsed result of usage definition in docstring.
     """
-    name     : str   # Option name.
-    has_value: bool  # True if this option has a value.
-    required : bool  # True if this option is mandatory.
+    name    : str   # Option name.
+    has_val : bool  # True if this option has a value.
+    required: bool  # True if this option is mandatory.
 
 
 @dataclasses.dataclass
@@ -160,7 +160,7 @@ class YadOptArgs:
         if isinstance(other, self.__class__):
             return self.__normal_dict__() == other.__normal_dict__()
 
-        raise NotImplementedError()
+        raise NotImplementedError
 
 
 # vim: expandtab tabstop=4 shiftwidth=4 fdm=marker

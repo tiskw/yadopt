@@ -1,5 +1,5 @@
 """
-Testcase 8: multiline usages and options.
+Testcase 8: Multiline usages and options.
 """
 
 # Import standard libraries.

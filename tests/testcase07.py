@@ -1,5 +1,5 @@
 """
-Testcase 7: strange indent
+Testcase 7: Strange indent.
 """
 
 # Import standard libraries.
