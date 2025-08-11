@@ -238,11 +238,12 @@ assert args == args_restored</code></pre>
                     <td>An argument vector to be parsed. YadOpt uses the command line arguments passed to your<!--
                     --> Python script, <code class="python">sys.argv[1:]</code>, by default.</td>
                 </tr><tr>
-                    <td><code class="python">default_type</code></td>
+                    <td><code class="python">type_fn</code></td>
                     <td><code class="python">Callable</code></td>
-                    <td><code class="python">auto_type</code></td>
-                    <td>A function that assigns types to arguments and option values. <!--
-                    -->The default value <code class="python">None</code> means using default function.</td>
+                    <td><code class="python">type_func</code></td>
+                    <td>A function that determine data types of arguments and options. <!--
+                    -->The default value <code class="python">type_func</code> means using default function <!--
+                    -->provided by YadOpt.</td>
                 </tr><tr>
                     <td><code class="python">verbose</code></td>
                     <td><code class="python">bool</code></td>
@@ -288,7 +289,7 @@ assert args == args_restored</code></pre>
 
                 <!-- yadopt.to_dict {{{ -->
                 <h3 id="reference_yadopt_to_dict" class="reference-title">yadopt.to_dict</h3>
-                <pre><code class="python">def yadopt.to_dict(args: YadOptArgs) -&gt; dict:</code></pre>
+                <pre><code class="python">def yadopt.to_dict(args: YadOptArgs) -&gt; dict[str, Any]:</code></pre>
                 <p>Convert the <code class="python">YadOptArgs</code> instance to a dictionary.</p>
                 <h4>Args</h4>
                 <table class="pure-table pure-table-bordered"><thead><tr>
@@ -307,7 +308,7 @@ assert args == args_restored</code></pre>
                     <th>Type</th>
                     <th>Description</th>
                 </tr></thead><tbody><tr>
-                    <td><code class="python">dict</code></td>
+                    <td><code class="python">dict[str, Any]</code></td>
                     <td>Dictionary of the given parsed arguments.</td>
                 </tr></tbody></table>
                 <!-- }}} -->
@@ -374,7 +375,7 @@ assert args == args_restored</code></pre>
                     <th>Description</th>
                 </tr></thead><tbody><tr>
                     <td><code class="python">None</code></td>
-                    <td>-</td>
+                    <td>Nothing is returned.</td>
                 </tr></tbody></table>
                 <!-- }}} -->
 
@@ -401,6 +402,37 @@ assert args == args_restored</code></pre>
                 </tr></thead><tbody><tr>
                     <td><code class="python">YadOptArgs</code></td>
                     <td>Restored parsed command line arguments.</td>
+                </tr></tbody></table>
+                <!-- }}} -->
+
+               <!-- yadopt.get_group {{{ -->
+                <h3 id="reference_yadopt_get_group" class="reference-title">yadopt.get_group</h3>
+                <pre><code class="python">def get_group(args: YadOptArgs, group: str) -&gt; dict[str, Any]:</code></pre>
+                <p>Returns the parsed result of the specified section only as a dictionary.</p>
+                <h4>Args</h4>
+                <table class="pure-table pure-table-bordered"><thead><tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Default value</th>
+                    <th>Description</th>
+                </tr></thead><tbody><tr>
+                    <td><code class="python">args</code></td>
+                    <td><code class="python">YadOptArgs</code></td>
+                    <td>-</td>
+                    <td>Parsed command line arguments.</td>
+                </tr><tr>
+                    <td><code class="python">group</code></td>
+                    <td><code class="python">str</code></td>
+                    <td>-</td>
+                    <td>Name of group to extract.</td>
+                </tr></tbody></table>
+                <h4>Returns</h4>
+                <table class="pure-table pure-table-bordered"><thead><tr>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr></thead><tbody><tr>
+                    <td><code class="python">dict[str, Any]</code></td>
+                    <td>Parsed command line arguments of the group.</td>
                 </tr></tbody></table>
                 <!-- }}} -->
 

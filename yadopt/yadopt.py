@@ -240,10 +240,10 @@ def load(path: str) -> YadOptArgs:
 
 def get_group(args: YadOptArgs, group: str) -> dict[str, Any]:
     """
-    Returns the parsed result of the specified section only.
+    Returns the parsed result of the specified section only as a dictionary.
 
     Args:
-        args  (YadOptArgs): [IN] Parsed command line arguments to be saved.
+        args  (YadOptArgs): [IN] Parsed command line arguments.
         group (str)       : [IN] Name of group to extract.
 
     Returns:
