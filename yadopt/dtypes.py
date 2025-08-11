@@ -11,7 +11,7 @@ import dataclasses
 import pathlib
 
 # For type hinting.
-from typing import Any
+from typing import Any, TypeAlias
 
 # Import custom modules.
 from .utils import repr_dataclass_items
@@ -21,10 +21,8 @@ from .utils import repr_dataclass_items
 # Path class for YadOpt
 ############################################################
 
-class Path(pathlib.Path):
-    """
-    File path class for YadOpt.
-    """
+# File path class for YadOpt.
+Path: TypeAlias = pathlib.Path
 
 
 ############################################################

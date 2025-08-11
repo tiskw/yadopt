@@ -16,6 +16,8 @@ help:
 	@echo "    check         Check the code quality"
 	@echo "    count         Count the lines of code"
 	@echo "    coverage      Measure code coverage"
+	@echo "    test          Run test on this device"
+	@echo "    testall       Run test on Docker"
 	@echo ""
 	@echo "Other commands:"
 	@echo "    clean         Cleanup cache files"
@@ -36,6 +38,16 @@ coverage:
 
 test:
 	python3 tests/run_tests.py
+
+test-all:
+	docker run --rm -it -v `pwd`:/work -w /work python:3.12 python3 tests/run_tests.py | tee /tmp/yadopt_test_py3_12.txt
+	docker run --rm -it -v `pwd`:/work -w /work python:3.11 python3 tests/run_tests.py | tee /tmp/yadopt_test_py3_11.txt
+	docker run --rm -it -v `pwd`:/work -w /work python:3.10 python3 tests/run_tests.py | tee /tmp/yadopt_test_py3_10.txt
+	@echo ""
+	@echo "----- Summary -----"
+	@echo "Test on Python 3.12:" `cat /tmp/yadopt_test_py3_12.txt | tail -n 1`
+	@echo "Test on Python 3.11:" `cat /tmp/yadopt_test_py3_11.txt | tail -n 1`
+	@echo "Test on Python 3.10:" `cat /tmp/yadopt_test_py3_10.txt | tail -n 1`
 
 build:
 	python3 -m build

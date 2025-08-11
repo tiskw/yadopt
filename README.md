@@ -161,7 +161,7 @@ args = yadopt.to_dict(yadopt.parse(__doc__))
 args = yadopt.to_namedtuple(yadopt.parse(__doc__))
 ```
 
-### Restore arguments from JSON file
+### Restore arguments from a file
 
 YadOpt has a function to save parsed argument instances as a JSON file and to restore the argument
 instances from the JSON files. These functions are probably useful when recalling the same arguments
@@ -201,7 +201,7 @@ in the code, code quality, etc. Please run the following command (the author rec
 environment).
 
 ```console
-$ apt install cloc
+$ apt install cloc docker.io
 $ pip install -r requirements-dev.txt
 ```
 
@@ -225,6 +225,8 @@ Test and code check commands:
     check         Check the code quality
     count         Count the lines of code
     coverage      Measure code coverage
+	test          Run test on this device
+	testall       Run test on Docker
 
 Other commands:
     clean         Cleanup cache files
