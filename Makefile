@@ -23,8 +23,8 @@ help:
 
 check:
 	pyflakes yadopt
-	pylint --max-line-length=120 yadopt
 	mypy yadopt
+	pylint --max-line-length=120 yadopt
 
 count:
 	cloc --by-file yadopt/*.py

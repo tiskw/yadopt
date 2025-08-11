@@ -50,21 +50,23 @@ class YadOptErrorBase(Exception):
 
 class YadOptErrorUsageParse(YadOptErrorBase):
     """
-    Error summary:
+    --------------------------------------------------------------------------------
+    <Error summary>
       YadOpt failed to parse a token in the usage section.
 
-    Location:
+    <Location>
       The following line in the usage setion.
 
         {0}
+        {1}
 
-    Details:
+    <Details>
       Each token in the usage section have to follow the specific format.
       For example, all argument tokens should be enclosed by angle bracket,
       all option tokens should be enclosed by bracket, and so on.
       Please see the YadOpt documentation for more details.
 
-    Solution:
+    <Solution>
       This is unknown token error therefore no concrete solution can be suggest,
       sorry. Please see the YadOpt documentation and modigy your usage pattern
       in the usage section.
@@ -74,22 +76,24 @@ class YadOptErrorUsageParse(YadOptErrorBase):
         Returns string expression of this error.
         """
         line = self.pargs[0].strip()
-        return self.stringify(line)
+        mark = "^" * len(line)
+        return self.stringify(line, mark)
 
 
 class YadOptErrorInvalidConstant(YadOptErrorBase):
     """
-    Error summary:
-      The error occurred because a constant token appears after an argument or
-      option token. This pattern is now allowed in YadOpt, sorry.
+    --------------------------------------------------------------------------------
+    <Error summary>
+      A constant token appears after an argument or option token.
+      This usage pattern is now allowed in YadOpt, sorry.
 
-    Location:
+    <Location>
       The following line in the usage setion.
 
         {1}
         {2}
 
-    Details:
+    <Details>
       Constant tokens are only allowed at the beginning of a usage.
       For example,
 
@@ -103,7 +107,7 @@ class YadOptErrorInvalidConstant(YadOptErrorBase):
         sample.py subcmd [--opt1 val1] bad_constant_token
                                        ^^^^^^^^^^^^^^^^^^
 
-    Solution:
+    <Solution>
       Please remove the constant token from the usage pattern. In some cases,
       you may need to reconsider the usage of your command. If you intended
       the argument, not constant token, please enclose the token in angle brackets
@@ -119,84 +123,112 @@ class YadOptErrorInvalidConstant(YadOptErrorBase):
         return self.stringify(token, line, marker)
 
 
-class YadOptErrorUsageArgMismatch(YadOptErrorBase):
-    """
-    Error summary:
-      The usage does not match with the arguments/options section.
-
-    Details:
-      The user input "{0}" (= {1}) does exist in arguments/options section.
-
-    Solution:
-      Modify user input or arguments/options section in your docstring.
-    """
-
-
 class YadOptErrorInvalidTypeFunc(YadOptErrorBase):
     """
-    Error summary:
+    --------------------------------------------------------------------------------
+    <Error summary>
       Invalid type function.
 
-    Location:
+    <Location>
       Argument "type_func" in "yadopt.parse" or "yadopt.wrap" function.
 
-    Details:
+    <Details>
       The type function should be a callable object or None, but the spacified
       object "{0}" does not satisfy either of them.
 
-    Solution:
+    <Solution>
       Modify the value of the "type_func" argument.
     """
 
 
-class YadOptErrorInvalidFileType(YadOptErrorBase):
+class YadOptErrorInvalidTypeName(YadOptErrorBase):
     """
-    Error summary:
-      Invalid file type
+    --------------------------------------------------------------------------------
+    <Error summary>
+      Invalid type name '{0}'.
 
-    Location:
+    <Location>
+      Argument "type_func" in "yadopt.parse" or "yadopt.wrap" function.
+
+    <Details>
+      Type name '{0}' is invalid. Acceptable type names are "int", "integer",
+      "flt", "float", or "str", "string", "path", or their uppercases.
+
+    <Solution>
+      Modify the type name, or give your custom typing function to "type_fn"
+      argument of "yadopt.parse" or "yadopt.wrap" function.
+    """
+
+
+class YadOptErrorInvalidIOFileFormat(YadOptErrorBase):
+    """
+    --------------------------------------------------------------------------------
+    <Error summary>
+      Invalid I/O file format
+
+    <Location>
       Argument of {0}: {1}
 
-    Details:
-      The "yadopt.save" and "yadopt.load" functions support only ".txt" format, and gzipped
-      version of it. However, this error indicates that the other suffixe than
-      ".json", ".json.gz" is specified.
+    <Details>
+      The "yadopt.save" and "yadopt.load" functions does not support "{2}" format.
 
-    Solution:
-      Please specify the supported file type.
+    <Solution>
+      Please specify the supported file format, for example, ".txt" or ".json".
+    """
+
+
+class YadOptErrorUnknownArgument(YadOptErrorBase):
+    """
+    --------------------------------------------------------------------------------
+    <Error summary>
+      Unknown argument is found in the usage.
+
+    <Details>
+      The argument "{0}" in the usage does exist in arguments definition.
+      {1}
     """
 
 
 class YadOptErrorUnknownOption(YadOptErrorBase):
     """
-    Error summary:
+    --------------------------------------------------------------------------------
+    <Error summary>
+      Unknown option is found in the usage.
+
+    <Details>
+      The option '{0}' in the usage does not exist in the option definition.
+      {1}
+    """
+
+
+class YadOptErrorUnknownOptionArgv(YadOptErrorBase):
+    """
+    --------------------------------------------------------------------------------
+    <Error summary>
       Unknown option detected in the argument vector.
 
-    Details:
+    <Details>
       Unknown option '{0}' detected in the argument vector.
       {1}
     """
-    def __str__(self) -> str:
-        """
-        Returns string expression of this error.
-        """
-        unknown_opt  : str = self.pargs[0]
-        opt_candidate: str = self.pargs[1]
-        return self.stringify(unknown_opt, opt_candidate)
+
 
 
 class YadOptErrorValidUsageNotFound(YadOptErrorBase):
     """
-    Error summary:
+    --------------------------------------------------------------------------------
+    <Error summary>
       Valid usage not found
 
-    Location:
+    <Location>
       {1}
+        {2}
+        {3}
 
-    Details:
+    <Details>
       The user input does not match any of the command usage.
 
-    Solution:
+    <Solution>
       Please check the user input and the command usage.
 
     {0}
@@ -209,32 +241,37 @@ class YadOptErrorValidUsageNotFound(YadOptErrorBase):
         funcname = self.pargs[1].function
         filename = os.path.basename(self.pargs[1].filename)
         err_pos  = f"{filename} : {funcname} : L.{line_num}"
-        return self.stringify(self.pargs[0], err_pos)
+        err_code = self.pargs[1].code_context[0].strip()
+        err_mark = "^" * len(err_code)
+        return self.stringify(self.pargs[0], err_pos, err_code, err_mark)
 
 
 class YadOptErrorInternal(YadOptErrorBase):
     """
-    Error summary:
+    --------------------------------------------------------------------------------
+    <Error summary>
       Internal error.
 
-    Location:
+    <Location>
       See the traceback above.
 
-    Details:
+    <Details>
       This error means that something happened that the developer(s) didn't anticipate during
       the execution of the YadOpt code, NOT that the user is using the library incorrectly.
     """
 
 
 YadOptError = {
-    "usage_parse"          : YadOptErrorUsageParse,
-    "invalid_constant"     : YadOptErrorInvalidConstant,
-    "usage_arg_mismatch"   : YadOptErrorUsageArgMismatch,
-    "invalid_type_func"    : YadOptErrorInvalidTypeFunc,
-    "invalid_file_type"    : YadOptErrorInvalidFileType,
-    "unknown_option"       : YadOptErrorUnknownOption,
-    "valid_usage_not_found": YadOptErrorValidUsageNotFound,
-    "internal_error"       : YadOptErrorInternal,
+    "usage_parse"           : YadOptErrorUsageParse,
+    "invalid_constant"      : YadOptErrorInvalidConstant,
+    "invalid_type_func"     : YadOptErrorInvalidTypeFunc,
+    "invalid_type_name"     : YadOptErrorInvalidTypeName,
+    "invalid_io_file_format": YadOptErrorInvalidIOFileFormat,
+    "unknown_argument"      : YadOptErrorUnknownArgument,
+    "unknown_option"        : YadOptErrorUnknownOption,
+    "unknown_option_argv"   : YadOptErrorUnknownOptionArgv,
+    "valid_usage_not_found" : YadOptErrorValidUsageNotFound,
+    "internal_error"        : YadOptErrorInternal,
 }
 
 

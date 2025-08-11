@@ -1,5 +1,5 @@
 """
-Testcase 9: additional type hint testing
+Testcase 9: Additional type hint testing.
 """
 
 # Import standard libraries.

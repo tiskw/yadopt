@@ -46,7 +46,7 @@ def match_and_get(line: str, patterns_and_indices: list[PatternType]) -> Matched
     Parse the given string and returns specified matched strings.
 
     Args:
-        line (str) : The target line.
+        line (str) : [IN] The target line.
 
     Returns:
         (tuple[str]): A tuple of matched strings corresponding to the indices,
@@ -91,7 +91,7 @@ def match_opt(line: str) -> MatchedType:
     Parse arguments line.
 
     Args:
-        line (str): Target string.
+        line (str): [IN] Target string.
 
     Returns:
         (MatchedType): A tuple of matched strings.
@@ -108,7 +108,7 @@ def match_sec(line: str) -> MatchedType:
     Parse section line.
 
     Args:
-        line (str): Target string.
+        line (str): [IN] Target string.
 
     Returns:
         (MatchedType): A tuple of matched strings.

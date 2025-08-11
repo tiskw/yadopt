@@ -13,35 +13,30 @@ from collections.abc import Generator
 
 # Import custom modules.
 from .dtypes import OptsInfo, ArgVector
-from .errors import YadOptError
 from .usage  import UsageEntry, UsageOpt, UsageInfo
-from .utils  import levenshtein_distance
 
 
-def parse_argvec(argv: list[str], usage: UsageInfo, opts: OptsInfo) -> ArgVector:
+def parse_argvec(argv: list[str], usage: UsageInfo, opts: OptsInfo) -> ArgVector | None:
     """
     Try to match with the given arguemtn vector and usage patterns.
     If matched usage found, this function returns a dictionary that represents name-value
     correspondance. Otherwise, returns None.
 
     Args:
-        argv  (list[str]): Argument vector.
-        usage (UsageInfo): Parsed result of docstring.
-        opts  (OptsInfo) : Options information of docstring.
+        argv  (list[str]): [IN] Argument vector.
+        usage (UsageInfo): [IN] Parsed result of docstring.
+        opts  (OptsInfo) : [IN] Options information of docstring.
 
     Returns:
-        (ArgVector): Correspondance of argument/option names and values.
+        (ArgVector | None): Correspondance of argument/option names and values.
     """
-    # Validate argv.
-    validate_argv(argv, opts)
-
     # Get a map from altanative name to standard name.
-    alt_names: dict[str, str] = {opt.name_alt: opt.name for opt in opts.items if opt.name_alt is not None}
+    alt_names: dict[str, str] = {opt.name_alt: opt.name for opt in opts.entries if opt.name_alt is not None}
 
     # Standardize option names of argument vector.
     argv_std: list[str] = list(standerdize_option_names_in_argument_vector(argv, alt_names))
 
-    for usage_entry in usage.items:
+    for usage_entry in usage.entries:
 
         # Convert options in usage to dict.
         usage_opt_dict: dict[str, UsageOpt] = {opt.name: opt for opt in usage_entry.opts}
@@ -56,13 +51,13 @@ def parse_argvec(argv: list[str], usage: UsageInfo, opts: OptsInfo) -> ArgVector
         if argvec is not None:
 
             # Append all unused precesing tokens as False.
-            for u in usage.items:
+            for u in usage.entries:
                 for token_pre in u.pres[1:]:
                     if token_pre not in argvec.pres:
                         argvec.pres[token_pre] = False
 
             # Append all optional arguments that has default value but not appears in the user input.
-            for opt in opts.items:
+            for opt in opts.entries:
                 if (opt.name not in argvec.opts) and (opt.default is not None):
                     if (opt.name in usage_opt_dict) and (not usage_opt_dict[opt.name].required):
                         argvec.opts[opt.name] = opt.default
@@ -70,44 +65,7 @@ def parse_argvec(argv: list[str], usage: UsageInfo, opts: OptsInfo) -> ArgVector
             return argvec
 
     # If appropriate usage not found, return empty user input.
-    return ArgVector(pres={}, args={}, opts={})
-
-
-def validate_argv(argv: list[str], opts: OptsInfo) -> None:
-    """
-    Validate the contents of the argument vector.
-    """
-    # Get a set of option names including short expression, except None.
-    opt_names: set[str] = {opt.name     for opt in opts.items if opt.name     is not None}
-    opt_names          |= {opt.name_alt for opt in opts.items if opt.name_alt is not None}
-
-    #
-    for arg_opt in (arg for arg in argv if arg.startswith("-")):
-        if arg_opt.lstrip("-") not in opt_names:
-
-            # Initialize the additional message.
-            message: str = ""
-
-            # If long option, try to search similar option name.
-            if arg_opt.startswith("--") and (len(opt_names) > 0):
-
-                # Get the name of the target unknown option.
-                arg_opt_name: str = arg_opt.lstrip("-")
-
-                # Get a list of long options.
-                long_opt_names: list[str] = sorted([opt.name for opt in opts.items])
-
-                # Find a word that has minimum Levenshtein distance.
-                (idx_min, min_val) = (0, levenshtein_distance(arg_opt_name, long_opt_names[0]))
-                for idx, name in enumerate(long_opt_names[1:], start=1):
-                    val: int = levenshtein_distance(arg_opt_name, name)
-                    if val < min_val:
-                        (idx_min, min_val) = (idx, val)
-
-                # Create the extra message.
-                message = f"Do you mean '--{long_opt_names[idx_min]}'?"
-
-            raise YadOptError["unknown_option"](arg_opt, message)
+    return None
 
 
 def standerdize_option_names_in_argument_vector(argv: list[str], alt_names: dict[str, str]) -> Generator[str]:
@@ -116,8 +74,8 @@ def standerdize_option_names_in_argument_vector(argv: list[str], alt_names: dict
     For example, "-h" -> "--help".
 
     Args:
-        argv      (list[str])     : Argument vector.
-        alt_names (dict[str, str]): A map from altanative name to standard name.
+        argv      (list[str])     : [IN] Argument vector.
+        alt_names (dict[str, str]): [IN] A map from altanative name to standard name.
 
     Returns:
         (Generator[str]): Standerdized option names.
@@ -132,9 +90,9 @@ def match_argvec_and_usage(argv: list[str], usage: UsageEntry, usage_opt_dict: d
     If matched, returns ArgVector instance, and otherwise, returns None.
 
     Args:
-        argv           (list[str])          : Argument vector.
-        usage          (UsageEntry)         : Usage pattern.
-        usage_opt_dict (dict[str, UsageOpt]): Dictionary form of options in usage.
+        argv           (list[str])          : [IN] Argument vector.
+        usage          (UsageEntry)         : [IN] Usage pattern.
+        usage_opt_dict (dict[str, UsageOpt]): [IN] Dictionary form of options in usage.
 
     Returns:
         (ArgVector): ArgVector instance if matched, and None otherwise.
@@ -194,9 +152,9 @@ def proc_arg_token(token: str, argvec: ArgVector, available_args: list[str]) -> 
     Process argument token.
 
     Args:
-        token          (str)      : Input token.
-        argvec         (ArgVector): User input instance.
-        available_args (list[str]): Rest of available arguments.
+        token          (str)      : [IN] Input token.
+        argvec         (ArgVector): [IN] User input instance.
+        available_args (list[str]): [IN] Rest of available arguments.
 
     Returns:
         (bool): True if matched.
@@ -230,10 +188,10 @@ def proc_opt_token(token: str, argv: list[str], user_input: ArgVector, usage_opt
     Process option token.
 
     Args:
-        token      (str)       : Input token.
-        argv       (list[str]) : Argument vector.
-        user_input (ArgVector) : User input instance.
-        usage      (UsageEntry): Usage pattern.
+        token      (str)       : [IN] Input token.
+        argv       (list[str]) : [IN] Argument vector.
+        user_input (ArgVector) : [IN] User input instance.
+        usage      (UsageEntry): [IN] Usage pattern.
 
     Returns:
         (bool): True if matched.
@@ -249,7 +207,7 @@ def proc_opt_token(token: str, argv: list[str], user_input: ArgVector, usage_opt
     usage_opt: UsageOpt = usage_opt_dict[token]
 
     # Case 1.1: Option with value.
-    if usage_opt.has_value:
+    if usage_opt.has_val:
 
         # NOT MATRCHED!: option value not found: there is no remaining token.
         if not argv:

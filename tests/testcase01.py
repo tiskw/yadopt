@@ -185,4 +185,33 @@ class Testcase01_02:
             raise ValueError(f"Check function for index={index} not found")
 
 
+class Testcase01_03:
+    """
+    Extremely simple case.
+
+    [Usage]
+        train.py
+    """
+    commands = [
+        "train.py",
+    ]
+
+    @staticmethod
+    def check(index, args, command):
+        """
+        Checker function for testcases.
+
+        Args:
+            index   (int)       : Index of testcases.
+            args    (YadOptArgs): Parsed command line arguments.
+            command (str)       : Command string (source of `args`).
+        """
+        if index == 0:
+            assert isinstance(args, yadopt.YadOptArgs)
+            assert len(yadopt.to_dict(args).keys()) == 0
+
+        else:
+            raise ValueError(f"Check function for index={index} not found")
+
+
 # vim: expandtab tabstop=4 shiftwidth=4

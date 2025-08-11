@@ -21,7 +21,7 @@ Other options:
 import yadopt
 
 
-@yadopt.wrap(__doc__)
+@yadopt.wrap(__doc__, verbose=True)
 def main(args: yadopt.YadOptArgs):
     """
     Entry point of this script.

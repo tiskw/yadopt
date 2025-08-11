@@ -29,10 +29,10 @@ class UsageInfo:
         Read docstring, parse usage section and store the result to myself.
 
         Args:
-            docstr (str): Docstring to be parsed.
+            docstr (str): [IN] Docstring to be parsed.
         """
         # Add usage information.
-        self.items: list[UsageEntry] = [parse_usage_line(line) for line in get_section_lines(docstr, "usage")]
+        self.entries: list[UsageEntry] = [parse_usage_line(line) for line in get_section_lines(docstr, "usage")]
 
         # Add docstring information.
         self.docstr: str = "Usage:\n" + "\n".join(get_section_lines(docstr, "usage"))
@@ -42,11 +42,11 @@ class UsageInfo:
         String expression of UsageInfo.
         """
         # Header of the string expression.
-        text = "UsageInfo:\n"
+        text: str = "UsageInfo:\n"
 
-        # Append item info.
-        for idx, item in enumerate(self.items):
-            text += f" |-({idx:02d}) " + textwrap.indent(pprint.pformat(item), " |      ")[8:] + "\n"
+        # Append entry info.
+        for idx, entry in enumerate(self.entries):
+            text += f" |-({idx:02d}) " + textwrap.indent(pprint.pformat(entry), " |      ")[8:] + "\n"
 
         # Append docstring info.
         text += f" |-(docstr) str of length {len(self.docstr)}"
@@ -57,9 +57,10 @@ class UsageInfo:
         """
         Expand [OPTIONS] token in the usage.
         """
-        for usage_entry in self.items:
+        # NOTE: The expression "opt.val_name is not None" means "The option has value".
+        for usage_entry in self.entries:
             if "OPTIONS" in {opt.name for opt in usage_entry.opts}:
-                usage_entry.opts = [UsageOpt(opt.name, opt.has_value, False) for opt in opts.items]
+                usage_entry.opts = [UsageOpt(opt.name, opt.val_name is not None, False) for opt in opts.entries]
 
 
 def parse_docstr_usage(docstr: str) -> UsageInfo:
@@ -67,6 +68,9 @@ def parse_docstr_usage(docstr: str) -> UsageInfo:
     Parse docstring and return usage info.
 
     Args:
+        docstr (str): [IN] Docstring to be parsed.
+
+    Returns:
         (UsageInfo): Parsed usage information.
     """
     return UsageInfo(docstr)
@@ -77,18 +81,18 @@ def parse_usage_line(line: str) -> UsageEntry:
     Parse usage line.
 
     Args:
-        line (str): Input usage string.
+        line (str): [IN] Input usage string.
 
     Returns:
         (UsageEntry): Parsed result of one usage.
 
     Examples:
         >>> parse_usage_line("sample.py <a1> <a2> [--o1]")
-        UsageEntry(pres=['sample.py'], args=['a1', 'a2'], opts=[UsageOpt(name='o1', has_value=False, required=False)])
+        UsageEntry(pres=['sample.py'], args=['a1', 'a2'], opts=[UsageOpt(name='o1', has_val=False, required=False)])
         >>> parse_usage_line("sample.py pre <a1> [--o1 INT]")
-        UsageEntry(pres=['sample.py', 'pre'], args=['a1'], opts=[UsageOpt(name='o1', has_value=True, required=False)])
+        UsageEntry(pres=['sample.py', 'pre'], args=['a1'], opts=[UsageOpt(name='o1', has_val=True, required=False)])
         >>> parse_usage_line("sample.py pre <a1> --o1")
-        UsageEntry(pres=['sample.py', 'pre'], args=['a1'], opts=[UsageOpt(name='o1', has_value=False, required=True)])
+        UsageEntry(pres=['sample.py', 'pre'], args=['a1'], opts=[UsageOpt(name='o1', has_val=False, required=True)])
     """
     def is_arg(token):
         return token.startswith("<") and token.endswith(">")
@@ -129,11 +133,11 @@ def parse_usage_line(line: str) -> UsageEntry:
                 _ = tokens.pop(0)
 
                 # Add option entry.
-                usage.opts.append(UsageOpt(name=opt_key, has_value=True, required=True))
+                usage.opts.append(UsageOpt(name=opt_key, has_val=True, required=True))
 
             # Case 2.2: Option without value.
             else:
-                usage.opts.append(UsageOpt(name=opt_key, has_value=False, required=True))
+                usage.opts.append(UsageOpt(name=opt_key, has_val=False, required=True))
 
         # Case 3: Non-mandatory option token.
         elif (token.startswith("[-") and token.endswith("]")) or (token == "[OPTIONS]"):
@@ -142,7 +146,7 @@ def parse_usage_line(line: str) -> UsageEntry:
             subtokens: list[str] = re.split("[ =]", token.strip("[]").lstrip("-"), maxsplit=1)
 
             # Add option entry.
-            usage.opts.append(UsageOpt(name=subtokens[0], has_value=len(subtokens)>1, required=False))
+            usage.opts.append(UsageOpt(name=subtokens[0], has_val=len(subtokens)>1, required=False))
 
         else:
             raise YadOptError["invalid_constant"](token, line)
@@ -156,8 +160,8 @@ def tokenize(usage_line: str) -> Generator[str]:
     If you prefer simple tokenization, use `shlex.split` function.
 
     Args:
-        usage_line (str) : Usage string.
-        strip      (bool): Strip whitespace from returned tokens if true.
+        usage_line (str) : [IN] Usage string.
+        strip      (bool): [IN] Strip whitespace from returned tokens if true.
 
     Returns:
         (Generator[str]): Tokens in the usage line.
