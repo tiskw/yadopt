@@ -8,7 +8,7 @@ from .hints  import type_func
 from .yadopt import parse, wrap, to_dict, to_namedtuple, save, load, get_group
 
 # Version information.
-__version__ = "2025.08.11"
+__version__ = "2025.11.22"
 
 # Declare published functions and variables.
 __all__ = ["parse", "wrap", "to_dict", "to_namedtuple", "save", "load", "get_group",
