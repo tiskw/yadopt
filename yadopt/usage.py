@@ -149,7 +149,7 @@ def parse_usage_line(line: str) -> UsageEntry:
             usage.opts.append(UsageOpt(name=subtokens[0], has_val=len(subtokens)>1, required=False))
 
         else:
-            raise YadOptError["invalid_constant"](token, line)
+            raise YadOptError.invalid_constant(token, line)
 
     return usage
 
@@ -194,7 +194,7 @@ def tokenize(usage_line: str) -> Generator[str]:
 
         # Raise an error if no pattern matched.
         if m is None:
-            raise YadOptError["usage_parse"](usage_line)
+            raise YadOptError.usage_parse(usage_line)
 
         # Get matched substring.
         token: str = m.group(0)

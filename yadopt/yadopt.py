@@ -29,6 +29,7 @@ from .dtypes  import ArgsInfo, OptsInfo, YadOptArgs
 from .errors  import YadOptError
 from .gendat  import generate_data
 from .hints   import type_func, type_hint
+from .toml    import dump_toml, load_toml
 from .usage   import parse_docstr_usage, UsageInfo
 from .utils   import retokenize
 
@@ -51,7 +52,7 @@ def parse(docstr: str, argv: list[str] = sys.argv, type_fn: Callable = type_func
 
     # Check the type function.
     if not callable(type_fn):
-        raise YadOptError["invalid_type_func"](type_fn)
+        raise YadOptError.invalid_type_func(type_fn)
 
     # Parse usage section.
     usage: UsageInfo = parse_docstr_usage(docstr)
@@ -81,7 +82,7 @@ def parse(docstr: str, argv: list[str] = sys.argv, type_fn: Callable = type_func
 
     # If appropriate usage not found, print message and raise an error.
     if argvec is None:
-        raise YadOptError["valid_usage_not_found"](usage.docstr, inspect.stack()[-1])
+        raise YadOptError.valid_usage_not_found(usage.docstr, inspect.stack()[-1])
 
     # Apply type hints. This function also fill default values.
     type_hint(argvec, args, opts, type_fn, fill_default=True)
@@ -189,9 +190,16 @@ def save(path: str, args: YadOptArgs, indent: int = 4) -> None:
         with open_fn(path_out, "wt") as ofp:
             ofp.write(data_txt)
 
+    # Case 3: TOML format.
+    elif any(path_out.name.endswith(sfx) for sfx in [".toml", ".toml.gz"]):
+
+        # Write as a TOML file.
+        with open_fn(path_out, "wt") as ofp:
+            ofp.write(dump_toml(args))
+
     # Otherwise: raise an error.
     else:
-        raise YadOptError["invalid_io_file_format"]("yadopt.save", path)
+        raise YadOptError.invalid_io_file_format("yadopt.save", path)
 
 
 def load(path: str) -> YadOptArgs:
@@ -218,7 +226,7 @@ def load(path: str) -> YadOptArgs:
             data_json: dict = json.load(ifp)
 
         # Parse the loaded argument vector using the loaded docstring.
-        return parse(**data_json)
+        return parse(data_json["docstr"], data_json["argv"])
 
     # Case 2: text format.
     if any(path_out.name.endswith(sfx) for sfx in [".txt", ".txt.gz"]):
@@ -234,8 +242,18 @@ def load(path: str) -> YadOptArgs:
         # Parse the loaded argument vector using the loaded docstring.
         return parse(docstr, argv)
 
+    # Case 3: TOML format.
+    if any(path_out.name.endswith(sfx) for sfx in [".toml", ".toml.gz"]):
+
+        # Load the TOML file.
+        with open_fn(path_out, "rt") as ifp:
+            data_toml: dict = load_toml(ifp)
+
+        # Parse the loaded argument vector using the loaded docstring.
+        return parse(data_toml["docstr"], data_toml["argv"])
+
     # Otherwise: raise an error.
-    raise YadOptError["invalid_io_file_format"]("yadopt.load", path, path_out.suffix)
+    raise YadOptError.invalid_io_file_format("yadopt.load", path, path_out.suffix)
 
 
 def get_group(args: YadOptArgs, group: str) -> dict[str, Any]:

@@ -213,7 +213,6 @@ class YadOptErrorUnknownOptionArgv(YadOptErrorBase):
     """
 
 
-
 class YadOptErrorValidUsageNotFound(YadOptErrorBase):
     """
     --------------------------------------------------------------------------------
@@ -261,18 +260,46 @@ class YadOptErrorInternal(YadOptErrorBase):
     """
 
 
-YadOptError = {
-    "usage_parse"           : YadOptErrorUsageParse,
-    "invalid_constant"      : YadOptErrorInvalidConstant,
-    "invalid_type_func"     : YadOptErrorInvalidTypeFunc,
-    "invalid_type_name"     : YadOptErrorInvalidTypeName,
-    "invalid_io_file_format": YadOptErrorInvalidIOFileFormat,
-    "unknown_argument"      : YadOptErrorUnknownArgument,
-    "unknown_option"        : YadOptErrorUnknownOption,
-    "unknown_option_argv"   : YadOptErrorUnknownOptionArgv,
-    "valid_usage_not_found" : YadOptErrorValidUsageNotFound,
-    "internal_error"        : YadOptErrorInternal,
-}
+class YadOptErrorCannotLoadToml(YadOptErrorBase):
+    """
+    --------------------------------------------------------------------------------
+    <Error summary>
+      Failed to load 'tomllib' library.
+
+    <Details>
+      TOML file IO is supported in Python 3.11 and later.
+    """
+
+
+class YadOptError:
+    """
+    General Error class for YadOpt.
+    """
+    usage_parse            = YadOptErrorUsageParse
+    invalid_constant       = YadOptErrorInvalidConstant
+    invalid_type_func      = YadOptErrorInvalidTypeFunc
+    invalid_type_name      = YadOptErrorInvalidTypeName
+    invalid_io_file_format = YadOptErrorInvalidIOFileFormat
+    unknown_argument       = YadOptErrorUnknownArgument
+    unknown_option         = YadOptErrorUnknownOption
+    unknown_option_argv    = YadOptErrorUnknownOptionArgv
+    valid_usage_not_found  = YadOptErrorValidUsageNotFound
+    internal_error         = YadOptErrorInternal
+    cannot_load_toml       = YadOptErrorCannotLoadToml
+
+    def __new__(cls, *pargs: Any, **kwargs: Any):
+        """
+        Object instance generator.
+        This function will be called before constructor (__init__).
+        """
+        raise YadOptErrorInternal()
+
+    @classmethod
+    def __getitem__(cls, key: str, default: Any = None) -> YadOptErrorBase:
+        """
+        Support dict-like access to the class variables.
+        """
+        return getattr(cls, key) if hasattr(cls, key) else default
 
 
 # vim: expandtab tabstop=4 shiftwidth=4 fdm=marker

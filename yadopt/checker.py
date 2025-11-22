@@ -37,12 +37,12 @@ def check_arguments(args, usage) -> bool:
 
             # If available arguments is empty, raise an error.
             if len(arg_names) == 0:
-                raise YadOptError["unknown_argument"](name, "")
+                raise YadOptError.unknown_argument(name, "")
 
             # If the argument does not exist in the available arguments, raise an error.
             if name.rstrip(".") not in arg_names:
                 arg_nearest: str = find_nearest_str(name, arg_names)
-                raise YadOptError["unknown_argument"](name, f"Do you mean '{arg_nearest}'?")
+                raise YadOptError.unknown_argument(name, f"Do you mean '{arg_nearest}'?")
 
     return True
 
@@ -65,30 +65,30 @@ def check_options(argv: list[str], opts: OptsInfo, usage) -> bool:
 
             # If available option is empty, raise an error.
             if len(opt_names) == 0:
-                raise YadOptError["unknown_option"]("--" + opt.name, "")
+                raise YadOptError.unknown_option("--" + opt.name, "")
 
             # If the option does not exist in the available options, raise an error.
             if opt.name not in opt_names:
                 opt_nearest = find_nearest_str(opt.name, opt_names)
-                raise YadOptError["unknown_option"]("--" + opt.name, f"Do you mean '--{opt_nearest}'?")
+                raise YadOptError.unknown_option("--" + opt.name, f"Do you mean '--{opt_nearest}'?")
 
     # Check all arguments in the argument vector.
     for arg_opt in (arg for arg in argv if arg.startswith("-")):
 
         # If available option is empty, raise an error.
         if len(opt_names) == 0:
-            raise YadOptError["unknown_option_argv"](arg_opt, "")
+            raise YadOptError.unknown_option_argv(arg_opt, "")
 
         # If the option does not exist in the available options, raise an error.
         if arg_opt.lstrip("-") not in opt_names:
 
             # Do not search nearest option for short options.
             if not arg_opt.startswith("--"):
-                raise YadOptError["unknown_option_argv"](arg_opt, "")
+                raise YadOptError.unknown_option_argv(arg_opt, "")
 
             # Otherwise, search nearest option name and show it in the error message.
             opt_nearest = find_nearest_str(arg_opt.lstrip("-"), opt_names)
-            raise YadOptError["unknown_option_argv"](arg_opt, f"Do you mean '--{opt_nearest}'?")
+            raise YadOptError.unknown_option_argv(arg_opt, f"Do you mean '--{opt_nearest}'?")
 
     return True
 

@@ -65,7 +65,7 @@ def type_func(name: str, val_name: str | None, type_dsc: str | None) -> Callable
 
         # Raise an error if type name is unknown.
         if type_dsc.lower() not in dtype_hints:
-            raise YadOptError["invalid_type_name"](type_dsc)
+            raise YadOptError.invalid_type_name(type_dsc)
 
         return dtype_hints[type_dsc.lower()]
 
