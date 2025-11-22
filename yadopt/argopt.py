@@ -11,7 +11,6 @@ import re
 # Import custom modules.
 from .dtypes   import ArgEntry, ArgsInfo, OptEntry, OptsInfo
 from .errors   import YadOptError
-# from .hints    import DTYPE_HINTS
 from .matchers import match_arg, match_opt
 from .utils    import get_default, get_section_lines, get_section_lines_and_names
 
@@ -95,7 +94,7 @@ def parse_line(line: str, group: str) -> ArgEntry | OptEntry | None:
 
         # The name should not be None.
         if not isinstance(name, str):
-            raise YadOptError["internal_error"]()
+            raise YadOptError.internal_error()
 
         # Get data type.
         (dtype_str, description) = get_dtype_desc(description)
@@ -115,7 +114,7 @@ def parse_line(line: str, group: str) -> ArgEntry | OptEntry | None:
 
         # The name should be a string.
         if not isinstance(name, str):
-            raise YadOptError["internal_error"]()
+            raise YadOptError.internal_error()
 
         # Get data type.
         (dtype_str, description) = get_dtype_desc(description)

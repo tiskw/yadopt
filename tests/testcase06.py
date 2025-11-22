@@ -54,7 +54,7 @@ class Testcase06_01:
             assert args.str == "hello"
             assert args.path == yadopt.Path("./dir")
 
-            for suffix in ["json", "json.gz", "txt", "txt.gz"]:
+            for suffix in ["json", "json.gz", "txt", "txt.gz", "toml", "toml.gz"]:
                 yadopt.save(f"/tmp/yadopt_test_args.{suffix}", args)
                 args_restore = yadopt.load(f"/tmp/yadopt_test_args.{suffix}")
                 assert args == args_restore
