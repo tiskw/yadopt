@@ -1,5 +1,5 @@
 """
-Usage line parser.
+yadopt.usage - docstring parser for usage section
 """
 
 # Declare published functins and variables.

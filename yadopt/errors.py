@@ -272,7 +272,7 @@ class YadOptErrorCannotLoadToml(YadOptErrorBase):
     """
 
 
-class YadOptError:
+class YadOptError(YadOptErrorBase):
     """
     General Error class for YadOpt.
     """
@@ -287,20 +287,6 @@ class YadOptError:
     valid_usage_not_found  = YadOptErrorValidUsageNotFound
     internal_error         = YadOptErrorInternal
     cannot_load_toml       = YadOptErrorCannotLoadToml
-
-    def __new__(cls, *pargs: Any, **kwargs: Any):
-        """
-        Object instance generator.
-        This function will be called before constructor (__init__).
-        """
-        raise YadOptErrorInternal()
-
-    @classmethod
-    def __getitem__(cls, key: str, default: Any = None) -> YadOptErrorBase:
-        """
-        Support dict-like access to the class variables.
-        """
-        return getattr(cls, key) if hasattr(cls, key) else default
 
 
 # vim: expandtab tabstop=4 shiftwidth=4 fdm=marker

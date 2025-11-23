@@ -1,5 +1,5 @@
 """
-Utility class to match string using regular expression.
+yadopt.machers - utility class to match string using regular expression
 """
 
 # Declare published functions and variables.

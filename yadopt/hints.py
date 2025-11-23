@@ -1,5 +1,5 @@
 """
-Assign types based on type hinting string.
+yadopt.hints - assign types based on type hinting string
 """
 
 # Declare published functins and variables.

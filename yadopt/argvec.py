@@ -1,5 +1,5 @@
 """
-Argment vector parsers.
+yadopt.argvec - argment vector parser
 """
 
 # Declare published functins and variables.

@@ -1,5 +1,5 @@
 """
-Colorize strings.
+yadopt.color - colorize strings
 """
 
 # Declare published functins and variables.
