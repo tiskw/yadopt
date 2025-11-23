@@ -1,5 +1,5 @@
 """
-Generate YadoptArgument data class.
+yadopt.gendat - generate YadoptArgument data class
 """
 
 # Declare published functions and variables.

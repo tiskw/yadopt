@@ -54,10 +54,28 @@ class Testcase06_01:
             assert args.str == "hello"
             assert args.path == yadopt.Path("./dir")
 
+            # Supported suffixes.
             for suffix in ["json", "json.gz", "txt", "txt.gz", "toml", "toml.gz"]:
                 yadopt.save(f"/tmp/yadopt_test_args.{suffix}", args)
                 args_restore = yadopt.load(f"/tmp/yadopt_test_args.{suffix}")
                 assert args == args_restore
+
+            # Unsupported suffixes.
+            for suffix in ["jpg", "png", "webp"]:
+
+                # Save function.
+                try:
+                    output = yadopt.save(f"/tmp/yadopt_test_args.{suffix}", args)
+                except Exception as e:
+                    output = e
+                assert output.__class__.__name__ == "YadOptErrorInvalidIOFileFormat"
+
+                # Load function.
+                try:
+                    output = yadopt.load(f"/tmp/yadopt_test_args.{suffix}")
+                except Exception as e:
+                    output = e
+                assert output.__class__.__name__ == "YadOptErrorInvalidIOFileFormat"
 
         else:
             raise ValueError(f"Check function for index={index} not found")

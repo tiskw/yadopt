@@ -1,5 +1,5 @@
 """
-Collections of data types and classes.
+yadopt.dtypes - collections of data types and classes
 """
 
 # Declare published functions and variables.

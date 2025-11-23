@@ -13,6 +13,7 @@ import textwrap
 from typing import Any
 
 # Import custom modules.
+from .color import colorize_error_message
 from .utils import get_error_marker
 
 
@@ -35,7 +36,7 @@ class YadOptErrorBase(Exception):
         """
         Returns string expression of this error.
         """
-        return self.stringify(*self.pargs)
+        return colorize_error_message(self.stringify(*self.pargs))
 
     def stringify(self, *pargs: Any, **kwargs: Any) -> str:
         """
@@ -271,7 +272,7 @@ class YadOptErrorCannotLoadToml(YadOptErrorBase):
     """
 
 
-class YadOptError:
+class YadOptError(YadOptErrorBase):
     """
     General Error class for YadOpt.
     """
@@ -286,20 +287,6 @@ class YadOptError:
     valid_usage_not_found  = YadOptErrorValidUsageNotFound
     internal_error         = YadOptErrorInternal
     cannot_load_toml       = YadOptErrorCannotLoadToml
-
-    def __new__(cls, *pargs: Any, **kwargs: Any):
-        """
-        Object instance generator.
-        This function will be called before constructor (__init__).
-        """
-        raise YadOptErrorInternal()
-
-    @classmethod
-    def __getitem__(cls, key: str, default: Any = None) -> YadOptErrorBase:
-        """
-        Support dict-like access to the class variables.
-        """
-        return getattr(cls, key) if hasattr(cls, key) else default
 
 
 # vim: expandtab tabstop=4 shiftwidth=4 fdm=marker

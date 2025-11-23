@@ -1,10 +1,10 @@
 """
-Collection of utility functions.
+yadopt.utils - collections of utility functions
 """
 
 # Declare published functins and variables.
-__all__ = ["get_default", "get_error_marker", "get_section_lines",
-           "strtobool", "strtostr", "retokenize", "repr_dataclass_items"]
+__all__ = ["get_default", "get_error_marker", "get_section_lines", "strtobool", "strtostr",
+           "retokenize", "repr_dataclass_items", "SubscriptableMetaClass"]
 
 # Import standard libraries.
 import ast
@@ -303,6 +303,16 @@ def repr_dataclass_items(name: str, data: Any) -> str:
     text += f" |-(docstr) str of length {len(data.docstr)}"
 
     return text.strip()
+
+
+class SubscriptableMetaClass(type):
+    """
+    Mateclass to make class subscriptable.
+    """
+    def __getitem__(cls, key: str, default: Any = None) -> Any:
+        """
+        """
+        return cls.__dict__.get(key, default)
 
 
 # vim: expandtab tabstop=4 shiftwidth=4 fdm=marker

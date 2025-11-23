@@ -1,5 +1,5 @@
 """
-Docstring parser.
+yadopt.argopt - docstring parsers for argument and option sections
 """
 
 # Declare published functions and variables.
@@ -87,6 +87,7 @@ def parse_line(line: str, group: str) -> ArgEntry | OptEntry | None:
     # Try to parse as argument line.
     (outputs, description, _) = match_arg(line)
 
+    # Returns ArgEntry if matched.
     if len(outputs) > 0:
 
         # Get matched argument name.
@@ -94,7 +95,7 @@ def parse_line(line: str, group: str) -> ArgEntry | OptEntry | None:
 
         # The name should not be None.
         if not isinstance(name, str):
-            raise YadOptError.internal_error()
+            raise YadOptError.internal_error
 
         # Get data type.
         (dtype_str, description) = get_dtype_desc(description)
@@ -107,6 +108,7 @@ def parse_line(line: str, group: str) -> ArgEntry | OptEntry | None:
     # Try to parse as option line.
     (outputs, description, has_value) = match_opt(line)
 
+    # Returns OptEntry if matched.
     if len(outputs) > 0:
 
         # Unpack matched results.
@@ -114,7 +116,7 @@ def parse_line(line: str, group: str) -> ArgEntry | OptEntry | None:
 
         # The name should be a string.
         if not isinstance(name, str):
-            raise YadOptError.internal_error()
+            raise YadOptError.internal_error
 
         # Get data type.
         (dtype_str, description) = get_dtype_desc(description)
@@ -129,6 +131,7 @@ def parse_line(line: str, group: str) -> ArgEntry | OptEntry | None:
 
         return OptEntry(name, name_alt, val_name, dtype_str, description, default, group)
 
+    # Otherwise, returns None.
     return None
 
 

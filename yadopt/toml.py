@@ -1,5 +1,5 @@
 """
-TOML parser and writer.
+yadopt.toml - TOML parser and writer for YadOpt
 """
 
 # Declare published functions and variables.
