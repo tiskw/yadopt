@@ -24,6 +24,7 @@ from typing          import Any
 # Import custom modules.
 from .argopt  import parse_docstr_args, parse_docstr_opts
 from .argvec  import ArgVector, parse_argvec
+from .color   import colorize_help_message
 from .checker import check_user_input
 from .dtypes  import ArgsInfo, OptsInfo, YadOptArgs
 from .errors  import YadOptError
@@ -90,7 +91,7 @@ def parse(docstr: str, argv: list[str] = sys.argv, type_fn: Callable = type_func
     # Print help message and exit if --help is specified, and exit.
     # You can stop exiting the software by catching the SystemExit error.
     if argvec.opts.get("help", False) or ("help" in argvec.pres):
-        print(docstr.strip())
+        print(colorize_help_message(docstr.strip()))
         sys.exit(os.EX_USAGE)
 
     # Returns YadOptArgs instance.

@@ -3,6 +3,7 @@ Testcase 10: Validation functions.
 """
 
 # Import standard libraries.
+import re
 import sys
 
 # Import Yadopt.
@@ -138,12 +139,12 @@ class Testcase10_03:
         """
         if index == 0:
             assert args.__class__.__name__ == "YadOptErrorUnknownOptionArgv"
-            assert "Do you mean '--alice'?" in str(args)
+            assert "Do you mean '--alice'?" in re.sub(r"\x1B\[[0-9;]*m", "", str(args))
             print(str(args).strip())
 
         elif index == 1:
             assert args.__class__.__name__ == "YadOptErrorUnknownOptionArgv"
-            assert "Do you mean '--bob'?" in str(args)
+            assert "Do you mean '--bob'?" in re.sub(r"\x1B\[[0-9;]*m", "", str(args))
             print(str(args).strip())
 
         elif index == 2:

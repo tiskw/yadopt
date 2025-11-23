@@ -13,6 +13,7 @@ import textwrap
 from typing import Any
 
 # Import custom modules.
+from .color import colorize_error_message
 from .utils import get_error_marker
 
 
@@ -35,7 +36,7 @@ class YadOptErrorBase(Exception):
         """
         Returns string expression of this error.
         """
-        return self.stringify(*self.pargs)
+        return colorize_error_message(self.stringify(*self.pargs))
 
     def stringify(self, *pargs: Any, **kwargs: Any) -> str:
         """
