@@ -7,6 +7,7 @@ __all__ = ["ArgEntry", "ArgsInfo", "OptEntry", "OptsInfo", "UsageOpt", "UsageEnt
 
 # Import standard libraries.
 import collections
+import copy
 import dataclasses
 import pathlib
 
@@ -14,7 +15,8 @@ import pathlib
 from typing import Any, TypeAlias
 
 # Import custom modules.
-from .utils import repr_dataclass_items
+from .errors import YadOptError
+from .utils  import repr_dataclass_items
 
 
 ############################################################
@@ -128,6 +130,12 @@ class YadOptArgs:
     """
     Command line arguments parsed by YadOpt.
     """
+    def __len__(self) -> int:
+        """
+        Returns the number of items.
+        """
+        return len(self.__normal_dict__())
+
     def __normal_dict__(self) -> dict:
         """
         Returns "normal" dictionary that contains keys not starting with the underscore.
@@ -159,8 +167,22 @@ class YadOptArgs:
         """
         if isinstance(other, self.__class__):
             return self.__normal_dict__() == other.__normal_dict__()
+        return False
 
-        raise NotImplementedError
+    def __or__(self, other: object) -> object:
+        """
+        """
+        # The operand should be YadOptArgs instance.
+        if not isinstance(other, YadOptArgs):
+            raise YadOptError.cannot_merge_dtype
+
+        # Create a copy of myself and the attributes dictionary.
+        args_copy = copy.deepcopy(self)
+
+        # Update the attributes dictionary.
+        args_copy.__dict__ |= other.__dict__
+
+        return args_copy
 
 
 # vim: expandtab tabstop=4 shiftwidth=4 fdm=marker

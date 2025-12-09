@@ -162,9 +162,25 @@ def get_group(args: YadOptArgs, group: str) -> dict[str, Any]:
     Returns:
         (YadOptArgs): Parsed command line arguments of the group.
     """
+    # Get the list of keys in the group.
     list_keys  = [entry.name for entry in getattr(args, "_args_").entries if entry.group == group]
     list_keys += [entry.name for entry in getattr(args, "_opts_").entries if entry.group == group]
-    return {key: value for key, value in to_dict(args).items() if key in list_keys}
+
+    data: YadOptArgs = YadOptArgs()
+
+    # Append group members.
+    for key, value in to_dict(args).items():
+        if key in list_keys:
+            setattr(data, key, value)
+
+    # Append extra data.
+    setattr(data, "_args_", copy.deepcopy(args._args_))
+    setattr(data, "_opts_", copy.deepcopy(args._opts_))
+    setattr(data, "_user_", copy.deepcopy(args._user_))
+    setattr(data, "_argv_", copy.deepcopy(args._argv_))
+    setattr(data, "_dstr_", copy.deepcopy(args._dstr_))
+
+    return data
 
 
 # vim: expandtab tabstop=4 shiftwidth=4 fdm=marker

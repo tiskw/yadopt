@@ -47,7 +47,7 @@ def save(path: str, args: YadOptArgs, indent: int = 4) -> None:
     elif any(path_out.name.endswith(sfx) for sfx in [".txt", ".txt.gz"]):
 
         # Create the contents to save.
-        data_txt: str = shlex.join(getattr(args, "_argv_")) + "\n" + getattr(args, "_dstr_")
+        data_txt: str = shlex.join(getattr(args, "_argv_")) + "\n\n" + getattr(args, "_dstr_")
 
         # Write as a text file.
         with open_fn(path_out, "wt") as ofp:

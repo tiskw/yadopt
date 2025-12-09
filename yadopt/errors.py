@@ -174,7 +174,7 @@ class YadOptErrorInvalidIOFileFormat(YadOptErrorBase):
       The "yadopt.save" and "yadopt.load" functions does not support "{2}" format.
 
     <Solution>
-      Please specify the supported file format, for example, ".txt" or ".json".
+      Please specify the supported file format, for example, ".toml" or ".json".
     """
 
 
@@ -190,7 +190,7 @@ class YadOptErrorUnknownArgument(YadOptErrorBase):
     """
 
 
-class YadOptErrorUnknownOption(YadOptErrorBase):
+class YadOptErrorUnknownOptionUsage(YadOptErrorBase):
     """
     --------------------------------------------------------------------------------
     <Error summary>
@@ -271,6 +271,16 @@ class YadOptErrorCannotLoadToml(YadOptErrorBase):
       TOML file IO is supported in Python 3.11 and later.
     """
 
+class YadOptErrorCannotMergeDtype(YadOptErrorBase):
+    """
+    --------------------------------------------------------------------------------
+    <Error summary>
+      Invalid data merge with unexpected datatype.
+
+    <Details>
+      Only YadOptArgs objects are supported as operands for the merge operator '|'.
+    """
+
 
 class YadOptError(YadOptErrorBase):
     """
@@ -282,11 +292,12 @@ class YadOptError(YadOptErrorBase):
     invalid_type_name      = YadOptErrorInvalidTypeName
     invalid_io_file_format = YadOptErrorInvalidIOFileFormat
     unknown_argument       = YadOptErrorUnknownArgument
-    unknown_option         = YadOptErrorUnknownOption
+    unknown_option_usage   = YadOptErrorUnknownOptionUsage
     unknown_option_argv    = YadOptErrorUnknownOptionArgv
     valid_usage_not_found  = YadOptErrorValidUsageNotFound
     internal_error         = YadOptErrorInternal
     cannot_load_toml       = YadOptErrorCannotLoadToml
+    cannot_merge_dtype     = YadOptErrorCannotMergeDtype
 
 
 # vim: expandtab tabstop=4 shiftwidth=4 fdm=marker

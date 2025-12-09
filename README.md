@@ -194,7 +194,52 @@ See [API reference page](https://tiskw.github.io/yadopt/index.html#sec4) of the 
 Tips
 ----------------------------------------------------------------------------------------------------
 
-### Mode complex validations for the input command-line arguments
+### Merge two YadOptArgs objects
+
+The `YadOptArgs` class, which is the return value of the `yadopt.parse` function, supports the merge
+operator `|`, similar to Python's dictionary type. This operator combines the two given YadOptArgs
+objects into a new one. In case of a key conflict, the values from the left-hand operand are used.
+
+This merge operator is particularly useful for implementing a feature to read an existing
+configuration file (for example, a file specified with the `--config` argument) and then overwrite
+those settings with values explicitly provided in the command line arguments. For example:
+
+```python
+"""
+Usage:
+    train.py <config_path> [--epochs INT] [--model STR] [--lr FLT]
+    train.py --help
+
+Train a neural network model.
+
+Arguments:
+    config_path     Path to base config file.
+
+Training options:
+    --epochs INT    The number of training epochs.   [default: 100]
+    --model STR     Neural network model name.       [default: mlp]
+    --lr FLT        Learning rate.                   [default: 1.0E-3]
+
+Other options:
+    -h, --help      Show this help message and exit.
+"""
+
+import yadopt
+
+if __name__ == "__main__":
+
+    # Parse the command line arguments.
+    args = yadopt.parse(__doc__, ignore_default_values=True)
+
+    # Load the base config file.
+    args_base = yadopt.load(args.config_path)
+
+    # Update the parsed command line arguments.
+    args_updated = args | args_base
+    print(args_updated)
+```
+
+### More complex validations for the input command-line arguments
 
 If you want more complex validations for the command-line arguments, the author recommends using
 [Pydantic](https://docs.pydantic.dev/latest/) for the dictionary form of the parsed object generated

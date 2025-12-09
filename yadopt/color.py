@@ -115,7 +115,7 @@ def colorize_help_message(help_message: str) -> str:
             line = colorize_opt_line(line)
 
         # Update section flags.
-        if line.endswith(":"):
+        if line.endswith(":") or (line.startswith("[") and line.endswith("]")):
             is_usg = "usage"     in line.lower()
             is_arg = "arguments" in line.lower()
             is_opt = "options"   in line.lower()
