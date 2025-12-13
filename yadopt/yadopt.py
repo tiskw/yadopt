@@ -3,18 +3,14 @@ Yet another docopt, a human-friendly command line arguments parser.
 """
 
 # Declare published functins and variables.
-__all__ = ["parse", "wrap", "to_dict", "to_namedtuple", "save", "load", "get_group"]
+__all__ = ["parse", "wrap", "to_dict", "to_namedtuple", "get_group"]
 
 # Import standard libraries.
 import collections
 import copy
-import gzip
 import functools
 import inspect
-import json
 import os
-import pathlib
-import shlex
 import sys
 
 # For type hinting.
@@ -24,12 +20,12 @@ from typing          import Any
 # Import custom modules.
 from .argopt  import parse_docstr_args, parse_docstr_opts
 from .argvec  import ArgVector, parse_argvec
+from .color   import colorize_help_message
 from .checker import check_user_input
 from .dtypes  import ArgsInfo, OptsInfo, YadOptArgs
 from .errors  import YadOptError
 from .gendat  import generate_data
 from .hints   import type_func, type_hint
-from .toml    import dump_toml, load_toml
 from .usage   import parse_docstr_usage, UsageInfo
 from .utils   import retokenize
 
@@ -90,7 +86,7 @@ def parse(docstr: str, argv: list[str] = sys.argv, type_fn: Callable = type_func
     # Print help message and exit if --help is specified, and exit.
     # You can stop exiting the software by catching the SystemExit error.
     if argvec.opts.get("help", False) or ("help" in argvec.pres):
-        print(docstr.strip())
+        print(colorize_help_message(docstr.strip()))
         sys.exit(os.EX_USAGE)
 
     # Returns YadOptArgs instance.
@@ -155,107 +151,6 @@ def to_namedtuple(args: YadOptArgs) -> tuple[Any, ...]:
     return collections.namedtuple("YadOptArgsNt", fields)(**args_d)
 
 
-def save(path: str, args: YadOptArgs, indent: int = 4) -> None:
-    """
-    Save the parsed command line arguments as a JSON file.
-
-    Args:
-        path   (str)       : [IN] Destination path.
-        args   (YadOptArgs): [IN] Parsed command line arguments to be saved.
-        indent (int)       : [IN] Indent size of the output JSON file.
-    """
-    # Conver the given path as an instance of pathlib.Path.
-    path_out: pathlib.Path = pathlib.Path(path)
-
-    # Determine the open function.
-    open_fn: Callable = gzip.open if path_out.suffix.endswith(".gz") else open
-
-    # Case 1: JSON file.
-    if any(path_out.name.endswith(sfx) for sfx in [".json", ".json.gz"]):
-
-        # Create the contents to save.
-        data_json: dict = {"argv": getattr(args, "_argv_"), "docstr": getattr(args, "_dstr_")}
-
-        # Write as a JSON file.
-        with open_fn(path_out, "wt") as ofp:
-            json.dump(data_json, ofp, indent=indent)
-
-    # Case 2: text format.
-    elif any(path_out.name.endswith(sfx) for sfx in [".txt", ".txt.gz"]):
-
-        # Create the contents to save.
-        data_txt: str = shlex.join(getattr(args, "_argv_")) + "\n" + getattr(args, "_dstr_")
-
-        # Write as a text file.
-        with open_fn(path_out, "wt") as ofp:
-            ofp.write(data_txt)
-
-    # Case 3: TOML format.
-    elif any(path_out.name.endswith(sfx) for sfx in [".toml", ".toml.gz"]):
-
-        # Write as a TOML file.
-        with open_fn(path_out, "wt") as ofp:
-            ofp.write(dump_toml(args))
-
-    # Otherwise: raise an error.
-    else:
-        raise YadOptError.invalid_io_file_format("yadopt.save", path)
-
-
-def load(path: str) -> YadOptArgs:
-    """
-    Load a parsed command line arguments from a text file.
-
-    Args:
-        path (str): [IN] Source path.
-
-    Returns:
-        (YadOptArgs): Restored parsed command line arguments.
-    """
-    # Conver the given path as an instance of pathlib.Path.
-    path_out: pathlib.Path = pathlib.Path(path)
-
-    # Determine the open function.
-    open_fn: Callable = gzip.open if path_out.suffix.endswith(".gz") else open
-
-    # Case 1: JSON file.
-    if any(path_out.name.endswith(sfx) for sfx in [".json", ".json.gz"]):
-
-        # Load the JSON file.
-        with open_fn(path_out, "rt") as ifp:
-            data_json: dict = json.load(ifp)
-
-        # Parse the loaded argument vector using the loaded docstring.
-        return parse(data_json["docstr"], data_json["argv"])
-
-    # Case 2: text format.
-    if any(path_out.name.endswith(sfx) for sfx in [".txt", ".txt.gz"]):
-
-        # Load the text file.
-        with open_fn(path_out, "rt") as ifp:
-            lines: list[str] = ifp.read().split("\n")
-
-        # Restore argument vector and docstring.
-        argv  : list[str] = shlex.split(lines[0])
-        docstr: str       = "\n".join(lines[2:])
-
-        # Parse the loaded argument vector using the loaded docstring.
-        return parse(docstr, argv)
-
-    # Case 3: TOML format.
-    if any(path_out.name.endswith(sfx) for sfx in [".toml", ".toml.gz"]):
-
-        # Load the TOML file.
-        with open_fn(path_out, "rt") as ifp:
-            data_toml: dict = load_toml(ifp)
-
-        # Parse the loaded argument vector using the loaded docstring.
-        return parse(data_toml["docstr"], data_toml["argv"])
-
-    # Otherwise: raise an error.
-    raise YadOptError.invalid_io_file_format("yadopt.load", path, path_out.suffix)
-
-
 def get_group(args: YadOptArgs, group: str) -> dict[str, Any]:
     """
     Returns the parsed result of the specified section only as a dictionary.
@@ -267,9 +162,25 @@ def get_group(args: YadOptArgs, group: str) -> dict[str, Any]:
     Returns:
         (YadOptArgs): Parsed command line arguments of the group.
     """
+    # Get the list of keys in the group.
     list_keys  = [entry.name for entry in getattr(args, "_args_").entries if entry.group == group]
     list_keys += [entry.name for entry in getattr(args, "_opts_").entries if entry.group == group]
-    return {key: value for key, value in to_dict(args).items() if key in list_keys}
+
+    data: YadOptArgs = YadOptArgs()
+
+    # Append group members.
+    for key, value in to_dict(args).items():
+        if key in list_keys:
+            setattr(data, key, value)
+
+    # Append extra data.
+    setattr(data, "_args_", copy.deepcopy(args._args_))
+    setattr(data, "_opts_", copy.deepcopy(args._opts_))
+    setattr(data, "_user_", copy.deepcopy(args._user_))
+    setattr(data, "_argv_", copy.deepcopy(args._argv_))
+    setattr(data, "_dstr_", copy.deepcopy(args._dstr_))
+
+    return data
 
 
 # vim: expandtab tabstop=4 shiftwidth=4 fdm=marker

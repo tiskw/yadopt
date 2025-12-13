@@ -1,5 +1,5 @@
 """
-Utility class to match string using regular expression.
+yadopt.machers - utility class to match string using regular expression
 """
 
 # Declare published functions and variables.
@@ -101,19 +101,6 @@ def match_opt(line: str) -> MatchedType:
         (('help', 'h', None), '   show this message and exit.', False)
     """
     return match_and_get(line, PATTERNS_AND_INDICES_OPT)
-
-
-def match_sec(line: str) -> MatchedType:
-    """
-    Parse section line.
-
-    Args:
-        line (str): [IN] Target string.
-
-    Returns:
-        (MatchedType): A tuple of matched strings.
-    """
-    return match_and_get(line, PATTERNS_AND_INDICES_SEC)
 
 
 # vim: expandtab tabstop=4 shiftwidth=4 fdm=marker

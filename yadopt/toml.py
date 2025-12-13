@@ -1,5 +1,5 @@
 """
-TOML parser and writer.
+yadopt.toml - TOML parser and writer for YadOpt
 """
 
 # Declare published functions and variables.
@@ -29,8 +29,7 @@ def dump_toml(args: YadOptArgs) -> str:
     Convert the given YadOptArgs instance to a TOML string.
     """
     # Raise an error if TOML is not suppoerted by Python.
-    if not is_toml_supported():
-        raise YadOptError.cannot_load_toml()
+    check_toml_supported()
 
     # Create TOML file template.
     template_toml: str = textwrap.dedent("""
@@ -80,8 +79,7 @@ def load_toml(fp: TextIO) -> dict:
         (dict): Contents of the TOML file.
     """
     # Raise an error if TOML is not suppoerted by Python.
-    if not is_toml_supported():
-        raise YadOptError.cannot_load_toml()
+    check_toml_supported()
 
     # Import tomllib library.
     tomllib = importlib.import_module("tomllib")
@@ -90,7 +88,7 @@ def load_toml(fp: TextIO) -> dict:
     return tomllib.loads(fp.read())["YadOptArgs"]
 
 
-def is_toml_supported() -> bool:
+def check_toml_supported() -> bool:
     """
     Returns True if the current Python supports TOML.
 
@@ -99,7 +97,8 @@ def is_toml_supported() -> bool:
     """
     major: int = sys.version_info.major
     minor: int = sys.version_info.minor
-    return (major >= 3) and (minor >= 11)
+    if (major != 3) or (minor < 11):
+        raise YadOptError.cannot_load_toml()
 
 
 def get_metadata() -> dict:

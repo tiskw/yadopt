@@ -1,6 +1,6 @@
 # Makefile
 
-SOFTWARE = yadopt
+SOFTWARE := yadopt
 
 help:
 	@echo "Usage:"
@@ -26,7 +26,7 @@ help:
 check:
 	pyflakes yadopt
 	mypy yadopt
-	pylint --max-line-length=120 yadopt
+	pylint --max-line-length=120 --generated-members=__dict__ yadopt
 
 count:
 	cloc --by-file yadopt/*.py

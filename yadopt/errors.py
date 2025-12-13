@@ -13,6 +13,7 @@ import textwrap
 from typing import Any
 
 # Import custom modules.
+from .color import colorize_error_message
 from .utils import get_error_marker
 
 
@@ -35,7 +36,7 @@ class YadOptErrorBase(Exception):
         """
         Returns string expression of this error.
         """
-        return self.stringify(*self.pargs)
+        return colorize_error_message(self.stringify(*self.pargs))
 
     def stringify(self, *pargs: Any, **kwargs: Any) -> str:
         """
@@ -173,7 +174,7 @@ class YadOptErrorInvalidIOFileFormat(YadOptErrorBase):
       The "yadopt.save" and "yadopt.load" functions does not support "{2}" format.
 
     <Solution>
-      Please specify the supported file format, for example, ".txt" or ".json".
+      Please specify the supported file format, for example, ".toml" or ".json".
     """
 
 
@@ -189,7 +190,7 @@ class YadOptErrorUnknownArgument(YadOptErrorBase):
     """
 
 
-class YadOptErrorUnknownOption(YadOptErrorBase):
+class YadOptErrorUnknownOptionUsage(YadOptErrorBase):
     """
     --------------------------------------------------------------------------------
     <Error summary>
@@ -270,8 +271,18 @@ class YadOptErrorCannotLoadToml(YadOptErrorBase):
       TOML file IO is supported in Python 3.11 and later.
     """
 
+class YadOptErrorCannotMergeDtype(YadOptErrorBase):
+    """
+    --------------------------------------------------------------------------------
+    <Error summary>
+      Invalid data merge with unexpected datatype.
 
-class YadOptError:
+    <Details>
+      Only YadOptArgs objects are supported as operands for the merge operator '|'.
+    """
+
+
+class YadOptError(YadOptErrorBase):
     """
     General Error class for YadOpt.
     """
@@ -281,25 +292,12 @@ class YadOptError:
     invalid_type_name      = YadOptErrorInvalidTypeName
     invalid_io_file_format = YadOptErrorInvalidIOFileFormat
     unknown_argument       = YadOptErrorUnknownArgument
-    unknown_option         = YadOptErrorUnknownOption
+    unknown_option_usage   = YadOptErrorUnknownOptionUsage
     unknown_option_argv    = YadOptErrorUnknownOptionArgv
     valid_usage_not_found  = YadOptErrorValidUsageNotFound
     internal_error         = YadOptErrorInternal
     cannot_load_toml       = YadOptErrorCannotLoadToml
-
-    def __new__(cls, *pargs: Any, **kwargs: Any):
-        """
-        Object instance generator.
-        This function will be called before constructor (__init__).
-        """
-        raise YadOptErrorInternal()
-
-    @classmethod
-    def __getitem__(cls, key: str, default: Any = None) -> YadOptErrorBase:
-        """
-        Support dict-like access to the class variables.
-        """
-        return getattr(cls, key) if hasattr(cls, key) else default
+    cannot_merge_dtype     = YadOptErrorCannotMergeDtype
 
 
 # vim: expandtab tabstop=4 shiftwidth=4 fdm=marker

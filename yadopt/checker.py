@@ -65,12 +65,12 @@ def check_options(argv: list[str], opts: OptsInfo, usage) -> bool:
 
             # If available option is empty, raise an error.
             if len(opt_names) == 0:
-                raise YadOptError.unknown_option("--" + opt.name, "")
+                raise YadOptError.unknown_option_usage("--" + opt.name, "")
 
             # If the option does not exist in the available options, raise an error.
             if opt.name not in opt_names:
                 opt_nearest = find_nearest_str(opt.name, opt_names)
-                raise YadOptError.unknown_option("--" + opt.name, f"Do you mean '--{opt_nearest}'?")
+                raise YadOptError.unknown_option_usage("--" + opt.name, f"Do you mean '--{opt_nearest}'?")
 
     # Check all arguments in the argument vector.
     for arg_opt in (arg for arg in argv if arg.startswith("-")):
