@@ -9,7 +9,7 @@ from .persist import load, save
 from .yadopt  import parse, wrap, to_dict, to_namedtuple, get_group
 
 # Version information.
-__version__ = "2025.12.06"
+__version__ = "2025.12.13"
 
 # Declare published functions and variables.
 __all__ = ["parse", "wrap", "to_dict", "to_namedtuple", "save", "load", "get_group",
