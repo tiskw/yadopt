@@ -246,6 +246,36 @@ class YadOptErrorValidUsageNotFound(YadOptErrorBase):
         return self.stringify(self.pargs[0], err_pos, err_code, err_mark)
 
 
+class YadOptErrorCannotLoadTomllib(YadOptErrorBase):
+    """
+    --------------------------------------------------------------------------------
+    <Error summary>
+      Failed to load a library for parsing TOML file.
+
+    <Details>
+      YadOpt uses "tomllib", a standard library of Python, if Python >= 3.11, and
+      uses "tomli" otherwise. The "tomli" library is specified as a dependency of
+      YadOpt when Python <= 3.10 and will be installed automatically when users
+      install YadOpt on Python<= 3.10. However, this mechanism doesn't seem to work
+      well for some reason.
+
+    <Solution>
+      Please check the tomli library if importable if Python <= 3.10,
+      and the tomllib otherwise.
+    """
+
+
+class YadOptErrorCannotMergeDtype(YadOptErrorBase):
+    """
+    --------------------------------------------------------------------------------
+    <Error summary>
+      Invalid data merge with unexpected datatype.
+
+    <Details>
+      Only YadOptArgs objects are supported as operands for the merge operator '|'.
+    """
+
+
 class YadOptErrorInternal(YadOptErrorBase):
     """
     --------------------------------------------------------------------------------
@@ -256,29 +286,9 @@ class YadOptErrorInternal(YadOptErrorBase):
       See the traceback above.
 
     <Details>
-      This error means that something happened that the developer(s) didn't anticipate during
-      the execution of the YadOpt code, NOT that the user is using the library incorrectly.
-    """
-
-
-class YadOptErrorCannotLoadToml(YadOptErrorBase):
-    """
-    --------------------------------------------------------------------------------
-    <Error summary>
-      Failed to load 'tomllib' library.
-
-    <Details>
-      TOML file IO is supported in Python 3.11 and later.
-    """
-
-class YadOptErrorCannotMergeDtype(YadOptErrorBase):
-    """
-    --------------------------------------------------------------------------------
-    <Error summary>
-      Invalid data merge with unexpected datatype.
-
-    <Details>
-      Only YadOptArgs objects are supported as operands for the merge operator '|'.
+      This error means that something happened that the author didn't anticipate
+      during the execution of the YadOpt code, NOT that the user is using
+      the library incorrectly.
     """
 
 
@@ -295,9 +305,9 @@ class YadOptError(YadOptErrorBase):
     unknown_option_usage   = YadOptErrorUnknownOptionUsage
     unknown_option_argv    = YadOptErrorUnknownOptionArgv
     valid_usage_not_found  = YadOptErrorValidUsageNotFound
-    internal_error         = YadOptErrorInternal
-    cannot_load_toml       = YadOptErrorCannotLoadToml
+    cannot_load_tomllib    = YadOptErrorCannotLoadTomllib
     cannot_merge_dtype     = YadOptErrorCannotMergeDtype
+    internal_error         = YadOptErrorInternal
 
 
 # vim: expandtab tabstop=4 shiftwidth=4 fdm=marker

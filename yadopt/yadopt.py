@@ -151,7 +151,7 @@ def to_namedtuple(args: YadOptArgs) -> tuple[Any, ...]:
     return collections.namedtuple("YadOptArgsNt", fields)(**args_d)
 
 
-def get_group(args: YadOptArgs, group: str) -> dict[str, Any]:
+def get_group(args: YadOptArgs, group: str) -> YadOptArgs:
     """
     Returns the parsed result of the specified section only as a dictionary.
 
@@ -174,11 +174,11 @@ def get_group(args: YadOptArgs, group: str) -> dict[str, Any]:
             setattr(data, key, value)
 
     # Append extra data.
-    setattr(data, "_args_", copy.deepcopy(args._args_))
-    setattr(data, "_opts_", copy.deepcopy(args._opts_))
-    setattr(data, "_user_", copy.deepcopy(args._user_))
-    setattr(data, "_argv_", copy.deepcopy(args._argv_))
-    setattr(data, "_dstr_", copy.deepcopy(args._dstr_))
+    setattr(data, "_args_", copy.deepcopy(getattr(args, "_args_", None)))
+    setattr(data, "_opts_", copy.deepcopy(getattr(args, "_opts_", None)))
+    setattr(data, "_user_", copy.deepcopy(getattr(args, "_user_", None)))
+    setattr(data, "_argv_", copy.deepcopy(getattr(args, "_argv_", None)))
+    setattr(data, "_dstr_", copy.deepcopy(getattr(args, "_dstr_", None)))
 
     return data
 

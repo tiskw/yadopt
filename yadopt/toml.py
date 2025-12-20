@@ -17,7 +17,7 @@ import sys
 import textwrap
 
 # For type hinting.
-from typing import TextIO
+from typing import Any, TextIO
 
 # Import custom modules.
 from .dtypes import YadOptArgs
@@ -82,10 +82,21 @@ def load_toml(fp: TextIO) -> dict:
     check_toml_supported()
 
     # Import tomllib library.
-    tomllib = importlib.import_module("tomllib")
+    tomllib = load_tomllib()
 
     # Load text from the given file pointer and parse it as TOML.
     return tomllib.loads(fp.read())["YadOptArgs"]
+
+
+def load_tomllib() -> Any:
+    """
+    Load module for loading TOML file.
+    """
+    # Determine the module name to load.
+    module_name: str = "tomllib" if (sys.version_info.minor >= 11) else "tomli"
+
+    # Load the module.
+    return importlib.import_module(module_name)
 
 
 def check_toml_supported() -> bool:
@@ -95,10 +106,12 @@ def check_toml_supported() -> bool:
     Returns:
         (bool): True if the runtime Python supports TOML.
     """
-    major: int = sys.version_info.major
-    minor: int = sys.version_info.minor
-    if (major != 3) or (minor < 11):
-        raise YadOptError.cannot_load_toml()
+    try:
+        load_tomllib()
+    except ImportError as e:
+        raise YadOptError.cannot_load_tomllib() from e
+
+    return True
 
 
 def get_metadata() -> dict:
@@ -119,17 +132,33 @@ def get_metadata() -> dict:
         """
         Get git information.
         """
-        return subprocess.check_output(["git", "rev-parse", "HEAD"]).decode().strip()
+        output: bytes = run_command(["git", "rev-parse", "HEAD"])
+        return "???" if len(output)== 0 else output.decode().strip()
 
     def get_git_changed() -> str:
         """
         Returns 'true' if Git status is 'changed' otherwise 'false'.
         """
-        output: str = subprocess.check_output(["git", "status", "--porcelain"]).decode().strip()
-        return "true" if (len(output) > 0) else "false"
+        output: bytes = run_command(["git", "status", "--porcelain"])
+        return "false" if len(output) == 0 else "true"
+
+    def get_username() -> str:
+        """
+        Get username.
+        """
+        try:
+            return getpass.getuser()
+        except (ImportError, KeyError, OSError):
+            return "???"
+
+    def run_command(tokens: list[str]) -> bytes:
+        """
+        Run the given command as a shell command.
+        """
+        return subprocess.run(tokens, check=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE).stdout
 
     return {"hostname"   : socket.gethostname(),
-            "username"   : getpass.getuser(),
+            "username"   : get_username(),
             "platform"   : platform.platform(),
             "timestamp"  : get_datetime_str(),
             "python_ver" : platform.python_version(),
