@@ -1,22 +1,21 @@
 #!/usr/bin/env python3
+"""
+Run all tests for YadOpt.
+"""
 
 # Import standard libraries.
+import argparse
 import importlib
 import itertools
 import pathlib
+import platform
 import re
 import shlex
 import sys
-import tomllib
 import traceback
 
 # For type hints.
 from typing import Any, TypeAlias
-
-# Import Yadopt.
-sys.path.append(str(pathlib.Path(__file__).parent.parent))
-import yadopt
-import yadopt.errors
 
 # Type aliases.
 Path: TypeAlias = pathlib.Path
@@ -26,6 +25,16 @@ COLOR_RED   : str = "\x1b[31m"
 COLOR_GREEN : str = "\x1b[32m"
 COLOR_YELLOW: str = "\x1b[33m"
 COLOR_NONE  : str = "\x1b[0m"
+
+
+def parse_args() -> argparse.Namespace:
+    """
+    Parse command line arguments.
+    """
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-l", "--local", action="store_true", help="Use local package")
+    parser.add_argument("-v", "--verbose", action="store_true", help="Show extra messages")
+    return parser.parse_args()
 
 
 def parse_argv_string_in_toml(testcase_data_argv: str) -> tuple[list[str], str]:
@@ -50,7 +59,7 @@ def parse_argv_string_in_toml(testcase_data_argv: str) -> tuple[list[str], str]:
     return (argv, "\n".join(check_lines))
 
 
-def main() -> None:
+def main(verbose: bool) -> None:
     """
     Main function of this test script.
     """
@@ -63,6 +72,9 @@ def main() -> None:
     unit_test.run_all_unittests()
     print(f"{COLOR_GREEN}Passed{COLOR_NONE}")
     print()
+
+    # Import tomllib (Python >= 3.11) or tomli (Python <= 3.10).
+    tomllib = importlib.import_module("tomllib" if sys.version_info.minor >= 11 else "tomli")
 
     # Load the TOML file of testcases.
     path_testacses: Path = Path(__file__).parent / "testcases.toml"
@@ -91,7 +103,7 @@ def main() -> None:
 
             # Parse the docstring.
             try:
-                args = yadopt.parse(docstr, argv, verbose=True)
+                args = yadopt.parse(docstr, argv, verbose=verbose)
             except yadopt.errors.YadOptErrorBase as error:
                 args = error
             except SystemExit as error:
@@ -116,11 +128,23 @@ def main() -> None:
     print()
 
     print("----- Test results summary -----")
-    print(f"{COLOR_GREEN}Passed all tests!!{COLOR_NONE}")
+    print(f"{COLOR_GREEN}Passed all tests!!{COLOR_NONE} ({platform.python_version()})")
 
 
 if __name__ == "__main__":
-    main()
+
+    # Parse command line arguments.
+    args: argparse.Namespace = parse_args()
+
+    if args.local:
+        sys.path.append(str(Path(__file__).parent.parent))
+
+    # Import Yadopt.
+    import yadopt
+    import yadopt.errors
+
+    # Call the main function.
+    main(args.verbose)
 
 
 # vim: expandtab tabstop=4 shiftwidth=4 fdm=marker
