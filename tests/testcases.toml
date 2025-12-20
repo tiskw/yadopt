@@ -1,5 +1,11 @@
+# testcases.toml - a collection of test cases and their correct answers
 #
-#
+# This file is designed to be read by "run_tests.py".
+# The format of this file is as follows:
+# - Each section has one "docstr" and multiple argv_xx, which correspond to one test.
+# - As the name suggests, "docstr" is a docstring passed to YadOpt.
+# - "arrgv_xx" is the argument vector and its result. The argument vector is listed
+#   on the first line of "argv_xx", and the results are listed on the second line and beyond.
 
 ####################################################################################################
 # Testcase 1: Standard usage of YadOpt
