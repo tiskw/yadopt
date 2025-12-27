@@ -8,9 +8,12 @@ __all__ = ["match_arg", "match_opt"]
 # Import standard libraries.
 import re
 
+# For type hinting.
+from typing import TypeAlias
+
 # Alias for data type annotations.
-PatternType = tuple[str, list[int], bool]
-MatchedType = tuple[tuple[str | None, ...], str, bool]
+PatternType: TypeAlias = tuple[str, list[int], bool]
+MatchedType: TypeAlias = tuple[tuple[str | None, ...], str, bool]
 
 # Define matching patterns.
 PATTERNS_AND_INDICES_ARG: list[PatternType] = [
@@ -46,7 +49,8 @@ def match_and_get(line: str, patterns_and_indices: list[PatternType]) -> Matched
     Parse the given string and returns specified matched strings.
 
     Args:
-        line (str) : [IN] The target line.
+        line                 (str)              : [IN] The target line.
+        patterns_and_indices (list[PatternType]): [IN] List of patterns and index of returned values.
 
     Returns:
         (tuple[str]): A tuple of matched strings corresponding to the indices,
@@ -78,10 +82,14 @@ def match_arg(line: str) -> MatchedType:
     Parse arguments line.
 
     Args:
-        line (str): Target string.
+        line (str): [IN] Target string.
 
     Returns:
         (MatchedType): A tuple of matched strings.
+
+    Examples:
+        >>> match_arg("  config_path   Path to config file.")
+        (('config_path',), '   Path to config file.', False)
     """
     return match_and_get(line, PATTERNS_AND_INDICES_ARG)
 

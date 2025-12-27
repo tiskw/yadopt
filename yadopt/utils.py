@@ -157,6 +157,10 @@ def find_nearest_str(target: str, texts: set[str]) -> str:
 
     Returns:
         (str): Nearest string in the texts.
+
+    Examples:
+        >>> find_nearest_str("rad", ["red", "green", "blue"])
+        'red'
     """
     def levenshtein_distance(src: str, dst: str) -> int:
         """
@@ -207,6 +211,29 @@ def find_nearest_str(target: str, texts: set[str]) -> str:
             (idx_min, min_val) = (idx, val)
 
     return list_texts[idx_min]
+
+
+def is_python_value(text: str) -> bool:
+    """
+    Returns true if the given string can be interpreted as a Python literal.
+
+    Args:
+        text (str): Input text.
+
+    Returns:
+        (bool): True if the given text is a Python literal.
+
+    Examples:
+        >>> is_python_value("-1")
+        True
+        >>> is_python_value("-h")
+        False
+    """
+    try:
+        ast.literal_eval(text)
+    except ValueError:
+        return False
+    return True
 
 
 def strtobool(s: str) -> bool | None:
