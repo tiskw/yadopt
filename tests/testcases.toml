@@ -1,4 +1,4 @@
-# testcases.toml - a collection of test cases and their correct answers
+# testcases.toml - a collection of testcases and their correct answers
 #
 # This file is designed to be read by "run_tests.py".
 # The format of this file is as follows:
@@ -491,6 +491,43 @@ train.py config.toml -v
 argv_03 = """
 train.py --help
 >>> assert isinstance(args, SystemExit)
+"""
+
+# }}}
+
+[testcase03_04]
+# Test negative integer and float. {{{
+
+docstr = """
+Data type hints - negative integer and float.
+
+Usage:
+    train.py <arg_int> <arg_float> [--opt_int INT] [--opt_float FLOAT]
+
+Arguments:
+    arg_int            Integer argument.
+    arg_float          Float argument.
+
+Training options:
+    --opt_int INT      Integer option.
+    --opt_float FLOAT  Float option.
+"""
+
+argv_01 = """
+train.py -1 -2.3 --opt_int -4 --opt_float -5.6
+>>> assert isinstance(args.arg_int, int) and (args.arg_int == -1)
+>>> assert isinstance(args.arg_float, float) and (abs(args.arg_float + 2.3) < 1.0E-6)
+>>> assert isinstance(args.opt_int, int) and (args.opt_int == -4)
+>>> assert isinstance(args.opt_float, float) and (abs(args.opt_float + 5.6) < 1.0E-6)
+"""
+
+argv_02 = """
+train.py -1 +0.7 --opt_int -2 --opt_float +0.4
+>>> print(args)
+>>> assert isinstance(args.arg_int, int) and (args.arg_int == -1)
+>>> assert isinstance(args.arg_float, float) and (abs(args.arg_float - 0.7) < 1.0E-6)
+>>> assert isinstance(args.opt_int, int) and (args.opt_int == -2)
+>>> assert isinstance(args.opt_float, float) and (abs(args.opt_float - 0.4) < 1.0E-6)
 """
 
 # }}}

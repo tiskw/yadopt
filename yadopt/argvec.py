@@ -14,6 +14,7 @@ from collections.abc import Generator
 # Import custom modules.
 from .dtypes import OptsInfo, ArgVector
 from .usage  import UsageEntry, UsageOpt, UsageInfo
+from .utils  import is_python_value
 
 
 def parse_argvec(argv: list[str], usage: UsageInfo, opts: OptsInfo) -> ArgVector | None:
@@ -95,7 +96,7 @@ def match_argvec_and_usage(argv: list[str], usage: UsageEntry, usage_opt_dict: d
         usage_opt_dict (dict[str, UsageOpt]): [IN] Dictionary form of options in usage.
 
     Returns:
-        (ArgVector): ArgVector instance if matched, and None otherwise.
+        (ArgVector | None): ArgVector instance if matched, and None otherwise.
     """
     # Copy the input argment vector for safety.
     argv = copy.deepcopy(argv)
@@ -124,8 +125,10 @@ def match_argvec_and_usage(argv: list[str], usage: UsageEntry, usage_opt_dict: d
         # Get next token.
         token = argv.pop(0)
 
-        # Case 1: Option token.
-        if token.startswith("-"):
+        print("DEBUG:", token, argv)
+
+        # Case 1: Long or short option token.
+        if token.startswith("--") or (token.startswith("-") and not is_python_value(token)):
             is_matched = proc_opt_token(token, argv, argvec, usage_opt_dict)
 
         # Case 2: Argument token.
@@ -217,7 +220,7 @@ def proc_opt_token(token: str, argv: list[str], user_input: ArgVector, usage_opt
         token_value: str = argv.pop(0)
 
         # NOT MATRCHED!: option value not found: seems like option token.
-        if token_value.startswith("-"):
+        if token_value.startswith("-") and not is_python_value(token_value):
             return False
 
         # Add {option_name: token_value} to the option dictionary of the user input.

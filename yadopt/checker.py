@@ -8,7 +8,7 @@ __all__ = ["check_user_input"]
 # Import custom modules.
 from .dtypes import ArgsInfo, OptsInfo
 from .errors import YadOptError
-from .utils  import find_nearest_str
+from .utils  import find_nearest_str, is_python_value
 
 
 def check_user_input(argv: list[str], args: ArgsInfo, opts: OptsInfo, usage) -> bool:
@@ -74,6 +74,10 @@ def check_options(argv: list[str], opts: OptsInfo, usage) -> bool:
 
     # Check all arguments in the argument vector.
     for arg_opt in (arg for arg in argv if arg.startswith("-")):
+
+        # If the token is a value (e.g. negative integer), skip it.
+        if is_python_value(arg_opt):
+            continue
 
         # If available option is empty, raise an error.
         if len(opt_names) == 0:
