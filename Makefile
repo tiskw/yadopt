@@ -33,7 +33,7 @@ count:
 
 coverage:
 	rm -rf .coverage
-	coverage run --source yadopt tests/run_tests.py
+	coverage run --source yadopt tests/run_tests.py --local --verbose
 	coverage html
 
 test:

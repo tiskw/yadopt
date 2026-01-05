@@ -40,6 +40,9 @@ class UsageInfo:
     def __str__(self) -> str:
         """
         String expression of UsageInfo.
+
+        Args:
+            (str): String expression of myself.
         """
         # Header of the string expression.
         text: str = "UsageInfo:\n"
@@ -56,6 +59,9 @@ class UsageInfo:
     def expand_options(self, opts: OptsInfo) -> None:
         """
         Expand [OPTIONS] token in the usage.
+
+        Args:
+            opts (OptsInfo): Parsed option information.
         """
         # NOTE: The expression "opt.val_name is not None" means "The option has value".
         for usage_entry in self.entries:
@@ -160,8 +166,7 @@ def tokenize(usage_line: str) -> Generator[str]:
     If you prefer simple tokenization, use `shlex.split` function.
 
     Args:
-        usage_line (str) : [IN] Usage string.
-        strip      (bool): [IN] Strip whitespace from returned tokens if true.
+        usage_line (str): [IN] Usage string.
 
     Returns:
         (Generator[str]): Tokens in the usage line.

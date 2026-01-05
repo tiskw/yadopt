@@ -45,6 +45,9 @@ def type_func(name: str, val_name: str | None, type_dsc: str | None) -> Callable
         name     (str)       : Argument/option name.
         val_name (str | None): Option value name.
         type_dsc (str | None): Type name written in description head.
+
+    Returns:
+        (Callable): Appropriate type function.
     """
     # Define a map from data type string to data type.
     dtype_hints: dict[str, Callable] = {
