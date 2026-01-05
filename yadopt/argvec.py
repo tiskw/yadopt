@@ -125,8 +125,6 @@ def match_argvec_and_usage(argv: list[str], usage: UsageEntry, usage_opt_dict: d
         # Get next token.
         token = argv.pop(0)
 
-        print("DEBUG:", token, argv)
-
         # Case 1: Long or short option token.
         if token.startswith("--") or (token.startswith("-") and not is_python_value(token)):
             is_matched = proc_opt_token(token, argv, argvec, usage_opt_dict)
