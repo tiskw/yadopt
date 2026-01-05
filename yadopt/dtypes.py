@@ -171,6 +171,7 @@ class YadOptArgs:
 
     def __or__(self, other: object) -> object:
         """
+        OR operation.
         """
         # The operand should be YadOptArgs instance.
         if not isinstance(other, YadOptArgs):

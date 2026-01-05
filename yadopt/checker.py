@@ -8,15 +8,19 @@ __all__ = ["check_user_input"]
 # Import custom modules.
 from .dtypes import ArgsInfo, OptsInfo
 from .errors import YadOptError
+from .usage  import UsageInfo
 from .utils  import find_nearest_str, is_python_value
 
 
-def check_user_input(argv: list[str], args: ArgsInfo, opts: OptsInfo, usage) -> bool:
+def check_user_input(argv: list[str], args: ArgsInfo, opts: OptsInfo, usage: UsageInfo) -> bool:
     """
     Check all user input variables are defined in arguments/options section.
 
     Args:
-        argvec  (ArgVector) : [IN] User input info.
+        argv   (list[str]): [IN] Argument vector.
+        args   (ArgInfo)  : [IN] Parsed argument information.
+        opts   (OptInfo)  : [IN] Parsed option information.
+        usages (UsageInfo): [IN] Parsed usage information.
 
     Returns:
         (bool): Returns True if all checks are passed.
@@ -24,9 +28,16 @@ def check_user_input(argv: list[str], args: ArgsInfo, opts: OptsInfo, usage) -> 
     return check_arguments(args, usage) and check_options(argv, opts, usage)
 
 
-def check_arguments(args, usage) -> bool:
+def check_arguments(args: ArgsInfo, usage: UsageInfo) -> bool:
     """
     Check the contents of argument information and usage.
+
+    Args:
+        args   (ArgInfo)  : [IN] Parsed argument information.
+        usages (UsageInfo): [IN] Parsed usage information.
+
+    Returns:
+        (bool): Returns True if all checks are passed.
     """
     # Generate a set of all available argument names.
     arg_names: set[str] = {item.name for item in args.entries}
@@ -47,13 +58,17 @@ def check_arguments(args, usage) -> bool:
     return True
 
 
-def check_options(argv: list[str], opts: OptsInfo, usage) -> bool:
+def check_options(argv: list[str], opts: OptsInfo, usage: UsageInfo) -> bool:
     """
     Check the contents of the argument vector and option information.
 
     Args:
-        argv (list[str]): [IN] Argument vector to be checked.
-        opts (OptsInfo) : [IN] Parsed option information.
+        argv (list[str])  : [IN] Argument vector to be checked.
+        opts (OptsInfo)   : [IN] Parsed option information.
+        usages (UsageInfo): [IN] Parsed usage information.
+
+    Returns:
+        (bool): Returns True if all checks are passed.
     """
     # Get a set of option names including short expression, except None.
     opt_names: set[str] = {opt.name     for opt in opts.entries if opt.name     is not None}

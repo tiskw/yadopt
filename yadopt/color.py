@@ -26,7 +26,7 @@ def colorize_help_message(help_message: str) -> str:
     Returns colored help message.
 
     Args:
-        help_message (str): Help message.
+        help_message (str): [IN] Help message.
 
     Returns:
         (str): Colorized string.
@@ -129,6 +129,12 @@ def colorize_help_message(help_message: str) -> str:
 def colorize_error_message(help_message: str) -> str:
     """
     Colorize error message.
+
+    Args:
+        help_message (str): [IN] Help message.
+
+    Returns:
+        (str): Colorized string.
     """
     # Colorize section header.
     help_message = re.sub(r"^(<[^>]+>)\s*$", f"{COLOR_SEC}\\1{COLOR_NON}", help_message, flags=re.MULTILINE)
