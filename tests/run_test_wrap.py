@@ -49,11 +49,7 @@ def main(args: yadopt.YadOptArgs, real_arg: str):
     print(args)
 
 
-def test():
-    """
-    Entry point of the test.
-    """
-    # Call the main function that is decorated by yadopt.wrap function.
+if __name__ == "__main__":
     main("real argument")
 
 

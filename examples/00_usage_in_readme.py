@@ -10,14 +10,11 @@ Training options:
     --epochs INT              The number of training epochs.      [default: 100]
 """
 
-# Import standard libraries.
-import sys
-
 # Import YadOpt.
 import yadopt
 
 if __name__ == "__main__":
-    argv = ["sample.py", "mlruns", "--optimizer", "adam", "--lr", "1.0E-3", "--epochs", "10"]
+    argv = ["mlruns", "--optimizer", "adam", "--lr", "1.0E-3", "--epochs", "10"]
     args = yadopt.parse(__doc__, argv)
     print(args)
 

@@ -32,12 +32,20 @@ count:
 	cloc --by-file yadopt/*.py
 
 coverage:
-	rm -rf .coverage
-	coverage run --source yadopt tests/run_tests.py --local --verbose
+	rm -f .coverage.*
+	coverage run --parallel-mode --source yadopt tests/run_tests.py          --local --verbose
+	coverage run --parallel-mode --source yadopt tests/run_test_dataclass.py --local --verbose
+	coverage run --parallel-mode --source yadopt tests/run_test_toml.py      --local --verbose
+	coverage run --parallel-mode --source yadopt tests/run_test_wrap.py      --local --verbose
+	coverage combine
 	coverage html
+	rm -f .coverage.*
 
 test:
 	python3 tests/run_tests.py --local --verbose
+	python3 tests/run_test_dataclass.py --local --verbose
+	python3 tests/run_test_toml.py      --local --verbose
+	python3 tests/run_test_wrap.py      --local --verbose
 
 testall:
 	bash tests/run_tests_on_docker.bash
