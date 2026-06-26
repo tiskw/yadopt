@@ -42,7 +42,7 @@ coverage:
 	rm -f .coverage.*
 
 test:
-	python3 tests/run_tests.py --local --verbose
+	python3 tests/run_tests.py          --local --verbose
 	python3 tests/run_test_dataclass.py --local --verbose
 	python3 tests/run_test_toml.py      --local --verbose
 	python3 tests/run_test_wrap.py      --local --verbose

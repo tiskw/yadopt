@@ -1,0 +1,19 @@
+title: "YadOpt Documentation"
+description: "Help-message-driven CLI parsing for Python"
+
+url: "https://tiskw.github.io"
+baseurl: "/yadopt"
+
+# Remote theme setting
+remote_theme: "just-the-docs/just-the-docs"
+
+logo: "/images/yadopt_logo.svg"
+
+plugins:
+  - jekyll-remote-theme
+
+# Navigation configuration
+nav_enabled: true
+aux_links: true
+search_enabled: true
+

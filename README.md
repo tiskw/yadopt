@@ -22,7 +22,7 @@ and reproducibility support. Define your CLI once as a human-readable text. YadO
 Quick example
 ------------------------------------------------------------------------------------------------------------------------
 
-### 1. Help-message driven command-line argument parsing
+### 1. Help-message-driven command-line argument parsing
 
 ```python
 """
@@ -207,12 +207,12 @@ Options:
 ```
 
 **(2) Type suffix**: Users can specify argument and option types by appending a type name to
-the argument or option name, as in the following examples:
+the argument or option value name, as in the following examples:
 
 ```
 Options:
-    --opt1 FLT    Option with floating-point type.
-    --opt2 STR    Option with string type.
+    --opt1 VALUE_INT   Option with integer type.
+    --opt2 STR         Option with string type.
 ```
 
 YadOpt currently supports the following types. Type names are case-insensitive,
@@ -263,9 +263,8 @@ args_restored = yadopt.load("args.toml")
 ```
 
 The structure of the TOML and JSON files is simple &mdash; the parsed arguments, along with their type information,
-are stored in a TOML/JSON file, organized into sections by group. The pre-parsing help message and argument vector
-are also saved, but only as supplementary information. It is not recommended to create a TOML/JSON file manually
-from scratch, but it should be easy to make manual modifications to a generated file.
+are stored in a TOML/JSON file, organized into sections by group. It is not recommended to create a TOML/JSON file
+manually from scratch, but it should be easy to make manual modifications to a generated file.
 
 The generated TOML/JSON file includes metadata about the execution environment, such as the hostname, username,
 platform, Python version, Git commit hash of the repository, and a timestamp. If you prefer not to store this
@@ -323,272 +322,6 @@ is struggling with it, you can simply say:
     Try writing something that looks like a normal help message and pass it to YadOpt
     &mdash; it just works!
 </i></p>
-
-
-Specification of help message
-------------------------------------------------------------------------------------------------------------------------
-
-The previous section provided a brief overview of using YadOpt.
-This section presents the formal specification of the help message.
-
-### Overview
-
-A YadOpt help message is defined as a single string composed of one or more *sections*.
-Of these sections, only those related to positional and optional arguments are parsed by YadOpt.
-The sections that YadOpt parses consist of one or more *lines*,
-with each line representing a declaration of a single positional or optional argument.
-
-Positional arguments are declared by placing a delimiter after the argument name, followed by a description of
-the positional argument, where the delimiter is defined as two or more consecutive whitespace characters.
-There are no particular restrictions on the description; it can be written freely.
-
-Optional arguments are declared by listing the option name, delimiter, and description in that order.
-For options that take a value, include the option value in the option name (e.g., `--opt VALUE` or `--opt=VALUE`).
-Short option names are also allowed (e.g., `-o, --opt VALUE`). You can write any description you like,
-but if you want the option to have a default value, add the string `[default: ...]` at the end of the description.
-
-YadOpt will raise an error if it cannot interpret the declaration lines for positional or optional arguments.
-
-### Sections
-
-A section is defined as a block of text that begins with a line that has no indentation and ends with a colon,
-followed by a line that shares a common indentation level. Brackets can be used instead of colons.
-Here, indentation is defined as the number of spaces at the beginning of each line, excluding blank lines,
-and a tab character is treated as four spaces.
-The section indentation level refers to the amount of indentation of the first line of the section's content.
-
-```
-Section Name A:
-    This line is part of the section A.
-    This line is also part of the section A.
-
-This line is not part of a section.
-
-[Section Name B]
-    Brackets are also considered sections, not just colons.
-```
-
-YadOpt only recognizes sections that meet the following conditions (case is not sensitive):
-  * the section name is either "arguments" or "options",
-  * the section name starts with "arguments " or "options " (note that there is a whitespace at the end),
-  * the section name ends with " arguments" or " options" (note that there is a whitespace at the beginning).
-Other sections and strings outside of sections are ignored.
-
-<!--
-(Strictly speaking, the existence of a section that is named `Usage` slightly affects the display of help messages,
-but this is not relevant to the help message specifications, so we won't delve into it further here)
--->
-
-### Lines
-
-The sections that YadOpt parses consist of one or more lines. Basically, one line corresponds to one declaration
-of a positional or an optional argument, but declarations spanning multiple lines are also possible.
-Lines with indentation deeper than the section's indentation level (as mentioned earlier, it is defined
-as the indentation of the first line in the section) are considered to be the same line as the preceding line.
-For example, the following declares a single option, `--opt`, and will not produce an error.
-
-```
-Options:
-    --opt   The description
-            spans multiple
-            lines.
-```
-
-Also, the following is technically acceptable, but it is extremely difficult to read and strongly discouraged.
-
-```
-Options:
-    --opt   The description   (indent=4)
-       spans multiple         (indent=7 > 4)
-         lines.               (indent=9 > 4)
-```
-
-### Positional argument declaration
-
-Positional arguments are declared by placing a delimiter, two or more whitespace characters,
-after the argument name, followed by a description of the positional argument. For example:
-
-```
-Arguments:
-    conf_path     Path to the config file.
-```
-
-### Optional argument declaration
-
-Optional arguments are declared by listing the option name, delimiter, and description in that order.
-Optional arguments allow for the use of both short and long option names, as well as use them together,
-and can also assign values to options. To assign a value to an option, write the value name after the option name,
-followed by a single whitespace or a single equals sign without a whitespace.
-
-Short options must consist of a single character. For example, an option declaration like `-abc` is not allowed.
-Instead, if the argument `-abc` is given during command execution (i.e., the argument vector contains `-abc`),
-this is treated as `-a`, `-b`, and `-c` are specified simultaneously.
-
-Therefore, there are many variations in the declaration of optional arguments.
-Some of them are listed below:
-
-```
-Flag options:
-    -o1                  Short name flag option.
-    --opt1               Long name flag option.
-
-Options with a value:
-    --opt2 VALUE         Long option with a value (whitespace).
-    --opt2=VALUE         Long option with a value (equal sign).
-    -o3, --opt3 VALUE    Short and long option with a value.
-    -o4 VAL, --opt4 VAL  Another way to declare an option with a value.
-    --opt5, -o5          Unconventional but acceptable.
-```
-
-You can write any description you like, but if you want the option to have a default value, add the string
-`[default: ...]` at the end of the description. Note that the `[default: ...]` notation is case-sensitive.
-The string following `default:` will be recognized as the default value.
-
-### Naming convention
-
-The naming convention for positional and optional argument names follows Python's variable naming conventions.
-This differs from the argument naming conventions of common Linux commands, but is because the parsed
-arguments will later be referenced as Python variable names.
-Exceptionally, hyphens and dots are allowed in any character other than the first character.
-However, in this case, the hyphen and dot will be internally replaced with an underscore.
-Therefore, be aware that variable name conflicts may occur due to the replacement.
-For example, the argument names `user-name` and `user_name` cannot coexist.
-Such conflicts will result in an error.
-
-### Type inference of positional or optional argument values
-
-For positional arguments or optional arguments that take values,
-the type can be assigned using the following procedure.
-Type assignment is performed in the order described below, and if none of the conditions apply,
-it is treated as a string type.
-
-#### 1. None type
-
-If the value of a positional argument or an optional argument exactly matches "None" including case sensitivity,
-the value will be NoneType, regardless of the type specification below.
-
-#### 2. Description head
-
-If the option description begins with parentheses and a type name,
-the content inside the parentheses will be recognized as the type name.
-
-```
-Arguments:
-    arg     (int) This is an integer argument.
-```
-
-#### 3. Value name suffix
-
-If the name of a positional argument or option value ends with a type name, that type name will be used.
-
-```
-Arguments and options:
-    arg_int        This is an integer argument.
-    --opt FLOAT    This is a float-value option.
-```
-
-### Common mistakes and misunderstandings
-
-#### Number of spaces when specifying both short and long options
-
-When specifying both short and long option names, or option values,
-be careful not to accidentally include two or more spaces.
-For example, the following two statements, differing only in the number of spaces,
-declare completely different options.
-Use a single space between an option name and its value,
-and two or more whitespace characters to separate the description.
-
-```
-Options:
-    --opt1 VALUE    Option with a value.
-    --opt2          VALUE Oops, it is a flag option!
-```
-
-YadOpt attempts to detect such errors and raise errors or warnings whenever possible,
-but it's not possible to catch all such cases completely, so careful attention is required.
-
-#### Indentation errors that do not result in errors
-
-If you make an indentation error like the one below, YadOpt will try to generate a warning whenever possible,
-but in principle, no error will occur.
-This is because `line3` below is, by definition, outside Section A, and YadOpt ignores strings outside of sections.
-
-```
-Section A:
-    line1
-    line2
-  line3
-```
-
-#### Multiple positional argument errors
-
-A positional argument declared with `...` must be the last positional argument.
-If you declare a positional argument with `...` in the middle of other positional arguments,
-YadOpt will raise an error.
-
-#### Examples of section names
-
-- Section names parsed by YadOpt:
-    * `Mandatory arguments` (ends with ` arguments`)
-    * `Options with a value` (starts with `options `)
-- Section names ignored by YadOpt:
-    * `MandatoryArguments`
-    * `Flag-options`
-
-
-Tips
-------------------------------------------------------------------------------------------------------------------------
-
-### Merge two YadOptArgs objects
-
-The `YadOptArgs` class, which is the return value of the `yadopt.parse` function, supports the merge operator `|`,
-similar to Python dictionaries. This operator combines the two given YadOptArgs objects into a new one. In case
-of a key conflict, the values from the right-hand operand are used.
-
-This merge operator is particularly useful for implementing a feature to read an existing configuration file
-(for example, a file specified with the `--config` argument) and then overwrite those settings with values explicitly
-provided in the command line arguments. For example:
-
-```python
-"""
-Train a neural network model.
-
-Arguments:
-    config_path     Path to base config file.
-
-Training options:
-    --epochs INT    The number of training epochs.   [default: 100]
-    --model STR     Neural network model name.       [default: mlp]
-    --lr FLT        Learning rate.                   [default: 1.0E-3]
-"""
-
-import yadopt
-
-if __name__ == "__main__":
-
-    # Parse the command line arguments.
-    args = yadopt.parse(__doc__)
-
-    # Load the base config file.
-    args_base = yadopt.load(args.config_path)
-
-    # Update the parsed command line arguments.
-    args_updated = args_base | args
-    print(args_updated)
-```
-
-### Backward compatibility of the TOML/JSON file in save/load functions
-
-The older versions of YadOpt (<= 2026.1.5) used a different TOML/JSON format in the save and load functions.
-The content of the TOML/JSON file was fundamentally different; older versions saved help messages and argument vector
-before parsing, and re-parsed them when loading. This can be seen as a YadOpt-style approach in which the help message
-is treated as the single source of truth. However, it makes it impossible to save `YadOptArgs` after operations such
-as merging `|` or group extraction `yadopt.get_group`, and it also fails to guarantee reproducibility if there is
-a bug in YadOpt's parsing functionality (and there is no such thing as completely bug-free software, if anything, only
-TeX might come close). Therefore, the current version of YadOpt has shifted to an approach that directly stores
-the parsed argument vector, making the saving of the help message and argument vector optional. These are included
-in the saved file only when YadOptArgs is saved immediately after parsing, and they are not included if YadOptArgs
-is saved after performing operations such as merging or group extraction.
 
 ### Comparison with other similar libraries
 
