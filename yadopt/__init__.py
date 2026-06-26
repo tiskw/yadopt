@@ -10,7 +10,7 @@ from .serialize import load, save
 from .yadopt    import parse, wrap, to_dict, to_namedtuple, get_group
 
 # Version information.
-__version__ = "2026.1.5"
+__version__ = "2026.6.26"
 
 # Declare published functions and variables.
 __all__ = ["parse", "wrap", "to_dict", "to_namedtuple", "save", "load", "get_group",
