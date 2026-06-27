@@ -1,9 +1,7 @@
 """
 yadopt.errors - Custom error classes for YadOpt.
 """
-
-# Declare published functions and variables.
-__all__ = ["YadOptError"]
+from __future__ import annotations
 
 # Import standard libraries.
 import difflib
@@ -17,6 +15,9 @@ from typing import Any
 # Import custom modules.
 from .color  import colorize_error_message
 from .dtypes import Path, Span
+
+# Declare published functions and variables.
+__all__ = ["YadOptError", "get_candidate_message", "get_target_and_marker"]
 
 
 #===================================================================================================
@@ -106,6 +107,19 @@ class YadOptErrorCannotLoadTomllib(YadOptErrorBase):
         and the "tomllib" otherwise.
     """
 
+class YadOptErrorCannotGetGroup(YadOptErrorBase):
+    """
+    <Error summary>
+        {loc_info}
+        Invalid group extraction with unexpected data type.
+
+    <Details>
+        The "yadopt.get_group" is called on an unexpected type "{cls_name}".
+
+    <Solution>
+        Consider applying "yadopt.get_group" to YadOptArgs.
+    """
+
 class YadOptErrorCannotMerge(YadOptErrorBase):
     """
     <Error summary>
@@ -133,6 +147,24 @@ class YadOptErrorDuplicatedName(YadOptErrorBase):
     <Solution>
         Please check the argument declaration for duplicated names.
     """
+
+class YadOptErrorHelpOptionInArgv(YadOptErrorBase):
+    """
+    <Error summary>
+        {loc_info}:
+        The reserved option "--help" is found in the argument vector.
+
+    <Details>
+        "--help" is a reserved option that displays a help message. By default, it
+        shows the message and exits the program. However, if "exit_on_help=False"
+        is set in the "yadopt.parse" function, the program will not exit and will
+        instead raise this error.
+
+    <Solution>
+        To avoid this error and allow the program to exit normally when "--help" is used,
+        do not specify "exit_on_help=False" in the "yadopt.parse" function.
+    """
+
 
 class YadOptErrorInvalidBoolValue(YadOptErrorBase):
     """
@@ -176,6 +208,20 @@ class YadOptErrorInvalidHelpOption(YadOptErrorBase):
         a value, or simply do not explicitly declare the "--help" option.
     """
 
+class YadOptErrorInvalidSourceType(YadOptErrorBase):
+    """
+    <Error summary>
+        {loc_info}
+        Invalid source type.
+
+    <Details>
+        The first argument of "yadopt.parse" function should be either a string
+        instance or a dataclass type, but "{source_type}" is given.
+
+    <Solution>
+        Please specify a valid source type. See the quick example in the README for details.
+    """
+
 class YadOptErrorInvalidTomlFile(YadOptErrorBase):
     """
     <Error summary>
@@ -196,25 +242,12 @@ class YadOptErrorInvalidTypeName(YadOptErrorBase):
         Invalid type name '{type_name}'.
 
     <Details>
-        Type name '{type_name}' is invalid. Acceptable type names are: "int",
-        "integer", "flt", "float", "str", "string", "path", or their uppercases.
+        Type name '{type_name}' is invalid. Acceptable type names are:
+        "int", "integer", "flt", "float", "str", "string", "path",
+        or their uppercases.
 
     <Solution>
       Modify the type name.
-    """
-
-class YadOptErrorInternal(YadOptErrorBase):
-    """
-    <Error summary>
-        {loc_info}: Internal error.
-
-    <Location>
-        See the traceback above.
-
-    <Details>
-        This error means that something happened that the author didn't anticipate
-        during the execution of the YadOpt code, NOT that the user is using
-        the library incorrectly.
     """
 
 class YadOptErrorMissingArgument(YadOptErrorBase):
@@ -408,20 +441,6 @@ class YadOptErrorInvalidCommaUsageInOptArgDecl(YadOptErrorBase):
         Please check the comma usage in the optional argument declaration.
     """
 
-class YadOptErrorUnexpectedTokenInOptArgDecl(YadOptErrorBase):
-    """
-    <Error summary>
-        {loc_info}
-        Unexpected token is found in optional argument declaration.
-
-    <Details>
-        {target}
-        {marker}
-
-    <Solution>
-        Please remove the unexpected token "{token}" from the optional argument declaration.
-    """
-
 class YadOptErrorInvalidEqualUsageInOptArgDecl(YadOptErrorBase):
     """
     <Error summary>
@@ -434,6 +453,32 @@ class YadOptErrorInvalidEqualUsageInOptArgDecl(YadOptErrorBase):
 
     <Solution>
         Please check the equal sign usage in the optional argument declaration.
+    """
+
+class YadOptErrorPosArgAfterMult(YadOptErrorBase):
+    """
+    <Error summary>
+        {loc_info}
+        Positional argument is declared after a multiple positional argument.
+
+    <Solution>
+        The positional argunment "{name}" is not achievable because it is
+        declared after a multiple positional argument. Please declare the positional
+        argument before the multiple positional argument.
+    """
+
+class YadOptErrorUnexpectedTokenInOptArgDecl(YadOptErrorBase):
+    """
+    <Error summary>
+        {loc_info}
+        Unexpected token is found in optional argument declaration.
+
+    <Details>
+        {target}
+        {marker}
+
+    <Solution>
+        Please remove the unexpected token "{token}" from the optional argument declaration.
     """
 
 class YadOptErrorUnknownErrorInOptArgDecl(YadOptErrorBase):
@@ -452,23 +497,6 @@ class YadOptErrorUnknownErrorInOptArgDecl(YadOptErrorBase):
 
 
 #===================================================================================================
-# Errors on check
-#===================================================================================================
-
-class YadOptErrorPosArgAfterMult(YadOptErrorBase):
-    """
-    <Error summary>
-        {loc_info}
-        Positional argument is declared after a multiple positional argument.
-
-    <Solution>
-        The positional argunment "{name}" is not achievable because it is
-        declared after a multiple positional argument. Please declare the positional
-        argument before the multiple positional argument.
-    """
-
-
-#===================================================================================================
 # Wrapper class
 #===================================================================================================
 
@@ -478,13 +506,16 @@ class YadOptError:
     """
     # Runtime errors.
     CannotLoadTomllib = YadOptErrorCannotLoadTomllib
+    CannotGetGroup    = YadOptErrorCannotGetGroup
     CannotMerge       = YadOptErrorCannotMerge
+    DuplicatedName    = YadOptErrorDuplicatedName
+    HelpOptionInArgv  = YadOptErrorHelpOptionInArgv
     InvalidBoolValue  = YadOptErrorInvalidBoolValue
     InvalidFileFormat = YadOptErrorInvalidFileFormat
     InvalidHelpOption = YadOptErrorInvalidHelpOption
+    InvalidSourceType = YadOptErrorInvalidSourceType
     InvalidTomlFile   = YadOptErrorInvalidTomlFile
     InvalidTypeName   = YadOptErrorInvalidTypeName
-    InternalError     = YadOptErrorInternal
     MissingArgument   = YadOptErrorMissingArgument
     NoOptionValue     = YadOptErrorNoOptionValue
     TooManyArgument   = YadOptErrorTooManyArgument
@@ -496,6 +527,7 @@ class YadOptError:
     InvalidArgNameInPosArgDecl  = YadOptErrorInvalidArgNameInPosArgDecl
     MultiEllipsisInPosArgDecl   = YadOptErrorMultiEllipsisInPosArgDecl
     InvalidEllipsisInPosArgDecl = YadOptErrorInvalidEllipsisInPosArgDecl
+    PosArgAfterMult             = YadOptErrorPosArgAfterMult
     UnexpectedTokenInPosArgDecl = YadOptErrorUnexpectedTokenInPosArgDecl
     UnknownErrorInPosArgDecl    = YadOptErrorUnknownErrorInPosArgDecl
 
@@ -507,9 +539,6 @@ class YadOptError:
     UnexpectedTokenInOptArgDecl   = YadOptErrorUnexpectedTokenInOptArgDecl
     UnknownErrorInOptArgDecl      = YadOptErrorUnknownErrorInOptArgDecl
 
-    # Errors on check.
-    DuplicatedName  = YadOptErrorDuplicatedName
-    PosArgAfterMult = YadOptErrorPosArgAfterMult
 
 #===================================================================================================
 # Private classes and functions

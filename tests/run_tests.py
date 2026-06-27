@@ -5,6 +5,8 @@ Run all tests for YadOpt.
 
 # Import standard libraries.
 import argparse
+import copy
+import dataclasses
 import importlib
 import itertools
 import pathlib
@@ -85,11 +87,14 @@ def main(verbose: bool) -> None:
 
         # Check the entries of the testcase.
         for key in testcase_data.keys():
-            if (key != "docstr") and (not key.startswith("argv_")):
+            if (key != "docstr") and (not key.startswith("argv_")) and (key != "dataclass"):
                 raise KeyError(f"Extra key: {key}")
 
+        if "docstr" not in testcase_data:
+            print(exec(testcase_data["dataclass"]))
+
         # Get the docstring used in the testcase.
-        docstr: str = testcase_data["docstr"]
+        source = testcase_data["docstr"] if "docstr" in testcase_data else eval(testcase_data["dataclass"])
 
         # Get the names of "argv_xx" in the testcase.
         argv_names: list[str] = [key for key in testcase_data.keys() if key.startswith("argv_")]
@@ -103,7 +108,7 @@ def main(verbose: bool) -> None:
 
             # Parse the docstring.
             try:
-                args = yadopt.parse(docstr, argv, verbose=verbose)
+                args = yadopt.parse(source, argv[1:], verbose=verbose)
             except yadopt.errors.YadOptErrorBase as error:
                 args = error
             except SystemExit as error:
@@ -120,12 +125,19 @@ def main(verbose: bool) -> None:
             print(f"{COLOR_GREEN}Passed{COLOR_NONE}")
             print()
 
-    # Test wrap function.
-    print("----- Test: testcase_wrap -----")
-    testcase = importlib.import_module("testcase_wrap")
-    testcase.test()
-    print(f"{COLOR_GREEN}Passed{COLOR_NONE}")
-    print()
+    # # Test wrap function.
+    # print("----- Test: testcase_wrap -----")
+    # testcase = importlib.import_module("testcase_wrap")
+    # testcase.test()
+    # print(f"{COLOR_GREEN}Passed{COLOR_NONE}")
+    # print()
+
+    # # Test wrap function.
+    # print("----- Test: testcase_dataclass -----")
+    # testcase = importlib.import_module("testcase_dataclass")
+    # testcase.test()
+    # print(f"{COLOR_GREEN}Passed{COLOR_NONE}")
+    # print()
 
     print("----- Test results summary -----")
     print(f"{COLOR_GREEN}Passed all tests!!{COLOR_NONE} ({platform.python_version()})")

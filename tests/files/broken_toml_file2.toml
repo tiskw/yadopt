@@ -1,0 +1,3 @@
+# Example of broken TOML file.
+
+_YADOPT_METADATA_ = "invalid metadata format"

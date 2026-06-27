@@ -1,9 +1,7 @@
 """
-yadopt.color - colorize strings
+yadopt.color - colorize strings.
 """
-
-# Declare published functions and variables.
-__all__ = ["colorize_help_message", "colorize_error_message"]
+from __future__ import annotations
 
 # Import standard libraries.
 import re
@@ -16,10 +14,9 @@ from typing import TypeAlias
 PatternType: TypeAlias = tuple[str, list[int], bool]
 MatchedType: TypeAlias = tuple[tuple[str | None, ...], str, bool]
 
+# Declare published functions and variables.
+__all__ = ["colorize_help_message", "colorize_error_message"]
 
-####################################################################################################
-# Public classes and functions
-####################################################################################################
 
 def colorize_help_message(help_message: str) -> str:
     """
@@ -53,7 +50,7 @@ def colorize_help_message(help_message: str) -> str:
         """
         Colorize section.
         """
-        return COLOR_SEC + line[:-1] + COLOR_NON + ":"
+        return COLOR_SEC + line + COLOR_NON
 
     def colorize_arg_line(line: str) -> str:
         """

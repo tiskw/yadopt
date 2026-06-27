@@ -50,31 +50,37 @@ train.py config.toml --epochs 10 --model cnn
 >>> assert args.output == yadopt.Path("runs")
 >>> assert args.help == False
 >>> assert args.verbose == False
+"""
 
+argv_02 = """
+train.py config.toml --epochs 10 --model cnn
 >>> args_dict = yadopt.to_dict(args)
 >>> assert isinstance(args_dict, dict)
 >>> assert args_dict["config_path"] == yadopt.Path("config.toml")
 >>> assert args_dict["epochs"] == 10
 >>> assert args_dict["model"] == "cnn"
 >>> assert abs(args_dict["lr"] - 1.0E-3) < 1.0E-8
->>> assert args.weights is None
+>>> assert args_dict["weights"] is None
 >>> assert args_dict["output"] == yadopt.Path("runs")
 >>> assert args_dict["help"] == False
 >>> assert args_dict["verbose"] == False
-
->>> args_nt = yadopt.to_namedtuple(args)
->>> assert args_nt.__class__.__name__ == "YadOptArgsNt"
->>> assert args.config_path == yadopt.Path("config.toml")
->>> assert args.epochs == 10
->>> assert args.model == "cnn"
->>> assert abs(args.lr - 1.0E-3) < 1.0E-8
->>> assert args.weights is None
->>> assert args.output == yadopt.Path("runs")
->>> assert args.help == False
->>> assert args.verbose == False
 """
 
-argv_02 = """
+argv_03 = """
+train.py config.toml --epochs 10 --model cnn
+>>> args_nt = yadopt.to_namedtuple(args)
+>>> assert args_nt.__class__.__name__ == "YadOptArgsNt"
+>>> assert args_nt.config_path == yadopt.Path("config.toml")
+>>> assert args_nt.epochs == 10
+>>> assert args_nt.model == "cnn"
+>>> assert abs(args_nt.lr - 1.0E-3) < 1.0E-8
+>>> assert args_nt.weights is None
+>>> assert args_nt.output == yadopt.Path("runs")
+>>> assert args_nt.help == False
+>>> assert args_nt.verbose == False
+"""
+
+argv_04 = """
 train.py config.toml -v
 >>> assert args.config_path == yadopt.Path("config.toml")
 >>> assert args.epochs == 100
@@ -86,12 +92,12 @@ train.py config.toml -v
 >>> assert args.verbose == True
 """
 
-argv_03 = """
+argv_05 = """
 train.py --help
 >>> assert isinstance(args, SystemExit)
 """
 
-argv_04 = """
+argv_06 = """
 train.py -h
 >>> assert isinstance(args, SystemExit)
 """
@@ -185,6 +191,8 @@ Extremely simple case.
 
 argv_01 = """
 train.py
+>>> print(args.__class__)
+>>> print(isinstance(args, yadopt.YadOptArgs))
 >>> assert isinstance(args, yadopt.YadOptArgs)
 >>> assert len(yadopt.to_dict(args).keys()) == 0
 """
@@ -215,12 +223,12 @@ Other options:
 
 argv_01 = """
 train.py config.toml
->>> assert args == args | args
+>>> assert args == (args | args)
 """
 
 # }}}
 
-[tesrcase_01_05]
+[testcase_01_05]
 # Comparison of two YadOptArgs objects. {{{
 
 docstr = """
@@ -238,6 +246,26 @@ train.py
 """
 
 # }}}
+
+[testcase_01_06]
+## --help is always special even if not declared in docstr. {{{
+
+docstr = """
+Options:
+    --verbose   Verbose flag.
+"""
+
+argv_01 = """
+sample.py --help
+>>> assert isinstance(args, SystemExit)
+"""
+
+argv_02 = """
+sample.py --verbose
+>>> assert args.verbose == True
+"""
+
+## }}}
 
 ####################################################################################################
 # Testcase 2: arguments, short options, and long options
@@ -283,6 +311,8 @@ Options:
     -f, --frank=STR        Both short/long option with single option value (equal sign).
     -g STR, --george STR   Both short/long option with double option values.
     -h=STR, --henry=STR    Both short/long option with double option values (equal sign).
+    --ida, -i STR          Both short/long option with single option values (equal sign).
+    --jack STR, -j STR     Both short/long option with double option values (equal sign).
 """
 
 argv_01 = """
@@ -337,6 +367,103 @@ argv_01 = """
 sample.py --opt-name value
 >>> assert args.opt_name == "value"
 >>> assert str(yadopt.to_namedtuple(args)) == "YadOptArgsNt(opt_name='value')"
+"""
+
+# }}}
+
+[testcase02_04]
+# Multiple short options. {{{
+
+docstr = """
+Options:
+    -a        First flag option.
+    -b        Second flag option.
+    -c        Third flag option.
+"""
+
+argv_01 = """
+sample.py -b
+>>> assert args.a == False
+>>> assert args.b == True
+>>> assert args.c == False
+"""
+
+argv_02 = """
+sample.py -ab
+>>> assert args.a == True
+>>> assert args.b == True
+>>> assert args.c == False
+"""
+
+argv_03 = """
+sample.py -abc
+>>> assert args.a == True
+>>> assert args.b == True
+>>> assert args.c == True
+"""
+
+# }}}
+
+[testcase02_05]
+# Hyphen and dot treatment {{{
+
+docstr = """
+Options with hyphen and dot:
+    --option-name-1    Option 1.
+    --option.name.2    Option 2.
+"""
+
+argv_01 = """
+sample.py --option-name-1
+>>> assert args.option_name_1 == True
+>>> assert args.option_name_2 == False
+"""
+
+argv_02 = """
+sample.py --option.name.2
+>>> assert args.option_name_1 == False
+>>> assert args.option_name_2 == True
+"""
+
+argv_03 = """
+sample.py --option-name-2
+>>> assert args.__class__.__name__ == "YadOptErrorUnknownOption"
+"""
+
+# }}}
+
+[testcase02_06]
+## Duplicated-name conflict caused by dot/underscore normalization. {{{
+
+docstr = """
+Options:
+    --output.dir PATH   First declaration.
+    --output_dir PATH   Second declaration.
+"""
+
+argv_01 = """
+sample.py
+>>> assert args.__class__.__name__ == "YadOptErrorDuplicatedName"
+"""
+
+## }}}
+
+[testcase02_07]
+# Double hyphen {{{
+
+docstr = """
+Arguments:
+    arg1     First positional argument.
+    arg2     Second positional argument.
+
+Options:
+    --opt    Optional arguments.
+"""
+
+argv_01 = """
+sample.py -- -arg1- -arg2-
+>>> assert args.arg1 == "-arg1-"
+>>> assert args.arg2 == "-arg2-"
 """
 
 # }}}
@@ -554,8 +681,165 @@ train.py -1 +0.7 --opt_int -2 --opt_float +0.4
 
 # }}}
 
+[testcase03_05]
+# None type treadment {{{
+
+docstr = """
+Data type hints - negative integer and float.
+
+Arguments:
+    arg_int      Integer argument.
+    arg_str      String argument.
+"""
+
+argv_01 = """
+train.py None None
+>>> assert args.arg_int is None
+>>> assert args.arg_str is None
+"""
+
+argv_02 = """
+train.py None NonE
+>>> assert args.arg_int is None
+>>> assert args.arg_str == "NonE"
+"""
+
+argv_03 = """
+train.py None none
+>>> assert args.arg_int is None
+>>> assert args.arg_str == "none"
+"""
+
+# }}}
+
+[testcase03_06]
+# Test case insensitivity. {{{
+
+docstr = """
+Test data types.
+
+Arguments:
+    arg_bOol      Boolean option value.
+    arg_inT       Integer option value.
+    arg_pAth      Path option value.
+    arg_Flt       Float option value.
+    arg_sTR       String option value.
+
+Options:
+    -a name           No type specification means string.
+    -b name_BOOl      Boolean option value.
+    -c name_bOOlEAn   Boolean option value.
+    -d name_iNT       Integer option value.
+    -e name_INTegEr   Integer option value.
+    -f name_pATh      Path option value.
+    -g name_flT       Float option value.
+    -h name_FlOaT     Float option value.
+    -i name_StR       String option value.
+    -j name_sTrIng    String option value.
+"""
+
+argv_01 = """
+sample.py True 3 text.txt 0.1 str -a val -b true -c false -d 67 -e 890 -f /home -g 0.1 -h 1.0 -i foo -j bar
+>>> assert isinstance(args.arg_bOol, bool)
+>>> assert isinstance(args.arg_inT, int)
+>>> assert isinstance(args.arg_pAth, yadopt.Path)
+>>> assert isinstance(args.arg_Flt, float)
+>>> assert isinstance(args.arg_sTR, str)
+>>> assert isinstance(args.a, str)
+>>> assert isinstance(args.b, bool)
+>>> assert isinstance(args.c, bool)
+>>> assert isinstance(args.d, int)
+>>> assert isinstance(args.e, int)
+>>> assert isinstance(args.f, yadopt.Path)
+>>> assert isinstance(args.g, float)
+>>> assert isinstance(args.h, float)
+>>> assert isinstance(args.i, str)
+>>> assert isinstance(args.j, str)
+"""
+
+# }}}
+
+[testcase03_07]
+# Additional test for integer, float and string types. {{{
+
+docstr = """
+Usage:
+    sample.py [--opt1 INT] [--opt2 FLOAT] [--opt3 STR]
+    sample.py --help
+
+Options:
+    --opt1 INT    Option with integer value.  [default: 1]
+    --opt2 FLOAT  Option with float value.    [default: 1]
+    --opt3 STR    Option with string value.   [default: 1]
+    -h, --help    Show this help message and exit.
+"""
+
+argv_01 = """
+sample.py
+>>> assert isinstance(args.opt1, int)
+>>> assert isinstance(args.opt2, float)
+>>> assert isinstance(args.opt3, str)
+>>> assert args.opt1 == 1
+>>> assert abs(args.opt2 - 1.0) < 1.0E-5
+>>> assert args.opt3 == "1"
+"""
+
+argv_02 = """
+sample.py --opt1 1 --opt2 1 --opt3 1
+>>> assert isinstance(args.opt1, int)
+>>> assert isinstance(args.opt2, float)
+>>> assert isinstance(args.opt3, str)
+>>> assert args.opt1 == 1
+>>> assert abs(args.opt2 - 1.0) < 1.0E-5
+>>> assert args.opt3 == "1"
+"""
+
+argv_03 = """
+sample.py --help
+>>> assert isinstance(args, SystemExit)
+"""
+
+# }}}
+
+[testcase03_08]
+# Type hints with multiple lines. {{{
+
+docstr = """
+Usage:
+    sample.py [--opt1 STR] [--opt2 STR]
+              [--opt3 STR] [--opt4 STR]
+    sample.py --help
+
+Options:
+    --opt1 STR    Option with value 1.
+                  This it the second line of --opt1.
+    --opt2 STR    Option with value 2.
+                  This it the second line of --opt2.
+    --opt3 STR    Option with value 3.
+                  This it the second line of --opt3.
+    --opt4 STR    Option with value 4.
+                  This it the second line of --opt4.
+    -h, --help    Show this help message and exit.
+                  This it the second line of --help.
+"""
+
+argv_01 = """
+sample.py --opt1 val1 --opt2 val2 --opt3 val3 --opt4 val4
+>>> assert args.opt1 == "val1"
+>>> assert args.opt2 == "val2"
+>>> assert args.opt3 == "val3"
+>>> assert args.opt4 == "val4"
+"""
+
+argv_02 = """
+sample.py --help
+>>> assert isinstance(args, SystemExit)
+"""
+
+# }}}
+
 ####################################################################################################
-# Testcase 4: Strange indent
+# Testcase 4: Section parsing
 ####################################################################################################
 
 [testcase04_01]
@@ -582,6 +866,53 @@ sample.py --help
 """
 
 # }}}
+
+[testcase04_02]
+# Treatment of tab. {{{
+
+docstr = """
+Options:
+     --opt1 STR    Indent level is 5.
+\t --opt2 STR      Indent level is 5 = 4 + 1.
+"""
+
+argv_01 = """
+sample.py --opt1 value1 --opt2 value2
+>>> assert args.opt1 == "value1"
+>>> assert args.opt2 == "value2"
+"""
+
+# }}}
+
+[testcase04_03]
+## Section-name recognition: case-insensitive, prefix/suffix match, and ignoring unrelated sections. {{{
+
+docstr = """
+Ignored header:
+    --ghost STR   This must be ignored.
+
+[MANDATORY ARGUMENTS]
+    input_path   Real positional argument.
+
+[Options With Values]
+    --learning-rate FLT   Real option.   [default: 0.5]
+"""
+
+argv_01 = """
+sample.py data.txt --learning-rate 0.25
+assert args.input_path == yadopt.Path("data.txt")
+assert abs(args.learning_rate - 0.25) < 1.0E-8
+assert "ghost" not in yadopt.to_dict(args)
+"""
+
+argv_02 = """
+sample.py data.txt
+assert args.input_path == yadopt.Path("data.txt")
+assert abs(args.learning_rate - 0.5) < 1.0E-8
+assert "ghost" not in yadopt.to_dict(args)
+"""
+
+## }}}
 
 ####################################################################################################
 # Testcase 5: Multiline usages and options
@@ -652,94 +983,11 @@ sample.py --help
 # }}}
 
 ####################################################################################################
-# Testcase 6: Additional type hint testing
+# Testcase 6: Group extraction
 ####################################################################################################
 
 [testcase06_01]
-# {{{
-
-docstr = """
-Usage:
-    sample.py [--opt1 INT] [--opt2 FLOAT] [--opt3 STR]
-    sample.py --help
-
-Options:
-    --opt1 INT    Option with integer value.  [default: 1]
-    --opt2 FLOAT  Option with float value.    [default: 1]
-    --opt3 STR    Option with string value.   [default: 1]
-    -h, --help    Show this help message and exit.
-"""
-
-argv_01 = """
-sample.py
->>> assert isinstance(args.opt1, int)
->>> assert isinstance(args.opt2, float)
->>> assert isinstance(args.opt3, str)
->>> assert args.opt1 == 1
->>> assert abs(args.opt2 - 1.0) < 1.0E-5
->>> assert args.opt3 == "1"
-"""
-
-argv_02 = """
-sample.py --opt1 1 --opt2 1 --opt3 1
->>> assert isinstance(args.opt1, int)
->>> assert isinstance(args.opt2, float)
->>> assert isinstance(args.opt3, str)
->>> assert args.opt1 == 1
->>> assert abs(args.opt2 - 1.0) < 1.0E-5
->>> assert args.opt3 == "1"
-"""
-
-argv_03 = """
-sample.py --help
->>> assert isinstance(args, SystemExit)
-"""
-
-# }}}
-
-[testcase06_02]
-# {{{
-
-docstr = """
-Usage:
-    sample.py [--opt1 STR] [--opt2 STR]
-              [--opt3 STR] [--opt4 STR]
-    sample.py --help
-
-Options:
-    --opt1 STR    Option with value 1.
-                  This it the second line of --opt1.
-    --opt2 STR    Option with value 2.
-                  This it the second line of --opt2.
-    --opt3 STR    Option with value 3.
-                  This it the second line of --opt3.
-    --opt4 STR    Option with value 4.
-                  This it the second line of --opt4.
-    -h, --help    Show this help message and exit.
-                  This it the second line of --help.
-"""
-
-argv_01 = """
-sample.py --opt1 val1 --opt2 val2 --opt3 val3 --opt4 val4
->>> assert args.opt1 == "val1"
->>> assert args.opt2 == "val2"
->>> assert args.opt3 == "val3"
->>> assert args.opt4 == "val4"
-"""
-
-argv_02 = """
-sample.py --help
->>> assert isinstance(args, SystemExit)
-"""
-
-# }}}
-
-####################################################################################################
-# Testcase 7: Group extraction
-####################################################################################################
-
-[testcase07_01]
-# {{{
+# Basic tests for group extraction {{{
 
 docstr = """
 Arguments:
@@ -778,22 +1026,22 @@ sample.py arg_val_0 arg_val_1
 >>> assert args.opt2_2 == 22
 
 >>> args_group = yadopt.get_group(args, "Options group 0")
->>> len(args_group) == 3
->>> args_group.opt0_0 == 0
->>> args_group.opt0_1 == 1
->>> args_group.opt0_2 == 2
+>>> assert len(args_group) == 3
+>>> assert args_group.opt0_0 == 0
+>>> assert args_group.opt0_1 == 1
+>>> assert args_group.opt0_2 == 2
 
 >>> args_group = yadopt.get_group(args, "Options group 1")
->>> len(args_group) == 3
->>> args_group.opt1_0 == 10
->>> args_group.opt1_1 == 11
->>> args_group.opt1_2 == 12
+>>> assert len(args_group) == 3
+>>> assert args_group.opt1_0 == 10
+>>> assert args_group.opt1_1 == 11
+>>> assert args_group.opt1_2 == 12
 
 >>> args_group = yadopt.get_group(args, "Options group 2")
->>> len(args_group) == 3
->>> yadopt.get_group(args, "Options group 2").opt2_0 == 20
->>> yadopt.get_group(args, "Options group 2").opt2_1 == 21
->>> yadopt.get_group(args, "Options group 2").opt2_2 == 22
+>>> assert len(args_group) == 3
+>>> assert yadopt.get_group(args, "Options group 2").opt2_0 == 20
+>>> assert yadopt.get_group(args, "Options group 2").opt2_1 == 21
+>>> assert yadopt.get_group(args, "Options group 2").opt2_2 == 22
 """
 
 argv_02 = """
@@ -814,22 +1062,22 @@ sample.py arg_val_0 arg_val_1
 >>> assert args_group.arg0 == "arg_val_0"
 
 >>> args_group = yadopt.get_group(args, "Options group 0")
->>> len(args_group) == 3
->>> args_group.opt0_0 == 0
->>> args_group.opt0_1 == 1
->>> args_group.opt0_2 == 2
+>>> assert len(args_group) == 3
+>>> assert args_group.opt0_0 == 0
+>>> assert args_group.opt0_1 == 1
+>>> assert args_group.opt0_2 == 2
 
 >>> args_group = yadopt.get_group(args, "Options group 1")
->>> len(args_group) == 3
->>> args_group.opt1_0 == 10
->>> args_group.opt1_1 == 11
->>> args_group.opt1_2 == 12
+>>> assert len(args_group) == 3
+>>> assert args_group.opt1_0 == 10
+>>> assert args_group.opt1_1 == 11
+>>> assert args_group.opt1_2 == 12
 
 >>> args_group = yadopt.get_group(args, "Options group 2")
->>> len(args_group) == 3
->>> yadopt.get_group(args, "Options group 2").opt2_0 == 20
->>> yadopt.get_group(args, "Options group 2").opt2_1 == 21
->>> yadopt.get_group(args, "Options group 2").opt2_2 == 22
+>>> assert len(args_group) == 3
+>>> assert yadopt.get_group(args, "Options group 2").opt2_0 == 20
+>>> assert yadopt.get_group(args, "Options group 2").opt2_1 == 21
+>>> assert yadopt.get_group(args, "Options group 2").opt2_2 == 22
 """
 
 argv_03 = """
@@ -852,25 +1100,58 @@ sample.py arg_val_0 arg_val_1
 >>> assert args_group.arg1 == "arg_val_1"
 
 >>> args_group = yadopt.get_group(args, "Options group 0")
->>> len(args_group) == 3
->>> args_group.opt0_0 == 0
->>> args_group.opt0_1 == 1
->>> args_group.opt0_2 == 2
+>>> assert len(args_group) == 3
+>>> assert args_group.opt0_0 == 0
+>>> assert args_group.opt0_1 == 1
+>>> assert args_group.opt0_2 == 2
 
 >>> args_group = yadopt.get_group(args, "Options group 1")
->>> len(args_group) == 3
->>> args_group.opt1_0 == 10
->>> args_group.opt1_1 == 11
->>> args_group.opt1_2 == 12
+>>> assert len(args_group) == 3
+>>> assert args_group.opt1_0 == 10
+>>> assert args_group.opt1_1 == 11
+>>> assert args_group.opt1_2 == 12
 
 >>> args_group = yadopt.get_group(args, "Options group 2")
->>> len(args_group) == 3
->>> yadopt.get_group(args, "Options group 2").opt2_0 == 20
->>> yadopt.get_group(args, "Options group 2").opt2_1 == 21
->>> yadopt.get_group(args, "Options group 2").opt2_2 == 22
+>>> assert len(args_group) == 3
+>>> assert yadopt.get_group(args, "Options group 2").opt2_0 == 20
+>>> assert yadopt.get_group(args, "Options group 2").opt2_1 == 21
+>>> assert yadopt.get_group(args, "Options group 2").opt2_2 == 22
 """
 
 # }}}
+
+####################################################################################################
+# Testcase 7: Merge operator
+####################################################################################################
+
+[testcase07_01]
+# Merge operator uses right-hand operand on key conflicts. {{{
+
+docstr = """
+Options 1:
+    --epochs INT         Number of epochs.  [default: 100]
+    --model STR          Model name.        [default: mlp]
+
+Options 2:
+    --batch_size INT     Batch size.        [default: 32]
+    --weight_decay FLT   Weight decay.      [default: 1.0E-4]
+"""
+
+argv_01 = """
+sample.py
+>>> args_1 = yadopt.get_group(args, "Options 1")
+>>> args_2 = yadopt.get_group(args, "Options 2")
+>>> args_3 = args_1 | args_2
+>>> assert len(args_1) == 2
+>>> assert len(args_2) == 2
+>>> assert len(args_3) == 4
+>>> assert args_3.epochs == 100
+>>> assert args_3.model == "mlp"
+>>> assert args_3.batch_size == 32
+>>> assert abs(args_3.weight_decay - 1.0E-4) < 1.0E-8
+"""
+
+## }}}
 
 ####################################################################################################
 # Testcase 8: Save and load functions
@@ -904,6 +1185,7 @@ train.py a b c -b True --int 6 -f 3.1416 --str hello -p ./dir
 >>> assert abs(args.float - 3.1416) < 1.0E-5
 >>> assert args.str == "hello"
 >>> assert args.path == yadopt.Path("./dir")
+>>> assert args.none is None
 """
 
 argv_02 = """
@@ -917,6 +1199,12 @@ train.py a b c -b True --int 6 -f 3.1416 --str hello -p ./dir
 >>>     assert args_restore.arg[0] == "a"
 >>>     assert args_restore.arg[1] == "b"
 >>>     assert args_restore.arg[2] == "c"
+>>>     assert args_restore.bool == True
+>>>     assert args_restore.int == 6
+>>>     assert abs(args_restore.float - 3.1416) < 1.0E-5
+>>>     assert args_restore.str == "hello"
+>>>     assert args_restore.path == yadopt.Path("./dir")
+>>>     assert args_restore.none is None
 """
 
 argv_03 = """

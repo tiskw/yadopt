@@ -1,0 +1,6 @@
+# Example of broken TOML file.
+
+value_outside_section = "Invalid value"
+
+[_YADOPT_METADATA_]
+hostname = "localhost"

@@ -1,0 +1,6 @@
+# Example of broken TOML file.
+
+[section]
+
+item = [1, "2", 3]  # Error: Mixed types in array.
+
