@@ -137,7 +137,7 @@ def colorize_error_message(help_message: str) -> str:
         (str): Colorized string.
     """
     # Colorize section header.
-    help_message = re.sub(r"^(<[^>]+>)\s*$", f"{COLOR_SEC}\\1{COLOR_NON}", help_message, flags=re.MULTILINE)
+    help_message = re.sub(r"^(<[a-zA-Z ]+>)\s*$", f"{COLOR_SEC}\\1{COLOR_NON}", help_message, flags=re.MULTILINE)
 
     # Colorize string literal.
     help_message = re.sub(r"('[^\']*')", f"{COLOR_STR}\\1{COLOR_NON}", help_message)
