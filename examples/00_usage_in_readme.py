@@ -1,26 +1,23 @@
 """
-Usage:
-    train.py <config_path> [--epochs INT] [--model STR] [--lr FLT]
-    train.py --help
+Train a convolutional neural network model on an image classification dataset.
 
-Train a neural network model.
-
-Arguments:
-    config_path     Path to config file.
+Mandatory arguments:
+    output_dir_path           Path to output directory.
 
 Training options:
-    --epochs INT    The number of training epochs.   [default: 100]
-    --model STR     Neural network model name.       [default: mlp]
-    --lr FLT        Learning rate.                   [default: 1.0E-3]
-
-Other options:
-    -h, --help      Show this help message and exit.
+    --optimizer STR           Optimizer name.                     [default: sgdm]
+    --lr FLOAT                Learning rate.                      [default: 1.0E-3]
+    --epochs INT              The number of training epochs.      [default: 100]
 """
 
+# Import standard libraries.
+import sys
+
+# Import YadOpt.
 import yadopt
 
 if __name__ == "__main__":
-    argv = ["train.py", "config.toml", "--epochs", "10", "--model=cnn"]
+    argv = ["sample.py", "mlruns", "--optimizer", "adam", "--lr", "1.0E-3", "--epochs", "10"]
     args = yadopt.parse(__doc__, argv)
     print(args)
 

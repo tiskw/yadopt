@@ -7,75 +7,67 @@
   &nbsp;
   <img src="https://img.shields.io/badge/LICENSE-MIT-orange.svg?style=for-the-badge">
   &nbsp;
-  <img src="https://img.shields.io/badge/COVERAGE-99%25-green.svg?style=for-the-badge">
+  <img src="https://img.shields.io/badge/COVERAGE-97.1%25-green.svg?style=for-the-badge">
   &nbsp;
   <img src="https://img.shields.io/badge/QUALITY-10.0/10.0-yellow.svg?style=for-the-badge">
 </div>
 
 YadOpt - Yet another docopt
-====================================================================================================
+========================================================================================================================
 
-YadOpt is a Python re-implementation of [docopt](https://github.com/docopt/docopt) and
-[docopt-ng](https://github.com/jazzband/docopt-ng), a human-friendly command-line argument parser
-with type hinting and utility functions. YadOpt helps you creating beautiful command-line
-interfaces, just like docopt and docopt-ng. However, **YadOpt also supports (1) data type hinting,
-(2) conversion to dictionaries and named tuples, and (3) save and load functions**.
+YadOpt is a modernized [docopt](https://github.com/docopt) for Python with static typing, serialization,
+and reproducibility support. Define your CLI once as a human-readable help message. YadOpt does the rest.
 
-The following is the typical usage of YadOpt:
+
+Quick example
+------------------------------------------------------------------------------------------------------------------------
 
 ```python
 """
-Usage:
-    train.py <config_path> [--epochs INT] [--model STR] [--lr FLT]
-    train.py --help
+Train a convolutional neural network model on an image classification dataset.
 
-Train a neural network model.
-
-Arguments:
-    config_path     Path to config file.
+Mandatory arguments:
+    output_dir_path           Path to output directory.
 
 Training options:
-    --epochs INT    The number of training epochs.   [default: 100]
-    --model STR     Neural network model name.       [default: mlp]
-    --lr FLT        Learning rate.                   [default: 1.0E-3]
+    --optimizer STR           Optimizer name.                     [default: sgdm]
+    --lr FLOAT                Learning rate.                      [default: 1.0E-3]
+    --epochs INT              The number of training epochs.      [default: 100]
 
 Other options:
-    -h, --help      Show this help message and exit.
+    -h, --help                Show this help message and exit.
 """
 
 import yadopt
 
-if __name__ == "__main__":
-    args = yadopt.parse(__doc__)
-    print(args)
+# Parse as a custom class (yadopt.YadOptArgs) instance.
+args = yadopt.parse(__doc__)
+print(args)
+
+# You can save the parsed arguments to a file and restore them later.
+yadopt.save("args.toml", args)
 ```
 
-Please save the above code as `sample.py` and run it as follows:
+Save the above code as `sample.py` and run it as follows:
 
 ```console
-$ python3 sample.py config.toml --epochs 10 --model=cnn
-YadOptArgs(config_path=config.toml, epochs=10, model=cnn, lr=0.001, help=False)
+$ python3 sample.py mlruns --optimizer adam --lr 1.0E-3 --epochs 10
+YadOptArgs(output_dir_path=mlruns, optimizer=adam, lr=0.001, epochs=10, help=False)
 ```
 
-In the above code, the parsed command-line arguments are stored in the `args` variable, and you can
-access each argument using dot notation, like `arg.config_path`. Also, the parsed command-line
-arguments are typed, in other words, the `args` variable satisfies the following assertions:
+Unlike libraries such as [Click](https://github.com/pallets/click) and [Typer](https://github.com/fastapi/typer),
+where the CLI is defined in Python code, YadOpt treats a human-readable specification itself as the single source
+of truth.
 
-```python
-assert isinstance(args.config_path, pathlib.Path)
-assert isinstance(args.epochs, int)
-assert isinstance(args.model, str)
-assert isinstance(args.lr, float)
-assert isinstance(args.help, bool)
-```
-
-More realistic examples can be found in the [examples](./examples/README.md) directory.
+You can view the help message using the `-h` or `--help` option. YadOpt always treats the `--help` option as a special
+option to display the help message and exit, regardless of whether it is defined in the docstring. In the example above,
+the short option `-h` is bound to the `--help` option, so you can also view the help message with `-h`.
 
 
 Installation
-----------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------
 
-Please install from [pip](https://pip.pypa.io/en/stable/).
+You can install YadOpt via [pip](https://pip.pypa.io/en/stable/):
 
 ```console
 $ pip install yadopt
@@ -83,13 +75,13 @@ $ pip install yadopt
 
 
 Usage
-----------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------
 
 ### Use `parse` function
 
-The `yadopt.parse` function allows you to parse command-line arguments based on your docstring.
-The function is designed to parse `sys.argv` by default, but you can explicitly specify the argument
-vector by using the second argument of the function, just like as follows:
+The `yadopt.parse` function allows you to parse command-line arguments based on your docstring. By default, the function
+parses `sys.argv`, but you can explicitly specify the argument vector by using the second argument of the function,
+as shown below.
 
 ```python
 # Parse "sys.argv" (default behaviour).
@@ -101,8 +93,8 @@ args = yadopt.parse(__doc__, argv)
 
 ### Use `wrap` function
 
-YadOpt supports the decorator approach for command-line parsing by the decorator `@yadopt.wrap`
-which takes the same arguments as the function `yadopt.parse`.
+YadOpt also supports decorator-style command-line parsing through the `@yadopt.wrap` decorator.
+The decorator takes the same arguments as the function `yadopt.parse`.
 
 ```python
 @yadopt.wrap(__doc__)
@@ -113,30 +105,31 @@ if __name__ == "__main__":
     main(arg1=1, arg2="2")
 ```
 
-### How to type arguments and options
+### How to specify argument and option types
 
-YadOpt provides two ways to type arguments and options: (1) type name postfix and (2) description
-head declaration.
+YadOpt provides two ways to specify argument and option types:
+(1) type suffix and (2) type declaration in the description head.
 
-**(1) Type name postfix**: Users can type arguments and options by adding a type name at the end of
-the arguments/options name, such as the following:
-
-```
-Options:
-    --opt1 FLT    Option of float type.
-    --opt2 STR    Option of string type.
-```
-
-**(2) Description head declaration**: An alternative way to type arguments and options is
-to precede the description with the type name in parentheses.
+**(1) Type suffix**: Users can specify argument and option types by appending a type name to
+the argument or option name, as in the following examples:
 
 ```
 Options:
-    --opt1 VAL1    (float) Option of float type.
-    --opt2 VAL2    (str)   Option of string type.
+    --opt1 FLT    Option with floating-point type.
+    --opt2 STR    Option with string type.
 ```
 
-The following is the list of available type names.
+**(2) Type declaration in the description head**: An alternative way to specify argument and option types
+is to precede the description with the type name in parentheses.
+
+```
+Options:
+    --opt1 VAL1    (float) Option with floating-point type.
+    --opt2 VAL2    (str)   Option with string type.
+```
+
+YadOpt currently supports the following types. Note that the type names are case-insensitive,
+and data types other than those listed below, such as list and enumeration, are not supported.
 
 | Data type in Python | Type name in YadOpt          |
 |---------------------|------------------------------|
@@ -149,60 +142,87 @@ The following is the list of available type names.
 
 ### Dictionary and named tuple support
 
-The returned value of `yadopt.parse` is an instance of `YadOptArgs`, a regular mutable Python class.
-However, sometimes a dictionary with the `get` accessor, or an immutable named tuple, may
-be preferable. In such cases, please try `yadopt.to_dict` or `yadopt.to_namedtuple` function.
+The return value of `yadopt.parse` is an instance of `YadOptArgs`, a regular mutable Python class.
+However, sometimes a dictionary with the `get` accessor, or an immutable named tuple, may be preferable.
+In such cases, you can use `yadopt.to_dict` or `yadopt.to_namedtuple` function.
 
 ```python
-# Convert the returned value to dictionary.
+# Convert the return value to dictionary.
 args = yadopt.to_dict(yadopt.parse(__doc__))
 
-# Convert the returned value to namedtuple.
+# Convert the return value to namedtuple.
 args = yadopt.to_namedtuple(yadopt.parse(__doc__))
 ```
 
 ### Restore arguments from a file
 
-YadOpt has the ability to save parsed argument instances to a file and restore them from the file.
-These features are useful, for example, in machine learning code, when you want to call exactly
-the same arguments again after a previous execution. Supported file formats include TOML and JSON.
+YadOpt has the ability to save parsed argument instances to a file and load them back later. These features are
+useful, for example, in machine learning code, when you want to reuse exactly the same arguments after a previous
+execution. Supported file formats include TOML and JSON.
 
 ```python
-# At first, create a parsed arguments (i.e. YadOptArgs instance).
+# First, parse the command line arguments and create an instance of YadOptArgs.
 args = yadopt.parse(__doc__)
 
 # Save the parsed arguments as a TOML file.
 yadopt.save("args.toml", args)
 
-# Resotre parsed YadOptArgs instance from the TOML file.
+# Restore parsed YadOptArgs instance from the TOML file.
 args_restored = yadopt.load("args.toml")
 ```
 
-The format of the TOML and JSON file is pretty straightforward &mdash; what the user types
-on the command line is stored in the `"argv"` key, and the docstring is stored in the `"docstr"`
-key in the TOML/JSON file. If users want to write the TOML/JSON file manually, the author recommends
-making a TOML/JSON file using the `yadopt.save` function at first and investigating the contents
-of the file.
+The structure of the TOML and JSON files is simple &mdash; the command-line input is stored in the `"argv"` key,
+and the docstring is stored in the `"docstr"` key in the TOML/JSON file. If users want to write the TOML/JSON file
+manually, the author recommends generating a TOML/JSON file using the `yadopt.save` function first and investigating
+the contents of the file.
+
+
+Motivation
+------------------------------------------------------------------------------------------------------------------------
+
+Why is command-line argument parsing for CLI programs still so unnecessarily cumbersome? In machine learning workflows,
+engineers frequently write short-lived scripts with many command-line parameters:
+
+```sh
+python3 train.py --model resnet50 --optimizer adam --lr 1.0E-4 --epochs 300 ...
+```
+
+Despite their simplicity, many command-line parsers, including third-party solutions such as
+[Click](https://github.com/pallets/click) and [Typer](https://github.com/fastapi/typer),
+still require developers to describe the same information repeatedly across parser definitions, help messages,
+configuration files, and type declarations. While [docopt](https://github.com/docopt) addressed part of this problem
+by treating the help message as the CLI definition. However, it does not provide native support for modern Python
+features such as type hints, configuration management, and reproducibility. YadOpt extends this idea: define your CLI
+once as a human-readable specification, and it becomes a parser, a typed interface, and a reproducible configuration
+source all in one place.
+
+Ultimately, YadOpt aims to make command-line argument parsing simple enough that, if someone sitting next to you
+is struggling with it, you can simply say:
+
+<p align="center"><i>
+    Try writing something that looks like a normal help message and feed it into YadOpt
+    &mdash; it just works!
+</i></p>
 
 
 API reference
-----------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------
 
 See [API reference page](https://tiskw.github.io/yadopt/index.html#sec4) of the online document.
 
 
 Tips
-----------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------
 
 ### Merge two YadOptArgs objects
 
-The `YadOptArgs` class, which is the return value of the `yadopt.parse` function, supports the merge
-operator `|`, similar to Python's dictionary type. This operator combines the two given YadOptArgs
-objects into a new one. In case of a key conflict, the values from the left-hand operand are used.
+The `YadOptArgs` class, which is the return value of the `yadopt.parse` function, supports the merge operator `|`,
+similar to Python dictionaries. This operator combines the two given YadOptArgs objects into a new one. In case
+of a key conflict, the values from the right-hand operand are used.
 
-This merge operator is particularly useful for implementing a feature to read an existing
-configuration file (for example, a file specified with the `--config` argument) and then overwrite
-those settings with values explicitly provided in the command line arguments. For example:
+This merge operator is particularly useful for implementing a feature to read an existing configuration file
+(for example, a file specified with the `--config` argument) and then overwrite those settings with values explicitly
+provided in the command line arguments. For example:
 
 ```python
 """
@@ -239,84 +259,37 @@ if __name__ == "__main__":
     print(args_updated)
 ```
 
-### More complex validations for the input command-line arguments
+### Notes on explicit `argv` values
 
-If you want more complex validations for the command-line arguments, the author recommends using
-[Pydantic](https://docs.pydantic.dev/latest/) for the dictionary form of the parsed object generated
-by YadOpt. Let me explain it using the sample code at the beginning of this README. Suppose you
-want to constrain the command line argument "lr" such that "0 <= lr <= 1.0". The following code
-will achieve that:
+When `argv` is explicitly supplied to `yadopt.parse`, the canonical form is the same as `sys.argv`,
+i.e. the first element is the program name. For option-only CLIs, YadOpt also accepts the shortened
+form without the program name.
 
-```python
-"""
-Usage:
-    train.py <config_path> [--epochs INT] [--model STR] [--lr FLT]
-    train.py --help
+### Multiple positional arguments
 
-Train a neural network model.
-
-Arguments:
-    config_path     Path to config file.
-
-Training options:
-    --epochs INT    The number of training epochs.   [default: 100]
-    --model STR     Neural network model name.       [default: mlp]
-    --lr FLT        Learning rate.                   [default: 1.0E-3]
-
-Other options:
-    -h, --help      Show this help message and exit.
-"""
-
-import pathlib
-import pydantic
-import yadopt
-
-class CommandlineArgumentsModel(pydantic.BaseModel):
-    """
-    Pydantic model for validation.
-    """
-    config_path: pathlib.Path
-    epochs: int
-    model: str
-    lr: float = pydantic.Field(ge=0.0, le=1.0)
-
-if __name__ == "__main__":
-
-    # Parse command-line arguments using YadOpt.
-    args = yadopt.parse(__doc__)
-
-    # Validate using the Pydantic model.
-    valid_args = CommandlineArgumentsModel(**yadopt.to_dict(args))
-    print(valid_args)
-```
-
-(It might be a good idea to add features to YadOpt that make it easier for users to implement
-the above code. However, the author hasn't implemented it yet because he wants to keep
-the dependency of YadOpt small.)
+A positional argument declared with `...` must be the last positional argument.
 
 ### Comparison with other similar libraries
 
-| Functions / Features    | argparse                            | click                       | docopt                                     | Typer                      | YadOpt (this repository)                          |
-|-------------------------|-------------------------------------|-----------------------------|--------------------------------------------|----------------------------|---------------------------------------------------|
-| Basic style             | Object-Oriented                     | Decorators                  | Docstring                                  | Type hints and decorators  | Docstring                                         |
-| Standard library        | Yes                                 | No (pip)                    | No (pip)                                   | No (pip)                   | No (pip)                                          |
-| Data type specification | Yes                                 | Yes                         | No                                         | Yes                        | Yes                                               |
-| Config file integration | No                                  | No                          | No                                         | No                         | Yes                                               |
-| Subcommands             | Yes (but verbose)                   | Yes                         | Yes                                        | Yes                        | Yes                                               |
-| User experience         | Standard, sometimes verbose         | Good, intuitive and modern  | Innovative, but type conversion is tedious | Good, intuitive and modern | Unique, integrates docs, types, and configuration |
+| Functions / Features    | argparse                            | click                   | docopt                                      | Typer                      | YadOpt (this repository)                          |
+|-------------------------|-------------------------------------|-------------------------|---------------------------------------------|----------------------------|---------------------------------------------------|
+| Basic style             | Object-Oriented                     | Decorators              | Docstring                                   | Type hints and decorators  | Docstring                                         |
+| Standard library        | Yes                                 | No (pip)                | No (pip)                                    | No (pip)                   | No (pip)                                          |
+| Data type specification | Yes                                 | Yes                     | No                                          | Yes                        | Yes                                               |
+| Config file integration | Not native                          | Not native              | Not native                                  | Not native                 | Yes                                               |
+| User experience         | Standard, sometimes verbose         | Widely used, modern API | Innovative, requires manual type conversion | Widely used, modern API    | Unique, integrates docs, types, and configuration |
 
 Please note that qualitative metrics (e.g., user experience) are based on the author's subjective evaluation.
 
 
 Developer's note
-----------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------
 
 ### Preparation
 
-Additional commands and Python packages are required for developers to measure the number of lines
-in the code, code quality, etc. Please run the following command (the author recommends using
-[venv](https://docs.python.org/3/library/venv.html) to avoid polluting your development
-environment).
+Additional commands and Python packages are required for developers to measure the number of lines in the code,
+code quality, etc. Please run the following command (the author recommends using
+[venv](https://docs.python.org/3/library/venv.html) to avoid polluting your development environment).
 
 ```console
 $ apt install cloc docker.io
@@ -325,8 +298,8 @@ $ pip install -r requirements-dev.txt
 
 ### Utility commands for developers
 
-Utility commands are summarized in the Makefile. Please run `make` at the root directory of this
-repository to see the details of the subcommands in the Makefile.
+The Makefile provides several utility commands. Please run `make` at the root directory of this repository to see
+the details of the subcommands in the Makefile.
 
 ```console
 $ make

@@ -1,21 +1,27 @@
 """
-Custom error classes.
+yadopt.errors - Custom error classes for YadOpt.
 """
 
-# Declare published functins and variables.
+# Declare published functions and variables.
 __all__ = ["YadOptError"]
 
 # Import standard libraries.
+import difflib
 import os
 import textwrap
+import traceback
 
 # For type hinting.
 from typing import Any
 
 # Import custom modules.
-from .color import colorize_error_message
-from .utils import get_error_marker
+from .color  import colorize_error_message
+from .dtypes import Path, Span
 
+
+#===================================================================================================
+# Base error class
+#===================================================================================================
 
 class YadOptErrorBase(Exception):
     """
@@ -26,17 +32,33 @@ class YadOptErrorBase(Exception):
     <https://github.com/tiskw/yadopt/issues>
     """.rstrip())
 
-    def __init__(self, *pargs: Any):
+    def __init__(self, *pargs: Any, **kwargs: Any):
         """
         Constructor.
         """
-        self.pargs = pargs
+        self.pargs : Any = pargs
+        self.kwargs: Any = kwargs
 
     def __str__(self) -> str:
         """
         Returns string expression of this error.
         """
-        return colorize_error_message(self.stringify(*self.pargs))
+        # Get the summary of the error from the traceback.
+        summary: traceback.FrameSummary = self.get_user_frame()
+
+        # Get the location of the error.
+        location = {
+            "filename" : os.path.basename(summary.filename),
+            "lineno"   : summary.lineno,
+            "funcname" : summary.name,
+            "line_text": summary.line,
+        }
+
+        # Append the location information.
+        location["loc_info"] = 'File "{filename}", L. {lineno}, in {funcname}'.format(**location)
+
+        # Returns colorized error message.
+        return colorize_error_message(self.stringify(*self.pargs, **self.kwargs, **location))
 
     def stringify(self, *pargs: Any, **kwargs: Any) -> str:
         """
@@ -46,283 +68,513 @@ class YadOptErrorBase(Exception):
         docstr: str = textwrap.dedent(self.__doc__) if (self.__doc__ is not None) else ""
 
         # Returns a string expression of the error class.
-        return "\n" + docstr.format(*pargs, **kwargs).strip() + "\n" + self.EPILOGUE
+        return "\n" + "-" * 80 + "\n" + docstr.format(*pargs, **kwargs).strip() + "\n" + self.EPILOGUE
 
-
-class YadOptErrorUsageParse(YadOptErrorBase):
-    """
-    --------------------------------------------------------------------------------
-    <Error summary>
-      YadOpt failed to parse a token in the usage section.
-
-    <Location>
-      The following line in the usage setion.
-
-        {0}
-        {1}
-
-    <Details>
-      Each token in the usage section have to follow the specific format.
-      For example, all argument tokens should be enclosed by angle bracket,
-      all option tokens should be enclosed by bracket, and so on.
-      Please see the YadOpt documentation for more details.
-
-    <Solution>
-      This is unknown token error therefore no concrete solution can be suggest,
-      sorry. Please see the YadOpt documentation and modigy your usage pattern
-      in the usage section.
-    """
-    def __str__(self) -> str:
+    def get_user_frame(self) -> traceback.FrameSummary:
         """
-        Returns string expression of this error.
+        Get the frame summary of the user code where this error is raised.
+
+        Returns:
+            (traceback.FrameSummary | None): The frame summary of the user code if found, or None otherwise.
         """
-        line = self.pargs[0].strip()
-        mark = "^" * len(line)
-        return self.stringify(line, mark)
+        list_tbs: list[traceback.FrameSummary] = traceback.extract_tb(self.__traceback__)
+        for frame in reversed(list_tbs):
+            if Path(frame.filename).parent != Path(__file__).parent:
+                return frame
+        return list_tbs[-1]
 
 
-class YadOptErrorInvalidConstant(YadOptErrorBase):
-    """
-    --------------------------------------------------------------------------------
-    <Error summary>
-      A constant token appears after an argument or option token.
-      This usage pattern is now allowed in YadOpt, sorry.
-
-    <Location>
-      The following line in the usage setion.
-
-        {1}
-        {2}
-
-    <Details>
-      Constant tokens are only allowed at the beginning of a usage.
-      For example,
-
-        sample.py subcmd <arg1> bad_constant_token
-                                ^^^^^^^^^^^^^^^^^^
-
-      the above "bad_constant_token" cause the error because it appears after
-      the argument <arg1>. The same error occurs if a constant token follows
-      an option token, for example,
-
-        sample.py subcmd [--opt1 val1] bad_constant_token
-                                       ^^^^^^^^^^^^^^^^^^
-
-    <Solution>
-      Please remove the constant token from the usage pattern. In some cases,
-      you may need to reconsider the usage of your command. If you intended
-      the argument, not constant token, please enclose the token in angle brackets
-      because all arguments should be enclosed by brackets in the usage section.
-    """
-    def __str__(self) -> str:
-        """
-        Returns string expression of this error.
-        """
-        token  = self.pargs[0]
-        line   = self.pargs[1].strip()
-        marker = get_error_marker(line, token)
-        return self.stringify(token, line, marker)
-
-
-class YadOptErrorInvalidTypeFunc(YadOptErrorBase):
-    """
-    --------------------------------------------------------------------------------
-    <Error summary>
-      Invalid type function.
-
-    <Location>
-      Argument "type_func" in "yadopt.parse" or "yadopt.wrap" function.
-
-    <Details>
-      The type function should be a callable object or None, but the spacified
-      object "{0}" does not satisfy either of them.
-
-    <Solution>
-      Modify the value of the "type_func" argument.
-    """
-
-
-class YadOptErrorInvalidTypeName(YadOptErrorBase):
-    """
-    --------------------------------------------------------------------------------
-    <Error summary>
-      Invalid type name '{0}'.
-
-    <Location>
-      Argument "type_func" in "yadopt.parse" or "yadopt.wrap" function.
-
-    <Details>
-      Type name '{0}' is invalid. Acceptable type names are "int", "integer",
-      "flt", "float", or "str", "string", "path", or their uppercases.
-
-    <Solution>
-      Modify the type name, or give your custom typing function to "type_fn"
-      argument of "yadopt.parse" or "yadopt.wrap" function.
-    """
-
-
-class YadOptErrorInvalidIOFileFormat(YadOptErrorBase):
-    """
-    --------------------------------------------------------------------------------
-    <Error summary>
-      Invalid I/O file format
-
-    <Location>
-      Argument of {0}: {1}
-
-    <Details>
-      The "yadopt.save" and "yadopt.load" functions does not support "{2}" format.
-
-    <Solution>
-      Please specify the supported file format, for example, ".toml" or ".json".
-    """
-
-
-class YadOptErrorUnknownArgument(YadOptErrorBase):
-    """
-    --------------------------------------------------------------------------------
-    <Error summary>
-      Unknown argument is found in the usage.
-
-    <Details>
-      The argument "{0}" in the usage does exist in arguments definition.
-      {1}
-    """
-
-
-class YadOptErrorUnknownOptionUsage(YadOptErrorBase):
-    """
-    --------------------------------------------------------------------------------
-    <Error summary>
-      Unknown option is found in the usage.
-
-    <Details>
-      The option '{0}' in the usage does not exist in the option definition.
-      {1}
-    """
-
-
-class YadOptErrorUnknownOptionArgv(YadOptErrorBase):
-    """
-    --------------------------------------------------------------------------------
-    <Error summary>
-      Unknown option detected in the argument vector.
-
-    <Details>
-      Unknown option '{0}' detected in the argument vector.
-      {1}
-    """
-
-
-class YadOptErrorValidUsageNotFound(YadOptErrorBase):
-    """
-    --------------------------------------------------------------------------------
-    <Error summary>
-      Valid usage not found
-
-    <Location>
-      {1}
-        {2}
-        {3}
-
-    <Details>
-      The user input does not match any of the command usage.
-
-    <Solution>
-      Please check the user input and the command usage.
-
-    {0}
-    """
-    def __str__(self) -> str:
-        """
-        Returns string expression of this error.
-        """
-        line_num = self.pargs[1].lineno
-        funcname = self.pargs[1].function
-        filename = os.path.basename(self.pargs[1].filename)
-        err_pos  = f"{filename} : {funcname} : L.{line_num}"
-        err_code = self.pargs[1].code_context[0].strip()
-        err_mark = "^" * len(err_code)
-        return self.stringify(self.pargs[0], err_pos, err_code, err_mark)
-
-
-class YadOptErrorNoOptionValueFound(YadOptErrorBase):
-    """
-    --------------------------------------------------------------------------------
-    <Error summary>
-      No value was given for an option that requires a value.
-
-    <Details>
-      The option '{0}' requires a value, but not given.
-
-    <Solution>
-      Please give a value to the option '{0}'.
-    """
-
+#===================================================================================================
+# Runtime errors
+#===================================================================================================
 
 class YadOptErrorCannotLoadTomllib(YadOptErrorBase):
     """
-    --------------------------------------------------------------------------------
     <Error summary>
-      Failed to load a library for parsing TOML file.
+        {loc_info}
+        Failed to load TOML library.
 
     <Details>
-      YadOpt uses "tomllib", a standard library of Python, if Python >= 3.11, and
-      uses "tomli" otherwise. The "tomli" library is specified as a dependency of
-      YadOpt when Python <= 3.10 and will be installed automatically when users
-      install YadOpt on Python<= 3.10. However, this mechanism doesn't seem to work
-      well for some reason.
+        YadOpt uses "tomllib", a standard library of Python, if Python >= 3.11, and
+        uses "tomli" otherwise. The "tomli" library is specified as a dependency of
+        YadOpt when Python <= 3.10 and will be installed automatically when users
+        install YadOpt on Python<= 3.10. However, this mechanism doesn't seem to
+        work well for some reason.
 
     <Solution>
-      Please check the tomli library if importable if Python <= 3.10,
-      and the tomllib otherwise.
+        Please check the "tomli" library if importable if Python <= 3.10,
+        and the "tomllib" otherwise.
     """
 
-
-class YadOptErrorCannotMergeDtype(YadOptErrorBase):
+class YadOptErrorCannotMerge(YadOptErrorBase):
     """
-    --------------------------------------------------------------------------------
     <Error summary>
-      Invalid data merge with unexpected datatype.
+        {loc_info}
+        Invalid data merge with unexpected data type.
 
     <Details>
-      Only YadOptArgs objects are supported as operands for the merge operator '|'.
+        The merge operation '|' is supported only by YadOptArgs. However, an attempt
+        was made to perform a merge on an unexpected type "{cls_name}".
+
+    <Solution>
+        Consider converting the instance of type "{cls_name}" to type YadOptArgs,
+        or converting both to dictionaries and then merging them.
     """
 
+class YadOptErrorDuplicatedName(YadOptErrorBase):
+    """
+    <Error summary>
+        {loc_info}
+        Duplicated name found in the declaration lines.
+
+    <Details>
+        The name "{name}" is duplicated in the argument declaration.
+
+    <Solution>
+        Please check the argument declaration for duplicated names.
+    """
+
+class YadOptErrorInvalidBoolValue(YadOptErrorBase):
+    """
+    <Error summary>
+        {loc_info}
+        Invalid boolean value.
+
+    <Details>
+        The value "{value}" is not a valid boolean value. Acceptable boolean values are:
+        "true", "false", "yes", "no", "on", "off", "1", "0", or their uppercases.
+
+    <Solution>
+        Please specify a valid boolean value.
+    """
+
+class YadOptErrorInvalidFileFormat(YadOptErrorBase):
+    """
+    <Error summary>
+        {loc_info}
+        Invalid file format.
+
+    <Details>
+        The "yadopt.save" and "yadopt.load" functions does not support "{suffix}" format.
+
+    <Solution>
+        Please specify the supported file format, for example, ".toml" or ".json".
+    """
+
+class YadOptErrorInvalidHelpOption(YadOptErrorBase):
+    """
+    <Error summary>
+        {loc_info}
+        Invalid help option.
+
+    <Details>
+        The "--help" option is a reserved option for displaying a help message
+        and does not take a value. It cannot be used as a regular option.
+
+    <Solution>
+        Please modify the "--help" option to display a help message without taking
+        a value, or simply do not explicitly declare the "--help" option.
+    """
+
+class YadOptErrorInvalidTomlFile(YadOptErrorBase):
+    """
+    <Error summary>
+        {loc_info}
+        Invalid TOML file.
+
+    <Details>
+        The given TOML file is invalid: {reason}
+
+    <Solution>
+        Please check the TOML file for errors.
+    """
+
+class YadOptErrorInvalidTypeName(YadOptErrorBase):
+    """
+    <Error summary>
+        {loc_info}
+        Invalid type name '{type_name}'.
+
+    <Details>
+        Type name '{type_name}' is invalid. Acceptable type names are: "int",
+        "integer", "flt", "float", "str", "string", "path", or their uppercases.
+
+    <Solution>
+      Modify the type name.
+    """
 
 class YadOptErrorInternal(YadOptErrorBase):
     """
-    --------------------------------------------------------------------------------
     <Error summary>
-      Internal error.
+        {loc_info}: Internal error.
 
     <Location>
-      See the traceback above.
+        See the traceback above.
 
     <Details>
-      This error means that something happened that the author didn't anticipate
-      during the execution of the YadOpt code, NOT that the user is using
-      the library incorrectly.
+        This error means that something happened that the author didn't anticipate
+        during the execution of the YadOpt code, NOT that the user is using
+        the library incorrectly.
+    """
+
+class YadOptErrorMissingArgument(YadOptErrorBase):
+    """
+    <Error summary>
+        {loc_info}: The necessary arguments are missing.
+
+    <Details>
+        The following positional arguments are missing: {missing_args}
+
+    <Solution>
+        Please give the above positional arguments in the user input.
+    """
+
+class YadOptErrorNoOptionValue(YadOptErrorBase):
+    """
+    <Error summary>
+        {loc_info}: No value was given for an option that requires a value.
+
+    <Details>
+        The option '{opt_name}' requires a value, but not given.
+
+    <Solution>
+        Please give a value to the option '{opt_name}'.
+    """
+
+class YadOptErrorTooManyArgument(YadOptErrorBase):
+    """
+    <Error summary>
+        {loc_info}: Too many arguments were given.
+
+    <Details>
+        Unrecognized extra positional arguments were given: {extra_args}
+
+    <Solution>
+        Please remove the above extra positional arguments from the user input.
+    """
+
+class YadOptErrorUnknownOption(YadOptErrorBase):
+    """
+    <Error summary>
+        {loc_info}: Unknown option detected in the argument vector.
+
+    <Details>
+        Unknown option "{opt_name}" detected in the user input.
+
+    <Solution>
+        Please check the option name "{opt_name}" for typos.
+        {candidate}
     """
 
 
-class YadOptError(YadOptErrorBase):
+#===================================================================================================
+# Errors on analysis phase
+#===================================================================================================
+
+class YadOptErrorExtraArgsInPosArgDecl(YadOptErrorBase):
+    """
+    <Error summary>
+        {loc_info}: Extra token is found in positional argument declaration.
+
+    <Details>
+        {target}
+        {marker}
+
+    <Hint>
+        Remove extra tokens from the positional argument name declaration.
+        Note that a description starts from a two or more spaces.
+    """
+
+class YadOptErrorNoArgNameInPosArgDecl(YadOptErrorBase):
+    """
+    <Error summary>
+        {loc_info}: No argument name is found in positional argument declaration.
+
+    <Details>
+        {target}
+        {marker}
+
+    <Solution>
+        Please specify an argument name in the positional argument declaration.
+    """
+
+class YadOptErrorInvalidArgNameInPosArgDecl(YadOptErrorBase):
+    """
+    <Error summary>
+        {loc_info}
+        Invalid argument name in positional argument declaration.
+
+    <Details>
+        {target}
+        {marker}
+
+    <Solution>
+        Please modify the argument name "{arg_name}" to a valid identifier.
+        Note that digit-starting names are not allowed as positional argument names.
+    """
+
+class YadOptErrorMultiEllipsisInPosArgDecl(YadOptErrorBase):
+    """
+    <Error summary>
+        {loc_info}: Multiple ellipses are found in positional argument declaration.
+
+    <Details>
+        {target}
+        {marker}
+
+    <Solution>
+        Please specify at most one ellipsis in the positional argument declaration.
+    """
+
+class YadOptErrorInvalidEllipsisInPosArgDecl(YadOptErrorBase):
+    """
+    <Error summary>
+        {loc_info}: Invalid ellipsis in positional argument declaration.
+
+    <Details>
+        {target}
+        {marker}
+
+    <Solution>
+        Please specify the ellipsis "..." at the end of the positional argument declaration.
+    """
+
+class YadOptErrorUnexpectedTokenInPosArgDecl(YadOptErrorBase):
+    """
+    <Error summary>
+        {loc_info}: Unexpected token is found in positional argument declaration.
+
+    <Details>
+        {target}
+        {marker}
+
+    <Solution>
+        Please remove the unexpected token "{token}" from the positional argument declaration.
+    """
+
+class YadOptErrorUnknownErrorInPosArgDecl(YadOptErrorBase):
+    """
+    <Error summary>
+        {loc_info}
+        Unknown error is found in positional argument declaration.
+
+    <Details>
+        {target}
+        {marker}
+
+    <Solution>
+        Please check the positional argument declaration for errors.
+    """
+
+class YadOptErrorNoOptNameInOptArgDecl(YadOptErrorBase):
+    """
+    <Error summary>
+        {loc_info}
+        No option name is found in optional argument declaration.
+
+    <Details>
+        {target}
+        {marker}
+
+    <Solution>
+        Please specify an option name in the optional argument declaration.
+    """
+
+class YadOptErrorInvalidCommaPosInOptArgDecl(YadOptErrorBase):
+    """
+    <Error summary>
+        {loc_info}
+        Invalid comma position is found in optional argument declaration.
+
+    <Details>
+        {target}
+        {marker}
+
+    <Solution>
+        Please check the comma position in the optional argument declaration.
+    """
+
+class YadOptErrorInvalidCommaUsageInOptArgDecl(YadOptErrorBase):
+    """
+    <Error summary>
+        {loc_info}
+        Invalid comma usage is found in optional argument declaration.
+
+    <Details>
+        {target}
+        {marker}
+
+    <Solution>
+        Please check the comma usage in the optional argument declaration.
+    """
+
+class YadOptErrorUnexpectedTokenInOptArgDecl(YadOptErrorBase):
+    """
+    <Error summary>
+        {loc_info}
+        Unexpected token is found in optional argument declaration.
+
+    <Details>
+        {target}
+        {marker}
+
+    <Solution>
+        Please remove the unexpected token "{token}" from the optional argument declaration.
+    """
+
+class YadOptErrorInvalidEqualUsageInOptArgDecl(YadOptErrorBase):
+    """
+    <Error summary>
+        {loc_info}
+        Invalid equal sign usage is found in optional argument declaration.
+
+    <Details>
+        {target}
+        {marker}
+
+    <Solution>
+        Please check the equal sign usage in the optional argument declaration.
+    """
+
+class YadOptErrorUnknownErrorInOptArgDecl(YadOptErrorBase):
+    """
+    <Error summary>
+        {loc_info}
+        Unknown error is found in optional argument declaration.
+
+    <Details>
+        {target}
+        {marker}
+
+    <Solution>
+        Please check the optional argument declaration for errors.
+    """
+
+
+#===================================================================================================
+# Errors on check
+#===================================================================================================
+
+class YadOptErrorPosArgAfterMult(YadOptErrorBase):
+    """
+    <Error summary>
+        {loc_info}
+        Positional argument is declared after a multiple positional argument.
+
+    <Solution>
+        The positional argunment "{name}" is not achievable because it is
+        declared after a multiple positional argument. Please declare the positional
+        argument before the multiple positional argument.
+    """
+
+
+#===================================================================================================
+# Wrapper class
+#===================================================================================================
+
+class YadOptError:
     """
     General Error class for YadOpt.
     """
-    usage_parse            = YadOptErrorUsageParse
-    invalid_constant       = YadOptErrorInvalidConstant
-    invalid_type_func      = YadOptErrorInvalidTypeFunc
-    invalid_type_name      = YadOptErrorInvalidTypeName
-    invalid_io_file_format = YadOptErrorInvalidIOFileFormat
-    unknown_argument       = YadOptErrorUnknownArgument
-    unknown_option_usage   = YadOptErrorUnknownOptionUsage
-    unknown_option_argv    = YadOptErrorUnknownOptionArgv
-    valid_usage_not_found  = YadOptErrorValidUsageNotFound
-    no_option_value_found  = YadOptErrorNoOptionValueFound
-    cannot_load_tomllib    = YadOptErrorCannotLoadTomllib
-    cannot_merge_dtype     = YadOptErrorCannotMergeDtype
-    internal_error         = YadOptErrorInternal
+    # Runtime errors.
+    CannotLoadTomllib = YadOptErrorCannotLoadTomllib
+    CannotMerge       = YadOptErrorCannotMerge
+    InvalidBoolValue  = YadOptErrorInvalidBoolValue
+    InvalidFileFormat = YadOptErrorInvalidFileFormat
+    InvalidHelpOption = YadOptErrorInvalidHelpOption
+    InvalidTomlFile   = YadOptErrorInvalidTomlFile
+    InvalidTypeName   = YadOptErrorInvalidTypeName
+    InternalError     = YadOptErrorInternal
+    MissingArgument   = YadOptErrorMissingArgument
+    NoOptionValue     = YadOptErrorNoOptionValue
+    TooManyArgument   = YadOptErrorTooManyArgument
+    UnknownOption     = YadOptErrorUnknownOption
+
+    # Errors on analysis phase (positional argument declaration).
+    ExtraArgsInPosArgDecl       = YadOptErrorExtraArgsInPosArgDecl
+    NoArgNameInPosArgDecl       = YadOptErrorNoArgNameInPosArgDecl
+    InvalidArgNameInPosArgDecl  = YadOptErrorInvalidArgNameInPosArgDecl
+    MultiEllipsisInPosArgDecl   = YadOptErrorMultiEllipsisInPosArgDecl
+    InvalidEllipsisInPosArgDecl = YadOptErrorInvalidEllipsisInPosArgDecl
+    UnexpectedTokenInPosArgDecl = YadOptErrorUnexpectedTokenInPosArgDecl
+    UnknownErrorInPosArgDecl    = YadOptErrorUnknownErrorInPosArgDecl
+
+    # Errors on analysis phase (optional argument declaration).
+    NoOptNameInOptArgDecl         = YadOptErrorNoOptNameInOptArgDecl
+    InvalidCommaPosInOptArgDecl   = YadOptErrorInvalidCommaPosInOptArgDecl
+    InvalidCommaUsageInOptArgDecl = YadOptErrorInvalidCommaUsageInOptArgDecl
+    InvalidEqualUsageInOptArgDecl = YadOptErrorInvalidEqualUsageInOptArgDecl
+    UnexpectedTokenInOptArgDecl   = YadOptErrorUnexpectedTokenInOptArgDecl
+    UnknownErrorInOptArgDecl      = YadOptErrorUnknownErrorInOptArgDecl
+
+    # Errors on check.
+    DuplicatedName  = YadOptErrorDuplicatedName
+    PosArgAfterMult = YadOptErrorPosArgAfterMult
+
+#===================================================================================================
+# Private classes and functions
+#===================================================================================================
+
+def get_candidate_message(target: str, texts: list[str]) -> str:
+    """
+    Get the candidate message for the target string from the given string list.
+
+    Args:
+        target (str)      : [IN] Target string.
+        texts  (list[str]): [IN] Candidate strings.
+
+    Returns:
+        (str): Candidate message if the candidate string is found, or empty string otherwise.
+
+    Examples:
+        >>> get_candidate_message("hlep", [])
+        ''
+        >>> get_candidate_message("verion", ["help", "version", "verbose"])
+        'Do you mean "version"?'
+        >>> get_candidate_message("verbse", ["help", "version", "verbose"])
+        'Do you mean "verbose"?'
+        >>> get_candidate_message("hlep", ["help", "version", "verbose"])
+        'Do you mean "help"?'
+    """
+    if not texts:
+        return ""
+
+    return 'Do you mean "' + difflib.get_close_matches(target, texts, n=1, cutoff=0.0)[0] + '"?'
+
+
+def get_target_and_marker(text: str, span: Span) -> dict[str, str]:
+    """
+    Get the target line and the marker to highlight it.
+
+    Args:
+        text (str) : [IN] Original text.
+        span (Span): [IN] Span of the target position.
+
+    Examples:
+        >>> get_target_and_marker("this is a pen", (5, 7))
+        {'target': 'L.1: this is a pen', 'marker': '          ^^      '}
+        >>> get_target_and_marker("Arguments:\\n    arg  description\\n    -l   description", (15, 18))
+        {'target': 'L.2:     arg  description', 'marker': '         ^^^             '}
+    """
+    # Get the position of the beginning and the end of the line that contains the target span.
+    pos_line_bgn: int = text.rfind("\n", 0, span[0])
+    pos_line_end: int = text.find("\n", span[1])
+
+    # Adjust the positions to be within the text.
+    pos_line_bgn = pos_line_bgn + 1 if (pos_line_bgn >= 0) else 0
+    pos_line_end = pos_line_end     if (pos_line_end >= 0) else len(text)
+
+    # Get the target line.
+    target: str = text[pos_line_bgn:pos_line_end]
+
+    # Get the marker to highlight the target span.
+    marker: str = " " * (span[0] - pos_line_bgn) + "^" * (span[1] - span[0]) + " " * (pos_line_end - span[1])
+
+    # Get the line number of the target line.
+    lineno: int = 1 + text[:span[0]].count("\n")
+    header: str = "L." + str(lineno) + ": "
+
+    return {"target": header + target, "marker": " " * len(header) + marker}
 
 
 # vim: expandtab tabstop=4 shiftwidth=4 fdm=marker

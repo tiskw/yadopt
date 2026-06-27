@@ -3,10 +3,10 @@ yadopt.__init__ - initialize yadopt module
 """
 
 # Import functions.
-from .dtypes  import YadOptArgs, Path
-from .hints   import type_func
+from .dtypes  import Path
+from .hint    import type_func
 from .persist import load, save
-from .yadopt  import parse, wrap, to_dict, to_namedtuple, get_group
+from .yadopt  import YadOptArgs, parse, wrap, to_dict, to_namedtuple, get_group
 
 # Version information.
 __version__ = "2026.01.05"

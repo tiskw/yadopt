@@ -91,6 +91,11 @@ train.py --help
 >>> assert isinstance(args, SystemExit)
 """
 
+argv_04 = """
+train.py -h
+>>> assert isinstance(args, SystemExit)
+"""
+
 # }}}
 
 [testcase_01_02]
@@ -235,20 +240,36 @@ train.py
 # }}}
 
 ####################################################################################################
-# Testcase 2: Short and long options
+# Testcase 2: arguments, short options, and long options
 ####################################################################################################
 
 [testcase02_01]
+# Multiple arguments {{{
+
+docstr = """
+Arguments:
+    arguments...     This is a description.
+"""
+
+argv_01 = """
+sample.py arg0 arg1 arg2
+>>> assert isinstance(args.arguments, list)
+>>> assert len(args.arguments) == 3
+>>> assert args.arguments[0] == "arg0"
+>>> assert args.arguments[1] == "arg1"
+>>> assert args.arguments[2] == "arg2"
+"""
+
+# }}}
+
+[testcase02_02]
 # Various options and option values. {{{
 
 docstr = """
 Various options and option values.
 
-Usage:
-    sample.py [OPTIONS] <filepath...>
-
 Arguments:
-    filepath               Input file path(s).
+    filepath...            Input file path(s).
 
 Options:
     -x                     Only short option with no option value.
@@ -304,6 +325,22 @@ sample.py -d -e=ELLEN -f FRANK -g=GEORGE -h HENRY path1
 
 # }}}
 
+[testcase02_03]
+# Option name with hyphen {{{
+
+docstr = """
+Options:
+    --opt-name STR    Option name with hyphen.
+"""
+
+argv_01 = """
+sample.py --opt-name value
+>>> assert args.opt_name == "value"
+>>> assert str(yadopt.to_namedtuple(args)) == "YadOptArgsNt(opt_name='value')"
+"""
+
+# }}}
+
 ####################################################################################################
 # Testcase 3: Data type hints
 ####################################################################################################
@@ -314,23 +351,12 @@ sample.py -d -e=ELLEN -f FRANK -g=GEORGE -h HENRY path1
 docstr = """
 Test data types.
 
-Usage:
-    sample.py <arg> [-a NAME]
-    sample.py <arg_bool> <arg_boolean> [-b NAME_BOOL] [-c NAME_BOOLEAN]
-    sample.py <arg_int> <arg_integer> <arg_path> [-d NAME_INT] [-e NAME_INTEGER] [-f NAME_PATH]
-    sample.py <arg_flt> <arg_float> <arg_str> <arg_string> [-g NAME_FLT] [-h NAME_FLOAT] [-i NAME_STR] [-j NAME_STRING]
-
 Arguments:
-    arg           No type specification means string.
     arg_bool      Boolean option value.
-    arg_boolean   Boolean option value.
     arg_int       Integer option value.
-    arg_integer   Integer option value.
     arg_path      Path option value.
     arg_flt       Float option value.
-    arg_float     Float option value.
     arg_str       String option value.
-    arg_string    String option value.
 
 Options:
     -a name           No type specification means string.
@@ -346,35 +372,30 @@ Options:
 """
 
 argv_01 = """
-sample.py arg -a val
->>> assert isinstance(args.arg, str)
+sample.py True 3 text.txt 0.1 str -a val
+>>> assert isinstance(args.arg_bool, bool)
+>>> assert isinstance(args.arg_int, int)
+>>> assert isinstance(args.arg_path, yadopt.Path)
+>>> assert isinstance(args.arg_flt, float)
+>>> assert isinstance(args.arg_str, str)
 >>> assert isinstance(args.a, str)
 """
 
 argv_02 = """
-sample.py True False -b true -c false
->>> assert isinstance(args.arg_bool, bool)
->>> assert isinstance(args.arg_boolean, bool)
+sample.py True 3 text.txt 0.1 str -b true -c false
 >>> assert isinstance(args.b, bool)
 >>> assert isinstance(args.c, bool)
 """
 
 argv_03 = """
-sample.py 12 345 /tmp -d 67 -e 890 -f /home
->>> assert isinstance(args.arg_int, int)
->>> assert isinstance(args.arg_integer, int)
->>> assert isinstance(args.arg_path, yadopt.Path)
+sample.py True 3 text.txt 0.1 str -d 67 -e 890 -f /home
 >>> assert isinstance(args.d, int)
 >>> assert isinstance(args.e, int)
 >>> assert isinstance(args.f, yadopt.Path)
 """
 
 argv_04 = """
-sample.py 3.1415 2.7183 hoge fuga -g 0.1 -h 1.0 -i foo -j bar
->>> assert isinstance(args.arg_flt, float)
->>> assert isinstance(args.arg_float, float)
->>> assert isinstance(args.arg_str, str)
->>> assert isinstance(args.arg_string, str)
+sample.py True 3 text.txt 0.1 str -g 0.1 -h 1.0 -i foo -j bar
 >>> assert isinstance(args.g, float)
 >>> assert isinstance(args.h, float)
 >>> assert isinstance(args.i, str)
@@ -454,9 +475,9 @@ Arguments:
     config             Path to config file.
 
 Training options:
-    --epochs EPOCHS    The number of training epochs.   [default: 100]
-    --model MODEL      Neural network model name.       [default: mlp]
-    --lr LR            Learning rate.                   [default: 1.0E-3]
+    --epochs AUTO      The number of training epochs.   [default: 100]
+    --model AUTO       Neural network model name.       [default: mlp]
+    --lr AUTO          Learning rate.                   [default: 1.0E-3]
 
 Output options:
     --output OUTPUT    Path to output directory.        [default: runs]
@@ -468,6 +489,7 @@ Other options:
 
 argv_01 = """
 train.py config.toml --epochs 10 --model=cnn
+>>> print(args)
 >>> assert args.config == "config.toml"
 >>> assert args.epochs == 10
 >>> assert args.model == "cnn"
@@ -533,296 +555,10 @@ train.py -1 +0.7 --opt_int -2 --opt_float +0.4
 # }}}
 
 ####################################################################################################
-# Testcase 4: Error checks
+# Testcase 4: Strange indent
 ####################################################################################################
 
 [testcase04_01]
-# Error check - usage parse. {{{
-
-docstr = """
-Error check - usage parse
-
-Usage:
-    sample.py (-h|--help)
-
-Options:
-    -h, --help   Show help message.
-"""
- 
-argv_01 = """
-sample.py --help
->>> assert args.__class__.__name__ == "YadOptErrorUsageParse"
->>> print(args)
-"""
-
-# }}}
-
-[testcase04_02]
-# Error check - invalid constants. {{{
-
-docstr = """
-Error check - invalid constants
-
-Usage:
-    sample.py subcmd <arg> bad_constant_token
-
-Arguments:
-    arg    Input argument.
-"""
-
-argv_01 = """
-sample.py argument
->>> assert args.__class__.__name__ == "YadOptErrorInvalidConstant"
->>> print(args)
-"""
-
-# }}}
-
-[testcase04_03]
-# Error check - user input not match. {{{
-
-docstr = """
-Error check - user input not match
-
-Usage:
-    sample.py subcmd <arg> [--opt1 INT] [--opt2 INT]
-
-Arguments:
-    arg         Input argument.
-
-Options:
-    --opt1 INT  Integer option.
-    --opt2 INT  Integer option.
-"""
-
-argv_01 = """
-sample.py cmdsub argument
->>> assert args.__class__.__name__ == "YadOptErrorValidUsageNotFound"
->>> print(args)
-"""
-
-# }}}
-
-[testcase04_04]
-# Error check - mandatory arguments. {{{
-
-docstr = """
-Error check - mandatory arguments
-
-Usage:
-    cmd <config_path>
-    cmd --help
-
-Arguments:
-    config_path    Path to config
-
-Other options:
-    -h, --help     Show this help message and exit.
-"""
-
-argv_01 = """
-sample.py
->>> assert args.__class__.__name__ == "YadOptErrorValidUsageNotFound"
->>> print(args)
-"""
-
-# }}}
-
-[testcase04_05]
-# Error check - mandatory options. {{{
-
-docstr = """
-Error check - mandatory options
-
-Usage:
-    sample.py --opt VALUE
-    sample.py --help
-
-Options:
-    --opt VALUE    Option with value.
-    -h, --help     Show this help message and exit.
-"""
-
-argv_01 = """
-sample.py
->>> assert args.__class__.__name__ == "YadOptErrorValidUsageNotFound"
->>> print(args)
-"""
-
-# }}}
-
-[testcase04_06]
-# Error check - invalid type name. {{{
-
-docstr = """
-Error check - invalid type name
-
-Usage:
-    sample.py --opt VALUE
-    sample.py --help
-
-Options:
-    --opt VALUE    (byte) Option with value.
-    -h, --help     (bool) Show this help message and exit.
-"""
-
-argv_01 = """
-sample.py --opt 1
->>> assert args.__class__.__name__ == "YadOptErrorInvalidTypeName"
->>> print(args)
-"""
-
-# }}}
-
-[testcase04_07]
-# Error check - no option value. {{{
-
-docstr = """
-Error check - no option value
-
-Usage:
-    sample.py [--opt1 VALUE] [--opt2 VALUE]
-    sample.py --help
-
-Options:
-    --opt1 VALUE   Option with value 1.
-    --opt2 VALUE   Option with value 2.
-    -h, --help     Show this help message and exit.
-"""
-
-argv_01 = """
-sample.py --opt1
->>> print(args)
->>> assert args.__class__.__name__ == "YadOptErrorNoOptionValueFound"
-"""
-
-argv_02 = """
-sample.py --opt1 --opt2 128
->>> assert args.__class__.__name__ == "YadOptErrorNoOptionValueFound"
->>> print(args)
-"""
-
-# }}}
-
-####################################################################################################
-# Testcase 5: Preceding tokens
-####################################################################################################
-
-[testcase05_01]
-# Check preceding tokens. {{{
-
-docstr = """
-Usage:
-    train.py subcmd1 [--opt1 INT]
-    train.py subcmd2 [--opt2 INT]
-    train.py subcmd3 [--opt3 INT]
-
-Options:
-    --opt1 INT  Option 1.  [default: 0]
-    --opt2 INT  Option 2.  [default: 0]
-    --opt3 INT  Option 3.  [default: 0]
-"""
-
-argv_01 = """
-train.py subcmd1
->>> assert args.subcmd1 == True
->>> assert args.subcmd2 == False
->>> assert args.subcmd3 == False
->>> assert args.opt1 == 0
->>> assert args.opt2 == 0
->>> assert args.opt3 == 0
-"""
-
-argv_02 = """
-train.py subcmd2 --opt2 1
->>> assert args.subcmd1 == False
->>> assert args.subcmd2 == True
->>> assert args.subcmd3 == False
->>> assert args.opt1 == 0
->>> assert args.opt2 == 1
->>> assert args.opt3 == 0
-"""
-
-argv_03 = """
-train.py subcmd3
->>> assert args.subcmd1 == False
->>> assert args.subcmd2 == False
->>> assert args.subcmd3 == True
->>> assert args.opt1 == 0
->>> assert args.opt2 == 0
->>> assert args.opt3 == 0
-"""
-
-# }}}
-
-####################################################################################################
-# Testcase 6: Save and load functions
-####################################################################################################
-
-[testcase06_01]
-# Check save and load functions. {{{
-
-docstr = """
-Usage:
-    train.py subcmd1 <arg1> [--bool BOOL] [--int INT] [--float FLOAT] [--str STR] [--path PATH]
-    train.py subcmd2 <arg2> [--bool BOOL] [--int INT] [--float FLOAT] [--str STR] [--path PATH]
-    train.py subcmd3 <arg3> [--bool BOOL] [--int INT] [--float FLOAT] [--str STR] [--path PATH]
-
-Arguments:
-    arg1           An argument for subcmd1.
-    arg2           An argument for subcmd2.
-    arg3           An argument for subcmd3.
-
-Options:
-    -b, --bool BOOL    An option of type boolean.
-    -i, --int INT      An option of type integer.
-    -f, --float FLOAT  An option of type float.
-    -s, --str STR      An option of type string.
-    -p, --path PATH    An option of type path.
-"""
-
-argv_01 = """
-train.py subcmd1 path1 -b True --int 6 -f 3.1416 --str hello -p ./dir
->>> assert args.subcmd1 == True
->>> assert args.subcmd2 == False
->>> assert args.subcmd3 == False
->>> assert args.bool == True
->>> assert args.int == 6
->>> assert abs(args.float - 3.1416) < 1.0E-5
->>> assert args.str == "hello"
->>> assert args.path == yadopt.Path("./dir")
-
->>> # Supported suffixes.
->>> for suffix in ["json", "json.gz", "toml", "toml.gz", "txt", "txt.gz"]:
->>>     yadopt.save(f"/tmp/yadopt_test_args.{suffix}", args)
->>>     args_restore = yadopt.load(f"/tmp/yadopt_test_args.{suffix}")
->>>     assert args == args_restore
-
->>> # Unsupported suffixes.
->>> for suffix in ["jpg", "png", "webp"]:
->>> 
->>>     # Save function.
->>>     try:
->>>         output = yadopt.save(f"/tmp/yadopt_test_args.{suffix}", args)
->>>     except Exception as e:
->>>         output = e
->>>     assert output.__class__.__name__ == "YadOptErrorInvalidIOFileFormat"
->>> 
->>>     # Load function.
->>>     try:
->>>         output = yadopt.load(f"/tmp/yadopt_test_args.{suffix}")
->>>     except Exception as e:
->>>         output = e
->>>     assert output.__class__.__name__ == "YadOptErrorInvalidIOFileFormat"
-"""
-
-# }}}
-
-####################################################################################################
-# Testcase 7: Strange indent
-####################################################################################################
-
-[testcase07_01]
 # Strange indent. {{{
 
 docstr = """
@@ -848,10 +584,10 @@ sample.py --help
 # }}}
 
 ####################################################################################################
-# Testcase 8: Multiline usages and options
+# Testcase 5: Multiline usages and options
 ####################################################################################################
 
-[testcase08_01]
+[testcase05_01]
 # Multiline usages. {{{
 
 docstr = """
@@ -883,15 +619,10 @@ sample.py --help
 
 # }}}
 
-[testcase08_02]
+[testcase05_02]
 # Multiline options. {{{
 
 docstr = """
-Usage:
-    sample.py [--opt1 STR] [--opt2 STR]
-              [--opt3 STR] [--opt4 STR]
-    sample.py --help
-
 Options:
     --opt1 STR    Option with value 1.
                   This it the second line of --opt1.
@@ -921,10 +652,10 @@ sample.py --help
 # }}}
 
 ####################################################################################################
-# Testcase 9: Additional type hint testing
+# Testcase 6: Additional type hint testing
 ####################################################################################################
 
-[testcase09_01]
+[testcase06_01]
 # {{{
 
 docstr = """
@@ -966,7 +697,7 @@ sample.py --help
 
 # }}}
 
-[testcase09_02]
+[testcase06_02]
 # {{{
 
 docstr = """
@@ -1004,152 +735,13 @@ sample.py --help
 # }}}
 
 ####################################################################################################
-# Testcase 10: Validation functions
+# Testcase 7: Group extraction
 ####################################################################################################
 
-[testcase10_01]
-# Error check - usage and arguments not match. {{{
-
-docstr = """
-Error check - usage and arguments not match
-
-Usage:
-    sample.py <arg_mistake> [-a NAME]
-
-Arguments:
-    arg       Input argument.
-
-Options:
-    -a name   Option with value.
-"""
-
-argv_01 = """
-sample.py arg -a val
->>> assert args.__class__.__name__ == "YadOptErrorUnknownArgument"
-"""
-
-# }}}
-
-[testcase10_02]
-# Error check - unknown arguments in usage. {{{
-
-docstr = """
-Usage:
-    sample.py <arg_mistake> [-a NAME]
-
-Arguments:
-    arg       Input argument.
-
-Options:
-    -a name   Option with value.
-"""
-
-argv_01 = """
-sample.py arg -a val
->>> assert args.__class__.__name__ == "YadOptErrorUnknownArgument"
-"""
-
-# }}}
-
-[testcase10_03]
-# Error check - unknown option in usage. {{{
-
-docstr = """
-Usage:
-    sample.py <arg> [--oqt NAME]
-
-Arguments:
-    arg         Input argument.
-
-Options:
-    --opt INT   Option with integer value.
-"""
-
-argv_01 = """
-sample.py arg --opt 1
->>> assert args.__class__.__name__ == "YadOptErrorUnknownOptionUsage"
-"""
-
-# }}}
-
-[testcase10_04]
-# Error check - unknown option in argv. {{{
-
-docstr = """
-Usage:
-    sample.py [--alice INT] [--bob FLOAT]
-
-Options:
-    -a, --alice INT  Option with integer value.  [default: 1]
-    -b, --bob FLOAT  Option with float value.    [default: 1]
-"""
-
-argv_01 = """
-sample.py --aline 1
->>> assert args.__class__.__name__ == "YadOptErrorUnknownOptionArgv"
->>> assert "Do you mean '--alice'?" in re.sub(r"\\x1B\\[[0-9;]*m", "", str(args))
-"""
-
-argv_02 = """
-sample.py --rob 1
->>> assert args.__class__.__name__ == "YadOptErrorUnknownOptionArgv"
->>> assert "Do you mean '--bob'?" in re.sub(r"\\x1B\\[[0-9;]*m", "", str(args))
-"""
-
-argv_03 = """
-sample.py -a 1 -c 1
->>> assert args.__class__.__name__ == "YadOptErrorUnknownOptionArgv"
->>> assert "Do you mean" not in str(args)
-"""
-
-# }}}
-
-[testcase10_05]
-# Error check - unknown argument. {{{
-
-docstr = """
-Usage:
-    sample.py <arg>
-"""
-
-argv_01 = """
-sample.py
->>> assert args.__class__.__name__ == "YadOptErrorUnknownArgument"
-"""
-
-# }}}
-
-[testcase10_06]
-# Error check - unknown option in argv. {{{
-
-docstr = """
-Usage:
-    sample.py
-"""
-
-argv_01 = """
-sample.py --opt 1
->>> assert args.__class__.__name__ == "YadOptErrorUnknownOptionArgv"
-"""
-
-# }}}
-
-####################################################################################################
-# Testcase 11: Group extraction
-####################################################################################################
-
-[testcase11_01]
+[testcase07_01]
 # {{{
 
 docstr = """
-Usage:
-    sample.py [OPTIONS]
-    sample.py <arg0> [OPTIONS]
-    sample.py <arg0> <arg1> [OPTIONS]
-    sample.py --help
-
-Testcase11_01.
-
 Arguments:
     arg0           Argument 0.
     arg1           Argument 1.
@@ -1174,7 +766,7 @@ Other options:
 """
 
 argv_01 = """
-sample.py
+sample.py arg_val_0 arg_val_1
 >>> assert args.opt0_0 == 0
 >>> assert args.opt0_1 == 1
 >>> assert args.opt0_2 == 2
@@ -1205,7 +797,7 @@ sample.py
 """
 
 argv_02 = """
-sample.py arg_val_0
+sample.py arg_val_0 arg_val_1
 >>> assert args.arg0 == "arg_val_0"
 >>> assert args.opt0_0 == 0
 >>> assert args.opt0_1 == 1
@@ -1218,7 +810,7 @@ sample.py arg_val_0
 >>> assert args.opt2_2 == 22
 
 >>> args_group = yadopt.get_group(args, "Arguments")
->>> assert len(args_group) == 1
+>>> assert len(args_group) == 2
 >>> assert args_group.arg0 == "arg_val_0"
 
 >>> args_group = yadopt.get_group(args, "Options group 0")
@@ -1276,6 +868,459 @@ sample.py arg_val_0 arg_val_1
 >>> yadopt.get_group(args, "Options group 2").opt2_0 == 20
 >>> yadopt.get_group(args, "Options group 2").opt2_1 == 21
 >>> yadopt.get_group(args, "Options group 2").opt2_2 == 22
+"""
+
+# }}}
+
+####################################################################################################
+# Testcase 8: Save and load functions
+####################################################################################################
+
+[testcase08_01]
+# Check save and load functions. {{{
+
+docstr = """
+Arguments:
+    arg...   Multiple arguments.
+
+Options:
+    -b, --bool BOOL     An option of type boolean.
+    -i, --int INT       An option of type integer.
+    -f, --float FLOAT   An option of type float.
+    -s, --str STR       An option of type string.
+    -p, --path PATH     An option of type path.
+    -n, --none STR      An option of type None.
+"""
+
+argv_01 = """
+train.py a b c -b True --int 6 -f 3.1416 --str hello -p ./dir
+>>> assert isinstance(args.arg, list)
+>>> assert len(args.arg) == 3
+>>> assert args.arg[0] == "a"
+>>> assert args.arg[1] == "b"
+>>> assert args.arg[2] == "c"
+>>> assert args.bool == True
+>>> assert args.int == 6
+>>> assert abs(args.float - 3.1416) < 1.0E-5
+>>> assert args.str == "hello"
+>>> assert args.path == yadopt.Path("./dir")
+"""
+
+argv_02 = """
+train.py a b c -b True --int 6 -f 3.1416 --str hello -p ./dir
+>>> for suffix in ["json", "json.gz", "toml", "toml.gz"]:
+>>>     yadopt.save(f"/tmp/yadopt_test_args.{suffix}", args)
+>>>     args_restore = yadopt.load(f"/tmp/yadopt_test_args.{suffix}")
+>>>     assert args == args_restore
+>>>     assert isinstance(args_restore.arg, list)
+>>>     assert len(args_restore.arg) == 3
+>>>     assert args_restore.arg[0] == "a"
+>>>     assert args_restore.arg[1] == "b"
+>>>     assert args_restore.arg[2] == "c"
+"""
+
+argv_03 = """
+train.py a b c -b True --int 6 -f 3.1416 --str hello -p ./dir
+>>> for suffix in ["jpg", "png", "webp"]:
+>>> 
+>>>     # Save function.
+>>>     try:
+>>>         output = yadopt.save(f"/tmp/yadopt_test_args.{suffix}", args)
+>>>     except Exception as e:
+>>>         output = e
+>>>     assert output.__class__.__name__ == "YadOptErrorInvalidFileFormat"
+>>>     print(output)
+>>> 
+>>>     # Load function.
+>>>     try:
+>>>         output = yadopt.load(f"/tmp/yadopt_test_args.{suffix}")
+>>>     except Exception as e:
+>>>         output = e
+>>>     assert output.__class__.__name__ == "YadOptErrorInvalidFileFormat"
+>>>     print(output)
+"""
+
+# }}}
+
+####################################################################################################
+# Testcase 9: Runtime errors
+####################################################################################################
+
+[testcase09_01]
+# Runtime error - missing arguments. {{{
+
+docstr = """
+Runtime error - missing arguments
+
+Arguments:
+    arg1   Argument 1.
+    arg2   Argument 2.
+    arg3   Argument 3.
+"""
+
+argv_01 = """
+sample.py argument
+>>> assert args.__class__.__name__ == "YadOptErrorMissingArgument"
+"""
+
+argv_02 = """
+sample.py argument1 argument2
+>>> assert args.__class__.__name__ == "YadOptErrorMissingArgument"
+"""
+
+# }}}
+
+[testcase09_02]
+# Runtime error - too many argument. {{{
+
+docstr = """
+Runtime error - too many argument
+
+Arguments:
+    arg1   Argument 1.
+"""
+
+argv_01 = """
+sample.py argument1 argument2
+>>> assert args.__class__.__name__ == "YadOptErrorTooManyArgument"
+"""
+
+# }}}
+
+[testcase09_03]
+# Runtime error - unknown option. {{{
+
+docstr = """
+Options:
+    --opt INT   Option with integer value.
+"""
+
+argv_01 = """
+sample.py --opt1 1
+>>> assert args.__class__.__name__ == "YadOptErrorUnknownOption"
+"""
+
+# }}}
+
+[testcase09_04]
+# Runtime error - unknown option (no option definition). {{{
+
+docstr = """
+"""
+
+argv_01 = """
+sample.py --opt1 1
+>>> assert args.__class__.__name__ == "YadOptErrorUnknownOption"
+"""
+
+# }}}
+
+[testcase09_05]
+# Runtime error - unknown option in argv. {{{
+
+docstr = """
+Options:
+    -a, --alice INT  Option with integer value.  [default: 1]
+    -b, --bob FLOAT  Option with float value.    [default: 1]
+"""
+
+argv_01 = """
+sample.py --aline 1
+>>> assert args.__class__.__name__ == "YadOptErrorUnknownOption"
+>>> assert 'Do you mean "--alice"?' in re.sub(r"\\x1B\\[[0-9;]*m", "", str(args))
+"""
+
+argv_02 = """
+sample.py --rob 1
+>>> assert args.__class__.__name__ == "YadOptErrorUnknownOption"
+>>> assert 'Do you mean "--bob"?' in re.sub(r"\\x1B\\[[0-9;]*m", "", str(args))
+"""
+
+argv_03 = """
+sample.py -a 1 -c 1
+>>> assert args.__class__.__name__ == "YadOptErrorUnknownOption"
+>>> assert 'Do you mean "-b"?' in re.sub(r"\\x1B\\[[0-9;]*m", "", str(args))
+"""
+
+# }}}
+
+[testcase09_06]
+# Runtime error - invalid type name. {{{
+
+docstr = """
+Runtime error - invalid type name
+
+Usage:
+    sample.py --opt VALUE
+    sample.py --help
+
+Options:
+    --opt VALUE    (byte) Option with value.
+    -h, --help     (bool) Show this help message and exit.
+"""
+
+argv_01 = """
+sample.py --opt 1
+>>> assert args.__class__.__name__ == "YadOptErrorInvalidTypeName"
+>>> print(args)
+"""
+
+# }}}
+
+[testcase09_07]
+# Runtime error - option value not found. {{{
+
+docstr = """
+Options:
+    --opt1 INT   Option with integer value.
+    --opt2 INT   Option with integer value.
+"""
+
+argv_01 = """
+sample.py --opt1
+>>> assert args.__class__.__name__ == "YadOptErrorNoOptionValue"
+"""
+
+argv_02 = """
+sample.py --opt1 --opt2 value2
+>>> assert args.__class__.__name__ == "YadOptErrorNoOptionValue"
+"""
+
+# }}}
+
+[testcase09_08]
+# Runtime error - duplicated name {{{
+
+docstr = """
+Arguments:
+    arg1           This is a description.
+
+Options:
+    --arg1 VALUE   This is a description.
+    --arg2 VALUE   This is a description.
+"""
+
+argv_01 = """
+sample.py
+>>> print(args)
+>>> assert args.__class__.__name__ == "YadOptErrorDuplicatedName"
+"""
+
+# }}}
+
+[testcase09_09]
+# Runtime error - duplicated name (hyphen case) {{{
+
+docstr = """
+Options:
+    --output-dir PATH   This is a description.
+    --output_dir PATH   This is a description.
+"""
+
+argv_01 = """
+sample.py
+>>> print(args)
+>>> assert args.__class__.__name__ == "YadOptErrorDuplicatedName"
+"""
+
+# }}}
+
+[testcase09_10]
+# {{{
+
+docstr = """
+Options:
+    --help VALUE    This is a description.
+"""
+
+argv_01 = """
+python sample.py
+>>> print(args)
+>>> assert args.__class__.__name__ == "YadOptErrorInvalidHelpOption"
+"""
+
+# }}}
+
+####################################################################################################
+# Testcase 10: Analysis errors (specification part)
+####################################################################################################
+
+[testcase10_01]
+# Analysis error - extra args in pos arg declaration {{{
+
+docstr = """
+Arguments:
+    arg_name extra_token   This is a description.
+"""
+
+argv_01 = """
+sample.py
+>>> print(args)
+>>> assert args.__class__.__name__ == "YadOptErrorExtraArgsInPosArgDecl"
+"""
+
+# }}}
+
+[testcase10_02]
+# Analysis error - invalid pos arg name in pos arg declaration {{{
+
+docstr = """
+Arguments:
+    1_arg    This is a description.
+"""
+
+argv_01 = """
+sample.py
+>>> print(args)
+>>> assert args.__class__.__name__ == "YadOptErrorInvalidArgNameInPosArgDecl"
+"""
+
+# }}}
+
+[testcase10_03]
+# Analysis error - multi ellipsis in pos arg declaration {{{
+
+docstr = """
+Arguments:
+    arg_name......   This is a description.
+"""
+
+argv_01 = """
+sample.py arg
+>>> print(args)
+>>> assert args.__class__.__name__ == "YadOptErrorMultiEllipsisInPosArgDecl"
+"""
+
+# }}}
+
+[testcase10_04]
+# Analysis error - invalid ellipsis use {{{
+
+docstr = """
+Arguments:
+    ...arg_name   This is a description.
+"""
+
+argv_01 = """
+sample.py arg
+>>> print(args)
+>>> assert args.__class__.__name__ == "YadOptErrorInvalidEllipsisInPosArgDecl"
+"""
+
+# }}}
+
+[testcase10_05]
+# Analysis error - unexpected token in pos arg decl {{{
+
+docstr = """
+Arguments:
+    arg_name!   This is a description.
+"""
+
+argv_01 = """
+sample.py arg
+>>> print(args)
+>>> assert args.__class__.__name__ == "YadOptErrorUnexpectedTokenInPosArgDecl"
+"""
+
+# }}}
+
+####################################################################################################
+# Testcase 11: Analysis errors (description part)
+####################################################################################################
+
+[testcase11_01]
+# Analysis error - no option name in short option {{{
+
+docstr = """
+Options:
+    -   This is a description.
+"""
+
+argv_01 = """
+sample.py
+>>> print(args)
+>>> assert args.__class__.__name__ == "YadOptErrorNoOptNameInOptArgDecl"
+"""
+
+# }}}
+
+[testcase11_02]
+# Analysis error - no option name in long option {{{
+
+docstr = """
+Options:
+    --   This is a description.
+"""
+
+argv_01 = """
+sample.py
+>>> print(args)
+>>> assert args.__class__.__name__ == "YadOptErrorNoOptNameInOptArgDecl"
+"""
+
+# }}}
+
+[testcase11_03]
+# Analysis error - invalid comma pos in opt decl (top) {{{
+
+docstr = """
+Options:
+    , --opt   This is a description.
+"""
+
+argv_01 = """
+sample.py
+>>> print(args)
+>>> assert args.__class__.__name__ == "YadOptErrorInvalidArgNameInPosArgDecl"
+"""
+
+# }}}
+
+[testcase11_04]
+# Analysis error - invalid comma pos in opt decl (last) {{{
+
+docstr = """
+Options:
+    --opt,   This is a description.
+"""
+
+argv_01 = """
+sample.py
+>>> print(args)
+>>> assert args.__class__.__name__ == "YadOptErrorInvalidCommaPosInOptArgDecl"
+"""
+
+# }}}
+
+[testcase11_05]
+# Analysis error - invalid comma usage {{{
+
+docstr = """
+Options:
+    --opt, VALUE   This is a description.
+"""
+
+argv_01 = """
+sample.py
+>>> print(args)
+>>> assert args.__class__.__name__ == "YadOptErrorInvalidCommaUsageInOptArgDecl"
+"""
+
+# }}}
+
+[testcase11_06]
+# Analysis error - unexpected character in opt decl {{{
+
+docstr = """
+Options:
+    --opt !VALUE!   This is a description.
+"""
+
+argv_01 = """
+sample.py
+>>> print(args)
+>>> assert args.__class__.__name__ == "YadOptErrorUnexpectedTokenInOptArgDecl"
 """
 
 # }}}
