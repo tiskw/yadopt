@@ -18,7 +18,7 @@ YadOpt - Yet another docopt
 YadOpt is a Python re-implementation of [docopt](https://github.com/docopt/docopt) and
 [docopt-ng](https://github.com/jazzband/docopt-ng), a human-friendly command-line argument parser
 with type hinting and utility functions. YadOpt helps you creating beautiful command-line
-interfaces, just like docopt and docopt-ng. However, **YadOpt also supports (1) date type hinting,
+interfaces, just like docopt and docopt-ng. However, **YadOpt also supports (1) data type hinting,
 (2) conversion to dictionaries and named tuples, and (3) save and load functions**.
 
 The following is the typical usage of YadOpt:
@@ -229,7 +229,7 @@ import yadopt
 if __name__ == "__main__":
 
     # Parse the command line arguments.
-    args = yadopt.parse(__doc__, ignore_default_values=True)
+    args = yadopt.parse(__doc__)
 
     # Load the base config file.
     args_base = yadopt.load(args.config_path)
@@ -293,6 +293,19 @@ if __name__ == "__main__":
 (It might be a good idea to add features to YadOpt that make it easier for users to implement
 the above code. However, the author hasn't implemented it yet because he wants to keep
 the dependency of YadOpt small.)
+
+### Comparison with other similar libraries
+
+| Functions / Features    | argparse                            | click                       | docopt                                     | Typer                      | YadOpt (this repository)                          |
+|-------------------------|-------------------------------------|-----------------------------|--------------------------------------------|----------------------------|---------------------------------------------------|
+| Basic style             | Object-Oriented                     | Decorators                  | Docstring                                  | Type hints and decorators  | Docstring                                         |
+| Standard library        | Yes                                 | No (pip)                    | No (pip)                                   | No (pip)                   | No (pip)                                          |
+| Data type specification | Yes                                 | Yes                         | No                                         | Yes                        | Yes                                               |
+| Config file integration | No                                  | No                          | No                                         | No                         | Yes                                               |
+| Subcommands             | Yes (but verbose)                   | Yes                         | Yes                                        | Yes                        | Yes                                               |
+| User experience         | Standard, sometimes verbose         | Good, intuitive and modern  | Innovative, but type conversion is tedious | Good, intuitive and modern | Unique, integrates docs, types, and configuration |
+
+Please note that qualitative metrics (e.g., user experience) are based on the author's subjective evaluation.
 
 
 Developer's note
