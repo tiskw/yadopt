@@ -12,6 +12,7 @@ import functools
 import inspect
 import os
 import sys
+import textwrap
 
 # For type hinting.
 from collections.abc import Callable
@@ -43,6 +44,9 @@ def parse(docstr: str, argv: list[str] = sys.argv, type_fn: Callable = type_func
     Returns:
         (YadOptArgs): Parsed command line arguments.
     """
+    # Dedent the given docstring.
+    docstr = textwrap.dedent(docstr)
+
     # Retokenize the input vector.
     argv = list(retokenize(copy.copy(argv)))
 

@@ -601,18 +601,6 @@ sample.py cmdsub argument
 >>> print(args)
 """
 
-argv_02 = """
-sample.py subcmd argument --opt1
->>> assert args.__class__.__name__ == "YadOptErrorValidUsageNotFound"
->>> print(args)
-"""
-
-argv_03 = """
-sample.py subcmd argument --opt1 --opt2
->>> assert args.__class__.__name__ == "YadOptErrorValidUsageNotFound"
->>> print(args)
-"""
-
 # }}}
 
 [testcase04_04]
@@ -681,6 +669,36 @@ Options:
 argv_01 = """
 sample.py --opt 1
 >>> assert args.__class__.__name__ == "YadOptErrorInvalidTypeName"
+>>> print(args)
+"""
+
+# }}}
+
+[testcase04_07]
+# Error check - no option value. {{{
+
+docstr = """
+Error check - no option value
+
+Usage:
+    sample.py [--opt1 VALUE] [--opt2 VALUE]
+    sample.py --help
+
+Options:
+    --opt1 VALUE   Option with value 1.
+    --opt2 VALUE   Option with value 2.
+    -h, --help     Show this help message and exit.
+"""
+
+argv_01 = """
+sample.py --opt1
+>>> print(args)
+>>> assert args.__class__.__name__ == "YadOptErrorNoOptionValueFound"
+"""
+
+argv_02 = """
+sample.py --opt1 --opt2 128
+>>> assert args.__class__.__name__ == "YadOptErrorNoOptionValueFound"
 >>> print(args)
 """
 

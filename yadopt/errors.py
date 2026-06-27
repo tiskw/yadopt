@@ -246,6 +246,20 @@ class YadOptErrorValidUsageNotFound(YadOptErrorBase):
         return self.stringify(self.pargs[0], err_pos, err_code, err_mark)
 
 
+class YadOptErrorNoOptionValueFound(YadOptErrorBase):
+    """
+    --------------------------------------------------------------------------------
+    <Error summary>
+      No value was given for an option that requires a value.
+
+    <Details>
+      The option '{0}' requires a value, but not given.
+
+    <Solution>
+      Please give a value to the option '{0}'.
+    """
+
+
 class YadOptErrorCannotLoadTomllib(YadOptErrorBase):
     """
     --------------------------------------------------------------------------------
@@ -305,6 +319,7 @@ class YadOptError(YadOptErrorBase):
     unknown_option_usage   = YadOptErrorUnknownOptionUsage
     unknown_option_argv    = YadOptErrorUnknownOptionArgv
     valid_usage_not_found  = YadOptErrorValidUsageNotFound
+    no_option_value_found  = YadOptErrorNoOptionValueFound
     cannot_load_tomllib    = YadOptErrorCannotLoadTomllib
     cannot_merge_dtype     = YadOptErrorCannotMergeDtype
     internal_error         = YadOptErrorInternal

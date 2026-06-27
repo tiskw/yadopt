@@ -63,8 +63,8 @@ def check_options(argv: list[str], opts: OptsInfo, usage: UsageInfo) -> bool:
     Check the contents of the argument vector and option information.
 
     Args:
-        argv (list[str])  : [IN] Argument vector to be checked.
-        opts (OptsInfo)   : [IN] Parsed option information.
+        argv   (list[str]): [IN] Argument vector to be checked.
+        opts   (OptsInfo) : [IN] Parsed option information.
         usages (UsageInfo): [IN] Parsed usage information.
 
     Returns:
@@ -74,21 +74,56 @@ def check_options(argv: list[str], opts: OptsInfo, usage: UsageInfo) -> bool:
     opt_names: set[str] = {opt.name     for opt in opts.entries if opt.name     is not None}
     opt_names          |= {opt.name_alt for opt in opts.entries if opt.name_alt is not None}
 
-    # Check all user input is defined in argument sections.
+    return check_options_usage(usage, opt_names) and check_options_argv(argv, opts, opt_names)
+
+
+def check_options_usage(usage: UsageInfo, opt_names: set[str]) -> bool:
+    """
+    Check all options defined in usage is defined in option sections.
+
+    Args:
+        usages    (UsageInfo): [IN] Parsed usage information.
+        opt_names (set[str]) : [IN] Set of option names (both short and long).
+
+    Returns:
+        (bool): Returns True if all checks are passed.
+    """
     for usage_entry in usage.entries:
-        for opt in usage_entry.opts:
+        for usg_opt in usage_entry.opts:
 
             # If available option is empty, raise an error.
             if len(opt_names) == 0:
-                raise YadOptError.unknown_option_usage("--" + opt.name, "")
+                raise YadOptError.unknown_option_usage("--" + usg_opt.name, "")
 
             # If the option does not exist in the available options, raise an error.
-            if opt.name not in opt_names:
-                opt_nearest = find_nearest_str(opt.name, opt_names)
-                raise YadOptError.unknown_option_usage("--" + opt.name, f"Do you mean '--{opt_nearest}'?")
+            if usg_opt.name not in opt_names:
+                opt_nearest = find_nearest_str(usg_opt.name, opt_names)
+                raise YadOptError.unknown_option_usage("--" + usg_opt.name, f"Do you mean '--{opt_nearest}'?")
 
-    # Check all arguments in the argument vector.
-    for arg_opt in (arg for arg in argv if arg.startswith("-")):
+    return True
+
+
+def check_options_argv(argv: list[str], opts: OptsInfo, opt_names: set[str]) -> bool:
+    """
+    Check all options in the argument vector.
+
+    Args:
+        argv      (list[str]): [IN] Argument vector to be checked.
+        opts      (OptsInfo) : [IN] Parsed option information.
+        opt_names (set[str]) : [IN] Set of option names (both short and long).
+
+    Returns:
+        (bool): Returns True if all checks are passed.
+    """
+    # Get a set of options that requires a value.
+    require_value: set[str] = set()
+    for opt in (opt for opt in opts.entries if opt.val_name is not None):
+        if opt.name is not None:
+            require_value.add(opt.name)
+        if opt.name_alt is not None:
+            require_value.add(opt.name)
+
+    for idx, arg_opt in ((i, arg) for i, arg in enumerate(argv) if arg.startswith("-")):
 
         # If the token is a value (e.g. negative integer), skip it.
         if is_python_value(arg_opt):
@@ -108,6 +143,15 @@ def check_options(argv: list[str], opts: OptsInfo, usage: UsageInfo) -> bool:
             # Otherwise, search nearest option name and show it in the error message.
             opt_nearest = find_nearest_str(arg_opt.lstrip("-"), opt_names)
             raise YadOptError.unknown_option_argv(arg_opt, f"Do you mean '--{opt_nearest}'?")
+
+        # If the option that requires a value doesn't have a value, raise an error.
+        if arg_opt.lstrip("-") in require_value:
+
+            # Get the next token.
+            token_next: str | None = argv[idx + 1] if ((idx + 1) < len(argv)) else None
+
+            if (token_next is None) or (token_next.startswith("-") and not is_python_value(token_next)):
+                raise YadOptError.no_option_value_found(arg_opt)
 
     return True
 
