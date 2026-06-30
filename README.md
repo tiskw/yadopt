@@ -389,5 +389,5 @@ Other commands:
 
 ### Architecture diagram
 
-![software\_architecture](./docs/images/software_architecture.svg)
+![architecture](./docs/images/architecture.svg)
 
